@@ -1,0 +1,59 @@
+name: balkanid-vault
+
+services:
+
+  postgres:
+    image: postgres:17-bookworm
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-vault}
+      POSTGRES_USER: ${POSTGRES_USER:-vault_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+
+    ports:
+      - "127.0.0.1:5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-vault_admin} -d ${POSTGRES_DB:-vault}"
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+    stop_grace_period: 30s
+
+
+  migrate:
+    image: migrate/migrate:v4.18.3
+    profiles:
+      - tools
+
+    restart: "no"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    volumes:
+      - ./db/migrations:/migrations:ro
+
+    entrypoint:
+      - migrate
+
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://${POSTGRES_USER:-vault_admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vault}?sslmode=disable"
+      - "up"
+
+
+volumes:
+  postgres_data:

@@ -1,0 +1,28 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+.secrets/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+bin/
+coverage/
+*.test
+
+# Logs
+*.log
+
+# Local storage / temporary uploads
+data/
+tmp/
+staging/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
