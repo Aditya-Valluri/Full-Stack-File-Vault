@@ -1,0 +1,21 @@
+"""Application queries. Operational readiness is exposed separately at /readyz."""
+type Query {
+  """Public display information; does not report dependency health or build details."""
+  serviceInfo: ServiceInfo!
+}
+
+"""Non-sensitive application information available without authentication."""
+type ServiceInfo {
+  """Human-readable application name, not a stable identifier."""
+  name: String!
+}
+
+type Mutation {
+  """Create anonymous state or recover the CSRF token of a valid existing session. Requires the protected bootstrap transport."""
+  beginSession: SessionBootstrap!
+}
+
+"""Only CSRF material is returned; authentication tokens are HttpOnly cookies."""
+type SessionBootstrap {
+  csrfToken: String!
+}

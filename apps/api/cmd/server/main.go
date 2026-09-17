@@ -9,8 +9,10 @@ import (
 	"syscall"
 	"time"
 
+	"balkanid.local/vault/api/internal/auth"
 	"balkanid.local/vault/api/internal/config"
 	"balkanid.local/vault/api/internal/database"
+	"balkanid.local/vault/api/internal/graph"
 	"balkanid.local/vault/api/internal/server"
 )
 
@@ -36,7 +38,18 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 	defer pool.Close()
-	srv := server.New(cfg.HTTPAddr, func(ctx context.Context) error { return database.Ready(ctx, pool) }, logger)
+	sessions, err := auth.NewSessionStore(pool, 24*time.Hour, 30*time.Minute)
+	if err != nil {
+		return err
+	}
+	browser, err := auth.NewBrowserSecurity(cfg.Browser, sessions)
+	if err != nil {
+		return err
+	}
+	handler := graph.NewBrowserHandler(logger, browser, func(ctx context.Context, existing string) (string, auth.Session, bool, error) {
+		return sessions.BeginSession(ctx, existing, cfg.BootstrapCreationsPerMinute)
+	})
+	srv := server.New(cfg.HTTPAddr, func(ctx context.Context) error { return database.Ready(ctx, pool) }, logger, handler)
 	listener, err := net.Listen("tcp", cfg.HTTPAddr)
 	if err != nil {
 		return err

@@ -14,7 +14,10 @@ import (
 
 type Check func(context.Context) error
 
-func New(addr string, ready Check, logger *slog.Logger) *http.Server {
+func New(addr string, ready Check, logger *slog.Logger, graphqlHandler http.Handler) *http.Server {
+	if graphqlHandler == nil {
+		panic("GraphQL handler is required")
+	}
 	r := chi.NewRouter()
 	// Avoid logging request URLs or headers: future transport URLs can be secrets.
 	r.Use(func(next http.Handler) http.Handler {
@@ -45,6 +48,7 @@ func New(addr string, ready Check, logger *slog.Logger) *http.Server {
 		}
 		_, _ = w.Write([]byte("{\"status\":\"ready\"}\n"))
 	})
+	r.Handle("/graphql", graphqlHandler)
 	return &http.Server{
 		Addr: addr, Handler: r,
 		ReadHeaderTimeout: 5 * time.Second,

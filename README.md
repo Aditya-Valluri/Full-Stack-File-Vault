@@ -10,9 +10,10 @@ React/TypeScript frontend. GraphQL is the single application API architecture.
 - Go foundation with chi, pgxpool, configuration validation, JSON logging,
   health/readiness probes, and graceful shutdown.
 - Local Docker Compose database and a PowerShell API bootstrap script.
+- gqlgen at `/graphql` with a public `serviceInfo` query and bounded JSON POST requests.
 
 This is a foundation in active development, not a completed production deployment.
-GraphQL, authentication/authorization, multipart uploads, content hashing/storage,
+Authentication/authorization, multipart uploads, content hashing/storage,
 quota enforcement, strict per-user rate limiting, and the frontend are upcoming steps.
 
 ## Run locally
@@ -27,8 +28,8 @@ From the repository root in PowerShell:
 
 The script starts PostgreSQL, applies migrations, provisions an ignored local
 runtime credential, and starts the API at `http://127.0.0.1:8080`.
-Operational probes are `/healthz` and `/readyz`. Application GraphQL operations
-are not implemented yet.
+Operational probes are `/healthz` and `/readyz`. The initial GraphQL query and its
+review are documented in the [Step 3 guide](docs/architecture/step-3-graphql.md).
 
 ## Validation
 

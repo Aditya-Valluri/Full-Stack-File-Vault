@@ -30,14 +30,22 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Database name lookup failed.' }
     $escapedDbName = [Uri]::EscapeDataString(($dbName | Out-String).Trim())
     $previousURL = $env:DATABASE_URL
+    $previousEnvironment = $env:APP_ENV
+    $previousOrigin = $env:PUBLIC_ORIGIN
     try {
         $env:DATABASE_URL = "postgres://vault_runtime:${password}@127.0.0.1:5432/${escapedDbName}?sslmode=disable"
+        if (-not $env:APP_ENV) { $env:APP_ENV = 'development' }
+        if (-not $env:PUBLIC_ORIGIN -and $env:APP_ENV -eq 'development') { $env:PUBLIC_ORIGIN = 'http://127.0.0.1:8080' }
         Push-Location 'apps/api'
         try {
             go run ./cmd/server
             if ($LASTEXITCODE -ne 0) { throw 'API process failed.' }
         } finally { Pop-Location }
-    } finally { $env:DATABASE_URL = $previousURL }
+    } finally {
+        $env:DATABASE_URL = $previousURL
+        $env:APP_ENV = $previousEnvironment
+        $env:PUBLIC_ORIGIN = $previousOrigin
+    }
 } finally {
     Remove-Variable password, sql -ErrorAction SilentlyContinue
     Pop-Location

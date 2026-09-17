@@ -1,6 +1,7 @@
 package server
 
 import (
+	"balkanid.local/vault/api/internal/graph"
 	"context"
 	"errors"
 	"io"
@@ -21,12 +22,12 @@ func TestProbesAndApplicationBoundary(t *testing.T) {
 			t.Error("readiness has no deadline")
 		}
 		return errors.New("secret database detail")
-	}, slog.New(slog.NewTextHandler(io.Discard, nil)))
+	}, slog.New(slog.NewTextHandler(io.Discard, nil)), graph.NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil))))
 	for _, tc := range []struct {
 		path   string
 		status int
 	}{
-		{"/healthz", 200}, {"/readyz", 503}, {"/graphql", 404}, {"/api/upload", 404},
+		{"/healthz", 200}, {"/readyz", 503}, {"/graphql", 405}, {"/api/upload", 404},
 	} {
 		w := httptest.NewRecorder()
 		srv.Handler.ServeHTTP(w, httptest.NewRequest("GET", tc.path, nil))

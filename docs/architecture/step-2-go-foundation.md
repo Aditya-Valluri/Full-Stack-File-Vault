@@ -1,5 +1,9 @@
 # Step 2: Go HTTP and PostgreSQL foundation
 
+Current startup also requires the [browser security configuration](browser-security.md).
+The local launcher supplies development defaults; direct Go execution requires an
+explicit PUBLIC_ORIGIN and defaults APP_ENV to production.
+
 ## What
 
 The API module is `balkanid.local/vault/api` under `apps/api`. It uses chi and pgxpool
