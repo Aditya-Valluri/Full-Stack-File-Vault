@@ -86,7 +86,7 @@ Invoke-RestMethod -Uri http://127.0.0.1:8080/graphql -Method Post -ContentType a
 Expected GraphQL result:
 
 ```json
-{"data":{"serviceInfo":{"name":"File Vault Application - secure and Production-Grade"}}}
+{"data":{"serviceInfo":{"name":"File Vault"}}}
 ```
 
 Validation: Go tests, vet and build passed. Handler tests exercise valid queries,

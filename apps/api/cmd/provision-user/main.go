@@ -2,7 +2,7 @@
 package main
 
 import (
-	"balkanid.local/vault/api/internal/auth"
+	"file-vault.local/api/internal/auth"
 	"context"
 	"errors"
 	"flag"

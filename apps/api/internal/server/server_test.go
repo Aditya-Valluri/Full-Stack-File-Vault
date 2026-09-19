@@ -1,7 +1,7 @@
 package server
 
 import (
-	"balkanid.local/vault/api/internal/graph"
+	"file-vault.local/api/internal/graph"
 	"context"
 	"errors"
 	"io"

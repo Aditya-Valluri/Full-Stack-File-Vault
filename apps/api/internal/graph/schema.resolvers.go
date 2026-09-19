@@ -8,8 +8,8 @@ package graph
 import (
 	"context"
 
-	"balkanid.local/vault/api/internal/auth"
-	"balkanid.local/vault/api/internal/graph/model"
+	"file-vault.local/api/internal/auth"
+	"file-vault.local/api/internal/graph/model"
 )
 
 // BeginSession is the resolver for the beginSession field.
@@ -23,7 +23,7 @@ func (r *mutationResolver) BeginSession(ctx context.Context) (*model.SessionBoot
 
 // ServiceInfo is the resolver for the serviceInfo field.
 func (r *queryResolver) ServiceInfo(ctx context.Context) (*model.ServiceInfo, error) {
-	return &model.ServiceInfo{Name: "File Vault Application - secure and Production-Grade"}, nil
+	return &model.ServiceInfo{Name: "File Vault"}, nil
 }
 
 // Mutation returns MutationResolver implementation.

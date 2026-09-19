@@ -1,4 +1,4 @@
-module balkanid.local/vault/api
+module file-vault.local/api
 
 go 1.27.0
 

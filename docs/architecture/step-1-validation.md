@@ -1,6 +1,6 @@
 # Step 1 validation
 
-Run from `D:\BalkanID File Vault` in PowerShell. Stop after any failed command.
+Run from `D:\file vault` in PowerShell. Stop after any failed command.
 
 ## Prerequisites
 

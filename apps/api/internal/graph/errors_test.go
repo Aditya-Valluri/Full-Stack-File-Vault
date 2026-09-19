@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"balkanid.local/vault/api/internal/graph/model"
+	"file-vault.local/api/internal/graph/model"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )

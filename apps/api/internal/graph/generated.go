@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"sync/atomic"
 
-	"balkanid.local/vault/api/internal/graph/model"
+	"file-vault.local/api/internal/graph/model"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	gqlparser "github.com/vektah/gqlparser/v2"
@@ -431,7 +431,7 @@ func (ec *executionContext) _Mutation_beginSession(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.SessionBootstrap) graphql.Marshaler {
-			return ec.marshalNSessionBootstrap2ᚖbalkanidᚗlocalᚋvaultᚋapiᚋinternalᚋgraphᚋmodelᚐSessionBootstrap(ctx, selections, v)
+			return ec.marshalNSessionBootstrap2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSessionBootstrap(ctx, selections, v)
 		},
 		true,
 		true,
@@ -463,7 +463,7 @@ func (ec *executionContext) _Query_serviceInfo(ctx context.Context, field graphq
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.ServiceInfo) graphql.Marshaler {
-			return ec.marshalNServiceInfo2ᚖbalkanidᚗlocalᚋvaultᚋapiᚋinternalᚋgraphᚋmodelᚐServiceInfo(ctx, selections, v)
+			return ec.marshalNServiceInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐServiceInfo(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2280,7 +2280,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNServiceInfo2ᚖbalkanidᚗlocalᚋvaultᚋapiᚋinternalᚋgraphᚋmodelᚐServiceInfo(ctx context.Context, sel ast.SelectionSet, v *model.ServiceInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNServiceInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐServiceInfo(ctx context.Context, sel ast.SelectionSet, v *model.ServiceInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -2290,7 +2290,7 @@ func (ec *executionContext) marshalNServiceInfo2ᚖbalkanidᚗlocalᚋvaultᚋap
 	return ec._ServiceInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSessionBootstrap2ᚖbalkanidᚗlocalᚋvaultᚋapiᚋinternalᚋgraphᚋmodelᚐSessionBootstrap(ctx context.Context, sel ast.SelectionSet, v *model.SessionBootstrap) graphql.Marshaler {
+func (ec *executionContext) marshalNSessionBootstrap2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSessionBootstrap(ctx context.Context, sel ast.SelectionSet, v *model.SessionBootstrap) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")

@@ -9,11 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"balkanid.local/vault/api/internal/auth"
-	"balkanid.local/vault/api/internal/config"
-	"balkanid.local/vault/api/internal/database"
-	"balkanid.local/vault/api/internal/graph"
-	"balkanid.local/vault/api/internal/server"
+	"file-vault.local/api/internal/auth"
+	"file-vault.local/api/internal/config"
+	"file-vault.local/api/internal/database"
+	"file-vault.local/api/internal/graph"
+	"file-vault.local/api/internal/server"
 )
 
 func main() {

@@ -9,7 +9,7 @@ import (
 	"mime"
 	"net/http"
 
-	"balkanid.local/vault/api/internal/auth"
+	"file-vault.local/api/internal/auth"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/parser"
 	"github.com/vektah/gqlparser/v2/validator"

@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"balkanid.local/vault/api/internal/auth"
-	"balkanid.local/vault/api/internal/graph"
-	"balkanid.local/vault/api/internal/server"
+	"file-vault.local/api/internal/auth"
+	"file-vault.local/api/internal/graph"
+	"file-vault.local/api/internal/server"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

@@ -15,8 +15,8 @@ import (
 	"testing"
 	"time"
 
-	"balkanid.local/vault/api/internal/auth"
-	"balkanid.local/vault/api/internal/graph"
+	"file-vault.local/api/internal/auth"
+	"file-vault.local/api/internal/graph"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

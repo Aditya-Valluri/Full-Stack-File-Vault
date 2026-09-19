@@ -1,4 +1,4 @@
-# File Vault Application - secure and Production-Grade
+# File Vault
 
 A secure file vault being built incrementally with Go, PostgreSQL, and a planned
 React/TypeScript frontend. GraphQL is the single application API architecture.
@@ -49,5 +49,9 @@ See the [Go foundation guide](docs/architecture/step-2-go-foundation.md) for det
 - [Quota accounting](docs/decisions/0002-quota-accounting.md)
 - [GraphQL-only application API](docs/decisions/0003-graphql-application-api.md)
 
-The Compose project identifier remains `balkanid-vault` to preserve existing local
-container and volume names. The project display name is the title above.
+The project is named **File Vault**. New installations use the Compose project
+identifier `file-vault`; the Go module is `file-vault.local/api`.
+
+When renaming an existing checkout, keep its previous Compose project identifier
+in the ignored `.env` as `COMPOSE_PROJECT_NAME` to reuse its database container
+and volume. Changing the folder name does not require migrating database data.
