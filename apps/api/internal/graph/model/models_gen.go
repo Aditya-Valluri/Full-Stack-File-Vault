@@ -68,8 +68,10 @@ type AdminUserConnection struct {
 }
 
 type AuthenticatedUser struct {
-	ID   string   `json:"id"`
-	Role UserRole `json:"role"`
+	// Current account username; empty only for an account without login credentials.
+	LoginName string   `json:"loginName"`
+	ID        string   `json:"id"`
+	Role      UserRole `json:"role"`
 }
 
 type CreateShareInput struct {

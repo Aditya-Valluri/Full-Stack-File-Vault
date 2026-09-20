@@ -392,3 +392,11 @@ fixture hash constraint; both were fixed before rollout. Unit/vet, PostgreSQL
 integration and all four browser scenarios passed. Applied migration 15 and
 updated the local HTTPS containers. The separate Windows PowerShell provisioning
 compatibility fix preserves exact UTF-8 password bytes without a BOM or newline.
+## Account header correction
+
+User requested replacing the generic account label and shortened UUID. Added the
+server-authenticated username to session lookup/creation and GraphQL identity/login
+responses, then displayed it with its initial and a labeled account-ID copy action.
+No migration or credential change was required. Backend unit/integration checks
+and vet passed; all four browser scenarios passed, including identity after reload
+and mobile accessibility/layout checks. The local container images were rebuilt.

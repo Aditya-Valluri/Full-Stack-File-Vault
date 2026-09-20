@@ -53,6 +53,7 @@ label { display: grid; gap: 7px; font-size: 13px; font-weight: 550; }
 .account { display: flex; align-items: center; gap: 12px; }
 .account-id { display: flex; align-items: center; gap: 10px; background: transparent; border: 0; text-align: left; font-size: 11px; font-weight: 600; }
 .account-id small { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 10px; font-weight: 400; }
+.account-name { display: block; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .avatar { display: grid; place-items: center; width: 33px; height: 33px; background: #e8efef; color: #32776e; border: 1px solid #d9e5e1; border-radius: 50%; font-size: 12px; }
 .main-content { padding: 35px 38px 50px; width: 100%; max-width: 1550px; margin: 0 auto; flex: 1; }
 .page-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 28px; }
@@ -222,7 +223,7 @@ tbody tr:hover { background: #fbfdfd; }
  .form-grid, .filters-grid { grid-template-columns: 1fr; }
  .tabs { gap: 18px; padding: 0 15px; }
  .tabs button { font-size: 11px; }
- .account-id > span:last-child { display: none; }
+ .account-name { max-width: 90px; }
  .dialog { padding: 20px; }
  .dialog-actions { flex-wrap: wrap; }
  .dialog-actions > span { width: 100%; }

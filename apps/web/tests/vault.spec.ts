@@ -8,11 +8,14 @@ async function login(page: Page, name: string) {
  await page.getByLabel('Password', { exact: true }).fill(process.env.E2E_PASSWORD!);
  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
  await expect(page.getByRole('heading', { name: 'My files', exact: true })).toBeVisible();
+ await expect(page.locator('.account-name')).toHaveText(name);
  await expect(page.getByText('Loading your files…')).not.toBeVisible();
 }
 
 test('files, dedup quota, sharing, revocation, and audited administration', async ({ page, browser }) => {
  await login(page, 'e2e.owner');
+ await page.reload();
+ await expect(page.locator('.account-name')).toHaveText('e2e.owner');
  await page.getByRole('button', { name: 'Upload files', exact: true }).click();
  const bytes = Buffer.from('Browser-tested vault content.');
  await page.getByLabel('Select files to upload').setInputFiles([

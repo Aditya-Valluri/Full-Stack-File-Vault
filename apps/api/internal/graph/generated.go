@@ -96,8 +96,9 @@ type ComplexityRoot struct {
 	}
 
 	AuthenticatedUser struct {
-		ID   func(childComplexity int) int
-		Role func(childComplexity int) int
+		ID        func(childComplexity int) int
+		LoginName func(childComplexity int) int
+		Role      func(childComplexity int) int
 	}
 
 	CreatedShare struct {
@@ -490,6 +491,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.AuthenticatedUser.ID(childComplexity), true
+	case "AuthenticatedUser.loginName":
+		if e.ComplexityRoot.AuthenticatedUser.LoginName == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AuthenticatedUser.LoginName(childComplexity), true
 	case "AuthenticatedUser.role":
 		if e.ComplexityRoot.AuthenticatedUser.Role == nil {
 			break
@@ -1202,6 +1209,8 @@ func (ec *executionContext) childFields_AdminUserConnection(ctx context.Context,
 
 func (ec *executionContext) childFields_AuthenticatedUser(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
+	case "loginName":
+		return ec.fieldContext_AuthenticatedUser_loginName(ctx, field)
 	case "id":
 		return ec.fieldContext_AuthenticatedUser_id(ctx, field)
 	case "role":
@@ -2799,6 +2808,29 @@ func (ec *executionContext) fieldContext_AdminUserConnection_pageInfo(_ context.
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _AuthenticatedUser_loginName(ctx context.Context, field graphql.CollectedField, obj *model.AuthenticatedUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthenticatedUser_loginName(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LoginName, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AuthenticatedUser_loginName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AuthenticatedUser", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _AuthenticatedUser_id(ctx context.Context, field graphql.CollectedField, obj *model.AuthenticatedUser) (ret graphql.Marshaler) {
@@ -6510,6 +6542,11 @@ func (ec *executionContext) _AuthenticatedUser(ctx context.Context, sel ast.Sele
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AuthenticatedUser")
+		case "loginName":
+			out.Values[i] = ec._AuthenticatedUser_loginName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "id":
 			out.Values[i] = ec._AuthenticatedUser_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

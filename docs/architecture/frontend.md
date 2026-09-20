@@ -55,3 +55,9 @@ storage, API process, and Vite process. Ports 18881 and 4173 must be available.
 The tests do not use the development database. Test reports and screenshots are
 ignored by Git. Automated accessibility checks supplement, rather than replace,
 manual keyboard and assistive-technology review.
+
+The account header displays the authenticated username and its initial rather than
+a shortened UUID. The username comes from GraphQL login/current-user responses,
+so existing sessions restore it after reload. A labeled Copy account ID action
+retains recipient-sharing support without using internal IDs as the display name.
+Long usernames truncate visually, with their full value available in the title.

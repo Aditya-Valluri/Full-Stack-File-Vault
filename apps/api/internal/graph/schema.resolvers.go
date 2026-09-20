@@ -105,7 +105,7 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 	if err != nil {
 		return nil, err
 	}
-	return &model.LoginPayload{CsrfToken: state.CSRFToken, User: &model.AuthenticatedUser{ID: state.UserID, Role: model.UserRole(state.Role)}}, nil
+	return &model.LoginPayload{CsrfToken: state.CSRFToken, User: &model.AuthenticatedUser{ID: state.UserID, Role: model.UserRole(state.Role), LoginName: state.LoginName}}, nil
 }
 
 // Logout is the resolver for the logout field.
@@ -264,7 +264,7 @@ func (r *queryResolver) Me(ctx context.Context) (*model.AuthenticatedUser, error
 	if err != nil {
 		return nil, err
 	}
-	return &model.AuthenticatedUser{ID: state.UserID, Role: model.UserRole(state.Role)}, nil
+	return &model.AuthenticatedUser{ID: state.UserID, Role: model.UserRole(state.Role), LoginName: state.LoginName}, nil
 }
 
 // Quota is the resolver for the quota field.

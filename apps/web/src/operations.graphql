@@ -1,7 +1,7 @@
 mutation Bootstrap { beginSession { csrfToken } }
-mutation Login($input: LoginInput!) { login(input: $input) { csrfToken user { id role } } }
+mutation Login($input: LoginInput!) { login(input: $input) { csrfToken user { id role loginName } } }
 mutation Logout { logout }
-query Identity { me { id role } }
+query Identity { me { id role loginName } }
 query Vault($first: Int!, $after: String, $filter: FileFilter) {
  quota { usedBytes quotaBytes remainingBytes }
  storageStats { fileCount logicalBytes uniqueContentBytes savedBytes savingsPercent }

@@ -68,6 +68,8 @@ type LoginPayload {
 }
 
 type AuthenticatedUser {
+  """Current account username; empty only for an account without login credentials."""
+  loginName: String!
   id: ID!
   role: UserRole!
 }

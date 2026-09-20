@@ -34,6 +34,11 @@ try {
  await page.getByLabel('Password', { exact: true }).fill(password);
  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
  await page.getByRole('heading', { name: 'My files', exact: true }).waitFor();
+ await page.locator('.account-name').waitFor();
+ if (await page.locator('.account-name').textContent() !== loginName) throw new Error('Account username is missing after login.');
+ await page.reload();
+ await page.locator('.account-name').waitFor();
+ if (await page.locator('.account-name').textContent() !== loginName) throw new Error('Account username is missing after reload.');
  const cookies = await context.cookies();
  if (!cookies.some(cookie => cookie.name === '__Host-vault_session' && cookie.secure && cookie.httpOnly && cookie.sameSite === 'Lax' && cookie.path === '/')) throw new Error('Production session cookie is not hardened.');
  await page.getByRole('button', { name: 'Upload files', exact: true }).click();

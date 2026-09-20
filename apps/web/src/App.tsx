@@ -84,9 +84,9 @@ export function App() {
     <div className="breadcrumb">Workspace <span>/</span> <strong>{isSharedRoute ? 'Shared file' : tab === 'admin' ? 'Administration' : 'My files'}</strong></div>
     <div className="account">
      {identity ? <>
-      <button className="account-id" title="Copy your user ID for restricted sharing" onClick={() => {
-       void navigator.clipboard.writeText(identity.id).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }, () => setError('Your browser could not copy the user ID.'));
-      }}><span className="avatar">{identity.role === UserRole.Admin ? 'A' : 'U'}</span><span>{copied ? 'User ID copied' : identity.role === UserRole.Admin ? 'Administrator' : 'My account'}<small>{identity.id.slice(0, 8)}… <Copy size={10} /></small></span></button>
+      <button className="account-id" aria-label="Copy account ID for sharing" title="Copy your account ID for recipient-specific sharing" onClick={() => {
+       void navigator.clipboard.writeText(identity.id).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }, () => setError('Your browser could not copy the account ID.'));
+      }}><span className="avatar" aria-hidden="true">{(identity.loginName || 'U').charAt(0).toUpperCase()}</span><span><span className="account-name" title={identity.loginName || 'My account'}>{identity.loginName || 'My account'}</span><small aria-live="polite">{copied ? 'Account ID copied' : 'Copy account ID'} <Copy size={10} aria-hidden="true" /></small></span></button>
       <Button variant="ghost" onClick={() => void logout()} disabled={busy} aria-label="Sign out"><LogOut size={17} /></Button>
      </> : <Button variant="secondary" onClick={() => setShowLogin(true)}>Sign in <ArrowUpRight size={15} /></Button>}
     </div>
