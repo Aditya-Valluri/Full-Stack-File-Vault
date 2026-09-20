@@ -2,8 +2,10 @@
 package config
 
 import (
-	"file-vault.local/api/internal/auth"
 	"errors"
+	"file-vault.local/api/internal/auth"
+	"file-vault.local/api/internal/graph"
+	"file-vault.local/api/internal/secret"
 	"net"
 	"os"
 	"strconv"
@@ -11,6 +13,9 @@ import (
 )
 
 type Config struct {
+	Upload                      graph.MultipartConfig
+	BlobDirectory               string
+	UserCallsPerSecond          int
 	HTTPAddr                    string
 	DatabaseURL                 string
 	ShutdownTimeout             time.Duration
@@ -19,7 +24,11 @@ type Config struct {
 }
 
 func Load() (Config, error) {
-	c := Config{HTTPAddr: os.Getenv("HTTP_ADDR"), DatabaseURL: os.Getenv("DATABASE_URL"), ShutdownTimeout: 15 * time.Second}
+	databaseURL, err := secret.Read("DATABASE_URL")
+	if err != nil {
+		return Config{}, err
+	}
+	c := Config{HTTPAddr: os.Getenv("HTTP_ADDR"), DatabaseURL: databaseURL, ShutdownTimeout: 15 * time.Second}
 	c.BootstrapCreationsPerMinute = 60
 	if value := os.Getenv("BOOTSTRAP_CREATIONS_PER_MINUTE"); value != "" {
 		limit, err := strconv.Atoi(value)
@@ -59,6 +68,10 @@ func Load() (Config, error) {
 		if host != "localhost" && (ip == nil || !ip.IsLoopback()) {
 			return Config{}, errors.New("HTTP development requires a loopback HTTP_ADDR")
 		}
+	}
+	c.Upload, c.BlobDirectory, c.UserCallsPerSecond, err = uploadConfig()
+	if err != nil {
+		return Config{}, err
 	}
 	return c, nil
 }

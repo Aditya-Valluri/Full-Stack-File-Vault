@@ -2,11 +2,155 @@
 
 package model
 
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"strconv"
+	"time"
+)
+
+type AdminAuditConnection struct {
+	Nodes    []*AdminAuditEntry `json:"nodes"`
+	PageInfo *FilePageInfo      `json:"pageInfo"`
+}
+
+type AdminAuditEntry struct {
+	ID                 string     `json:"id"`
+	ActorID            string     `json:"actorId"`
+	TargetUserID       string     `json:"targetUserId"`
+	Action             string     `json:"action"`
+	OccurredAt         time.Time  `json:"occurredAt"`
+	PreviousQuota      string     `json:"previousQuota"`
+	NewQuota           string     `json:"newQuota"`
+	PreviousDisabledAt *time.Time `json:"previousDisabledAt,omitempty"`
+	NewDisabledAt      *time.Time `json:"newDisabledAt,omitempty"`
+	RevokedSessions    string     `json:"revokedSessions"`
+	RevokedShares      string     `json:"revokedShares"`
+}
+
+type AdminFile struct {
+	File           *VaultFile `json:"file"`
+	OwnerID        string     `json:"ownerId"`
+	LoginName      *string    `json:"loginName,omitempty"`
+	DownloadStarts string     `json:"downloadStarts"`
+}
+
+type AdminFileConnection struct {
+	Nodes    []*AdminFile  `json:"nodes"`
+	PageInfo *FilePageInfo `json:"pageInfo"`
+}
+
+type AdminStorageStats struct {
+	UserCount            string `json:"userCount"`
+	FileCount            string `json:"fileCount"`
+	LogicalBytes         string `json:"logicalBytes"`
+	ReferencedBytes      string `json:"referencedBytes"`
+	PendingDeletionBytes string `json:"pendingDeletionBytes"`
+	SavedBytes           string `json:"savedBytes"`
+	SavingsPercent       string `json:"savingsPercent"`
+	DownloadStarts       string `json:"downloadStarts"`
+}
+
+type AdminUser struct {
+	ID         string     `json:"id"`
+	LoginName  *string    `json:"loginName,omitempty"`
+	Role       UserRole   `json:"role"`
+	UsedBytes  string     `json:"usedBytes"`
+	QuotaBytes string     `json:"quotaBytes"`
+	DisabledAt *time.Time `json:"disabledAt,omitempty"`
+	CreatedAt  time.Time  `json:"createdAt"`
+}
+
+type AdminUserConnection struct {
+	Nodes    []*AdminUser  `json:"nodes"`
+	PageInfo *FilePageInfo `json:"pageInfo"`
+}
+
+type AuthenticatedUser struct {
+	ID   string   `json:"id"`
+	Role UserRole `json:"role"`
+}
+
+type CreateShareInput struct {
+	FileID     string          `json:"fileId"`
+	Permission SharePermission `json:"permission"`
+	// 60..2592000 seconds (30 days); required so expiration is explicit.
+	ExpiresInSeconds int     `json:"expiresInSeconds"`
+	RecipientID      *string `json:"recipientId,omitempty"`
+}
+
+type CreatedShare struct {
+	Share *FileShare `json:"share"`
+	// Returned once; token is in the fragment, never a query string.
+	URL string `json:"url"`
+}
+
+type FileAccess struct {
+	URL       string    `json:"url"`
+	ExpiresAt time.Time `json:"expiresAt"`
+}
+
+type FileConnection struct {
+	Nodes    []*VaultFile  `json:"nodes"`
+	PageInfo *FilePageInfo `json:"pageInfo"`
+}
+
+type FileFilter struct {
+	// Case-insensitive literal substring; percent and underscore are not wildcards.
+	NameContains *string `json:"nameContains,omitempty"`
+	// Exact detected base MIME, e.g. text/plain. No parameters or wildcards.
+	MimeType *string `json:"mimeType,omitempty"`
+	// Inclusive nonnegative decimal byte count.
+	MinSizeBytes *string `json:"minSizeBytes,omitempty"`
+	// Inclusive nonnegative decimal byte count.
+	MaxSizeBytes *string `json:"maxSizeBytes,omitempty"`
+	// Inclusive creation instant.
+	CreatedFrom *time.Time `json:"createdFrom,omitempty"`
+	// Exclusive creation instant.
+	CreatedBefore *time.Time `json:"createdBefore,omitempty"`
+}
+
+type FilePageInfo struct {
+	EndCursor   *string `json:"endCursor,omitempty"`
+	HasNextPage bool    `json:"hasNextPage"`
+}
+
+type FileShare struct {
+	ID          string          `json:"id"`
+	RecipientID *string         `json:"recipientId,omitempty"`
+	Permission  SharePermission `json:"permission"`
+	CreatedAt   time.Time       `json:"createdAt"`
+	ExpiresAt   time.Time       `json:"expiresAt"`
+}
+
+type FileSharing struct {
+	Shares []*FileShare `json:"shares"`
+	// Admitted DOWNLOAD GET opens, once per grant; not completed transfers.
+	DownloadStarts string `json:"downloadStarts"`
+}
+
+type LoginInput struct {
+	LoginName string `json:"loginName"`
+	Password  string `json:"password"`
+}
+
+type LoginPayload struct {
+	CsrfToken string             `json:"csrfToken"`
+	User      *AuthenticatedUser `json:"user"`
+}
+
 type Mutation struct {
 }
 
 // Application queries. Operational readiness is exposed separately at /readyz.
 type Query struct {
+}
+
+type Quota struct {
+	UsedBytes      string `json:"usedBytes"`
+	QuotaBytes     string `json:"quotaBytes"`
+	RemainingBytes string `json:"remainingBytes"`
 }
 
 // Non-sensitive application information available without authentication.
@@ -18,4 +162,195 @@ type ServiceInfo struct {
 // Only CSRF material is returned; authentication tokens are HttpOnly cookies.
 type SessionBootstrap struct {
 	CsrfToken string `json:"csrfToken"`
+}
+
+type SharedFile struct {
+	Name           string    `json:"name"`
+	SizeBytes      string    `json:"sizeBytes"`
+	DetectedMime   string    `json:"detectedMIME"`
+	PreviewAllowed bool      `json:"previewAllowed"`
+	ExpiresAt      time.Time `json:"expiresAt"`
+}
+
+type StorageStats struct {
+	FileCount          string `json:"fileCount"`
+	LogicalBytes       string `json:"logicalBytes"`
+	UniqueContentBytes string `json:"uniqueContentBytes"`
+	SavedBytes         string `json:"savedBytes"`
+	SavingsPercent     string `json:"savingsPercent"`
+}
+
+// Owned logical metadata. No blob hash, physical key or deduplication hint.
+type VaultFile struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	// Decimal byte count, not a GraphQL 32-bit Int.
+	SizeBytes    string    `json:"sizeBytes"`
+	DetectedMime string    `json:"detectedMIME"`
+	CreatedAt    time.Time `json:"createdAt"`
+}
+
+type FileAccessMode string
+
+const (
+	FileAccessModeDownload FileAccessMode = "DOWNLOAD"
+	FileAccessModePreview  FileAccessMode = "PREVIEW"
+)
+
+var AllFileAccessMode = []FileAccessMode{
+	FileAccessModeDownload,
+	FileAccessModePreview,
+}
+
+func (e FileAccessMode) IsValid() bool {
+	switch e {
+	case FileAccessModeDownload, FileAccessModePreview:
+		return true
+	}
+	return false
+}
+
+func (e FileAccessMode) String() string {
+	return string(e)
+}
+
+func (e *FileAccessMode) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FileAccessMode(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FileAccessMode", str)
+	}
+	return nil
+}
+
+func (e FileAccessMode) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *FileAccessMode) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e FileAccessMode) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type SharePermission string
+
+const (
+	SharePermissionDownload           SharePermission = "DOWNLOAD"
+	SharePermissionPreviewAndDownload SharePermission = "PREVIEW_AND_DOWNLOAD"
+)
+
+var AllSharePermission = []SharePermission{
+	SharePermissionDownload,
+	SharePermissionPreviewAndDownload,
+}
+
+func (e SharePermission) IsValid() bool {
+	switch e {
+	case SharePermissionDownload, SharePermissionPreviewAndDownload:
+		return true
+	}
+	return false
+}
+
+func (e SharePermission) String() string {
+	return string(e)
+}
+
+func (e *SharePermission) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = SharePermission(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid SharePermission", str)
+	}
+	return nil
+}
+
+func (e SharePermission) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *SharePermission) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e SharePermission) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type UserRole string
+
+const (
+	UserRoleUser  UserRole = "USER"
+	UserRoleAdmin UserRole = "ADMIN"
+)
+
+var AllUserRole = []UserRole{
+	UserRoleUser,
+	UserRoleAdmin,
+}
+
+func (e UserRole) IsValid() bool {
+	switch e {
+	case UserRoleUser, UserRoleAdmin:
+		return true
+	}
+	return false
+}
+
+func (e UserRole) String() string {
+	return string(e)
+}
+
+func (e *UserRole) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = UserRole(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid UserRole", str)
+	}
+	return nil
+}
+
+func (e UserRole) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *UserRole) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e UserRole) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }

@@ -21,6 +21,10 @@ func NewBrowserHandler(logger *slog.Logger, browser *auth.BrowserSecurity, begin
 	return browser.WrapBootstrap(NewHandler(logger), validateBootstrapRequest, begin)
 }
 
+func NewAuthenticationHandler(logger *slog.Logger, browser *auth.BrowserSecurity, begin auth.BootstrapFunc, login auth.LoginFunc, logout auth.LogoutFunc) http.Handler {
+	return browser.WrapAuthentication(NewHandler(logger), validateBootstrapRequest, begin, login, logout)
+}
+
 func validateBootstrapRequest(r *http.Request) error {
 	invalid := errors.New("invalid bootstrap operation")
 	media, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
@@ -60,8 +64,17 @@ func validateBootstrapRequest(r *http.Request) error {
 	} else {
 		selected = doc.Operations.ForName(input.OperationName)
 	}
-	if selected == nil || selected.Operation != ast.Mutation || len(selected.Directives) > 0 {
+	if !singleAuthRoot(doc, selected, "beginSession") {
 		return invalid
+	}
+	return nil
+}
+
+// singleAuthRoot rejects ambiguous identity changes before any resolver executes.
+// An empty expected name allows any implemented authentication mutation.
+func singleAuthRoot(doc *ast.QueryDocument, selected *ast.OperationDefinition, expected string) bool {
+	if selected == nil || selected.Operation != ast.Mutation || len(selected.Directives) > 0 {
+		return false
 	}
 	roots := 0
 	budget := 4096
@@ -76,7 +89,7 @@ func validateBootstrapRequest(r *http.Request) error {
 			switch node := selection.(type) {
 			case *ast.Field:
 				roots++
-				if roots > 1 || node.Name != "beginSession" || len(node.Directives) > 0 {
+				if roots > 1 || (expected != "" && node.Name != expected) || (node.Name != "beginSession" && node.Name != "login" && node.Name != "logout") || len(node.Directives) > 0 {
 					return false
 				}
 			case *ast.InlineFragment:
@@ -99,8 +112,17 @@ func validateBootstrapRequest(r *http.Request) error {
 		}
 		return true
 	}
-	if !walk(selected.SelectionSet) || roots != 1 {
-		return invalid
+	return walk(selected.SelectionSet) && roots == 1
+}
+
+// Authentication and file mutations may not be mixed or repeated through aliases.
+func singleMutationRoot(doc *ast.QueryDocument, op *ast.OperationDefinition) bool {
+	if singleAuthRoot(doc, op, "") {
+		return true
 	}
-	return nil
+	if op == nil || op.Operation != ast.Mutation || len(op.Directives) > 0 {
+		return false
+	}
+	field := singleUploadRoot(doc, op.SelectionSet)
+	return field != nil && (field.Name == "uploadFile" || field.Name == "uploadFiles" || field.Name == "createFileAccess" || field.Name == "deleteFile" || field.Name == "createShare" || field.Name == "revokeShare" || field.Name == "createSharedAccess" || field.Name == "adminSetQuota" || field.Name == "adminSetUserDisabled")
 }

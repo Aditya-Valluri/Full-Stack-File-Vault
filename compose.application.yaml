@@ -1,0 +1,135 @@
+# Isolated production-mode rehearsal; does not reuse the development database.
+name: file-vault-application
+services:
+ postgres:
+  image: postgres:17-bookworm
+  environment:
+   POSTGRES_DB: vault
+   POSTGRES_USER: vault_operator
+   POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+   POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+  secrets: [postgres_password]
+  volumes: [application_database:/var/lib/postgresql/data]
+  healthcheck:
+   test: ["CMD-SHELL", "pg_isready -U vault_operator -d vault"]
+   interval: 3s
+   timeout: 3s
+   retries: 20
+  restart: unless-stopped
+ migrate:
+  build: { context: ., dockerfile: apps/api/Dockerfile }
+  image: file-vault-api:local
+  entrypoint: ["/app/migrate"]
+  environment:
+   MIGRATE_DATABASE_URL_FILE: /run/secrets/operator_url
+   MIGRATE_CONFIGURE_ROLES: "true"
+   RUNTIME_PASSWORD_FILE: /run/secrets/runtime_password
+   GC_PASSWORD_FILE: /run/secrets/gc_password
+  secrets: [operator_url, runtime_password, gc_password]
+  depends_on:
+   postgres: { condition: service_healthy }
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+ api:
+  image: file-vault-api:local
+  environment:
+   APP_ENV: production
+   PUBLIC_ORIGIN: ${VAULT_PUBLIC_ORIGIN:-https://localhost:8443}
+   HTTP_ADDR: "0.0.0.0:8080"
+   DATABASE_URL_FILE: /run/secrets/runtime_url
+   BLOB_STORAGE_DIR: /data/blobs
+   UPLOAD_STAGING_DIR: /data/staging
+   USER_CALLS_PER_SECOND: "2"
+  secrets: [runtime_url]
+  volumes: [application_files:/data]
+  ports: ["127.0.0.1:8443:8443"]
+  depends_on:
+   migrate: { condition: service_completed_successfully }
+  healthcheck:
+   test: ["CMD", "/app/probe"]
+   interval: 10s
+   timeout: 4s
+   retries: 5
+  read_only: true
+  tmpfs: ["/tmp:rw,noexec,nosuid,size=16m"]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 512m
+  cpus: 2
+  stop_grace_period: 25s
+  restart: unless-stopped
+ web:
+  build: { context: ., dockerfile: apps/web/Dockerfile }
+  image: file-vault-web:local
+  network_mode: service:api
+  depends_on:
+   api: { condition: service_healthy }
+  volumes: ["./deploy/local-tls.conf:/etc/nginx/vault-tls.conf:ro"]
+  secrets: [tls_certificate, tls_key]
+  healthcheck:
+   test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8081/healthz"]
+   interval: 5s
+   timeout: 3s
+   retries: 10
+  read_only: true
+  tmpfs: ["/tmp:rw,noexec,nosuid,size=32m"]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 128m
+  restart: unless-stopped
+ collector:
+  image: file-vault-api:local
+  entrypoint: ["/app/collect"]
+  environment:
+   APP_ENV: production
+   GC_DATABASE_URL_FILE: /run/secrets/gc_url
+   GC_METRICS_ADDR: "0.0.0.0:8082"
+   BLOB_STORAGE_DIR: /data/blobs
+   UPLOAD_STAGING_DIR: /data/staging
+  secrets: [gc_url]
+  volumes: [application_files:/data]
+  depends_on:
+   api: { condition: service_healthy }
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 128m
+  restart: unless-stopped
+ provision:
+  image: file-vault-api:local
+  profiles: [tools]
+  entrypoint: ["/app/provision-user"]
+  environment:
+   PROVISION_DATABASE_URL_FILE: /run/secrets/operator_url
+  secrets: [operator_url]
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+ prometheus:
+  image: prom/prometheus:v3.14.0
+  profiles: [monitoring]
+  command: ["--config.file=/etc/prometheus/prometheus.yaml", "--storage.tsdb.retention.time=7d"]
+  volumes:
+   - ./monitoring/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+   - ./monitoring/alerts.yaml:/etc/prometheus/alerts.yaml:ro
+   - application_metrics:/prometheus
+  ports: ["127.0.0.1:9090:9090"]
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 256m
+  restart: unless-stopped
+volumes:
+ application_metrics:
+ application_database:
+ application_files:
+secrets:
+ postgres_password: { file: ./.secrets/application/postgres-password }
+ operator_url: { file: ./.secrets/application/operator-url }
+ runtime_password: { file: ./.secrets/application/runtime-password }
+ gc_password: { file: ./.secrets/application/gc-password }
+ runtime_url: { file: ./.secrets/application/runtime-url }
+ gc_url: { file: ./.secrets/application/gc-url }
+ tls_certificate: { file: ./.secrets/application/tls.crt }
+ tls_key: { file: ./.secrets/application/tls.key }

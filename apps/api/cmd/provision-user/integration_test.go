@@ -23,7 +23,7 @@ import (
 // This test owns a separate container, database and runtime role. Never point it
 // at a development database: migration 2 creates a cluster-scoped role.
 func TestProvisionCommandIntegration(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	random := func() string {
 		b := make([]byte, 24)
@@ -82,7 +82,7 @@ func TestProvisionCommandIntegration(t *testing.T) {
 		t.Fatal("test database connection failed")
 	}
 	defer conn.Close(context.Background())
-	for _, file := range []string{"000001_initial_schema.up.sql", "000002_runtime_role.up.sql", "000003_credentials.up.sql", "000004_sessions.up.sql", "000005_prelogin.up.sql", "000006_bootstrap_budget.up.sql"} {
+	for _, file := range []string{"000001_initial_schema.up.sql", "000002_runtime_role.up.sql", "000003_credentials.up.sql", "000004_sessions.up.sql", "000005_prelogin.up.sql", "000006_bootstrap_budget.up.sql", "000007_login_throttle.up.sql"} {
 		sql, err := os.ReadFile(filepath.Join("..", "..", "..", "..", "db", "migrations", file))
 		if err != nil {
 			t.Fatal(err)
@@ -90,6 +90,19 @@ func TestProvisionCommandIntegration(t *testing.T) {
 		if _, err := conn.Exec(ctx, string(sql)); err != nil {
 			t.Fatalf("migration %s failed", file)
 		}
+	}
+	t.Run("publication migration", func(t *testing.T) { testPublicationMigration(t, ctx, conn) })
+	if _, err := conn.Exec(ctx, migrationSQL(t, "000009_user_rate_limit.up.sql")); err != nil {
+		t.Fatal(err)
+	}
+	// Empty-schema round trips verify worker-role privileges can be rolled back.
+	for _, migration := range []string{"000010_file_access.up.sql", "000010_file_access.down.sql", "000010_file_access.up.sql", "000011_cleanup_worker.up.sql", "000011_cleanup_worker.down.sql", "000011_cleanup_worker.up.sql", "000012_sharing.up.sql", "000012_sharing.down.sql", "000012_sharing.up.sql", "000013_administration.up.sql", "000013_administration.down.sql", "000013_administration.up.sql", "000014_upload_receipts.up.sql", "000014_upload_receipts.down.sql", "000014_upload_receipts.up.sql"} {
+		if _, err := conn.Exec(ctx, migrationSQL(t, migration)); err != nil {
+			t.Fatalf("migration %s: %v", migration, err)
+		}
+	}
+	if _, err := conn.Exec(ctx, "ALTER ROLE vault_gc LOGIN PASSWORD '"+runtimePassword+"'"); err != nil {
+		t.Fatal("cleanup test role setup failed")
 	}
 	// Generated hex cannot contain quotes; never include an operator-supplied value.
 	if _, err := conn.Exec(ctx, "ALTER ROLE vault_runtime LOGIN PASSWORD '"+runtimePassword+"'"); err != nil {
@@ -172,5 +185,34 @@ func TestProvisionCommandIntegration(t *testing.T) {
 	})
 	t.Run("browser boundary", func(t *testing.T) { testBrowserSecurity(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
 	t.Run("GraphQL bootstrap", func(t *testing.T) { testBootstrap(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
+	t.Run("GraphQL login", func(t *testing.T) {
+		testGraphQLLogin(t, ctx, conn, dsn("vault_runtime", runtimePassword), accountPassword)
+	})
+	t.Run("authenticated me", func(t *testing.T) { testMe(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
+	t.Run("GraphQL logout", func(t *testing.T) { testLogout(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
+	storageDirectory := t.TempDir()
+	t.Run("file publication", func(t *testing.T) {
+		testPublication(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory)
+	})
+	t.Run("per-user rate limit", func(t *testing.T) {
+		testUserRateLimit(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory)
+	})
+	t.Run("GraphQL uploads", func(t *testing.T) {
+		testUploadAPI(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory)
+	})
+	t.Run("file queries", func(t *testing.T) { testFiles(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory) })
+	t.Run("file lifecycle", func(t *testing.T) {
+		testLifecycle(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory)
+	})
+	t.Run("sharing", func(t *testing.T) { testSharing(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory) })
+	t.Run("administration", func(t *testing.T) {
+		testAdministration(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory)
+	})
+	t.Run("upload receipts", func(t *testing.T) {
+		testUploadReceipts(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory)
+	})
+	t.Run("cleanup", func(t *testing.T) {
+		testCleanup(t, ctx, conn, dsn("vault_runtime", runtimePassword), dsn("vault_gc", runtimePassword), storageDirectory)
+	})
 	t.Log(fmt.Sprintf("Verified accounts and sessions; test container %s will be removed", name))
 }

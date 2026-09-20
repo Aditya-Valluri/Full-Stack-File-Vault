@@ -101,7 +101,7 @@ func (b *BrowserSecurity) ClearSessionCookie(w http.ResponseWriter) {
 // authenticate cookie-less requests: only the current public schema is reachable.
 // Use WrapBootstrap when exposing the operation-aware bootstrap mutation.
 func (b *BrowserSecurity) Wrap(next http.Handler) http.Handler {
-	return b.wrap(next, nil, nil)
+	return b.wrap(next, nil, nil, nil, nil)
 }
 
 // WrapBootstrap allows only a schema-validated, single-root bootstrap operation
@@ -110,10 +110,19 @@ func (b *BrowserSecurity) WrapBootstrap(next http.Handler, validate func(*http.R
 	if validate == nil || begin == nil {
 		panic("bootstrap dependencies required")
 	}
-	return b.wrap(next, validate, begin)
+	return b.wrap(next, validate, begin, nil, nil)
 }
 
-func (b *BrowserSecurity) wrap(next http.Handler, validate func(*http.Request) error, begin BootstrapFunc) http.Handler {
+// WrapAuthentication installs identity-specific capabilities only after cookie/CSRF
+// checks: anonymous state may log in, authenticated state may log out.
+func (b *BrowserSecurity) WrapAuthentication(next http.Handler, validate func(*http.Request) error, begin BootstrapFunc, login LoginFunc, logout LogoutFunc) http.Handler {
+	if validate == nil || begin == nil || login == nil || logout == nil {
+		panic("authentication dependencies required")
+	}
+	return b.wrap(next, validate, begin, login, logout)
+}
+
+func (b *BrowserSecurity) wrap(next http.Handler, validate func(*http.Request) error, begin BootstrapFunc, login LoginFunc, logout LogoutFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -204,7 +213,44 @@ func (b *BrowserSecurity) wrap(next http.Handler, validate func(*http.Request) e
 		}
 		// The short storage deadline must not shorten future upload execution. Preserve
 		// the original request context, carrying only the validated session snapshot.
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), browserSessionKey{}, state)))
+		requestCtx := context.WithValue(r.Context(), browserSessionKey{}, state)
+		{
+			digest, err := sessionDigest(token)
+			if err != nil {
+				b.sessionFailure(w, err)
+				return
+			}
+			requestCtx = context.WithValue(requestCtx, boundSessionDigestKey{}, digest)
+		}
+		if login != nil && state.UserID == "" {
+			peer, _, err := net.SplitHostPort(r.RemoteAddr)
+			if err != nil {
+				browserReject(w, 503, "INTERNAL_ERROR", "session service unavailable")
+				return
+			}
+			capability := loginCapability(func(ctx context.Context, name string, password []byte) (Session, error) {
+				raw, authenticated, err := login(ctx, token, csrf[0], peer, name, password)
+				if err != nil {
+					return Session{}, err
+				}
+				if err = b.SetSessionCookie(w, raw, authenticated.ExpiresAt); err != nil {
+					return Session{}, err
+				}
+				return authenticated, nil
+			})
+			requestCtx = context.WithValue(requestCtx, loginContextKey{}, capability)
+		}
+		if logout != nil && state.UserID != "" {
+			capability := logoutCapability(func(ctx context.Context) error {
+				if err := logout(ctx, token); err != nil {
+					return err
+				}
+				b.ClearSessionCookie(w)
+				return nil
+			})
+			requestCtx = context.WithValue(requestCtx, logoutContextKey{}, capability)
+		}
+		next.ServeHTTP(w, r.WithContext(requestCtx))
 	})
 }
 

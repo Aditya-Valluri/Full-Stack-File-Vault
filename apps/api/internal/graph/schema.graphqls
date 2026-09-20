@@ -1,7 +1,25 @@
 """Application queries. Operational readiness is exposed separately at /readyz."""
 type Query {
+  adminUsers(first: Int! = 20, after: String): AdminUserConnection!
+  adminFiles(first: Int! = 20, after: String, ownerId: ID): AdminFileConnection!
+  adminStorageStats: AdminStorageStats!
+  adminAudit(first: Int! = 20, after: String): AdminAuditConnection!
+  """Active sharing links and admitted download starts for an owned file."""
+  fileShares(fileId: ID!): FileSharing!
+  """Read-only shared metadata; requires an anonymous or authenticated browser session."""
+  sharedFile(token: String!): SharedFile
   """Public display information; does not report dependency health or build details."""
   serviceInfo: ServiceInfo!
+  """Current middleware-validated identity. Requires authenticated cookie and CSRF."""
+  me: AuthenticatedUser!
+  """Current user logical quota; byte counts are decimal strings to preserve bigint precision."""
+  quota: Quota!
+  """Statistics derived only from the caller's logical files; not global disk savings."""
+  storageStats: StorageStats!
+  """Owned files, newest first; first is 1..50. Filters combine with AND."""
+  files(first: Int! = 20, after: String, filter: FileFilter): FileConnection!
+  """Owned metadata only. Missing and another owner's IDs return NOT_FOUND."""
+  file(id: ID!): VaultFile
 }
 
 """Non-sensitive application information available without authentication."""
@@ -11,11 +29,195 @@ type ServiceInfo {
 }
 
 type Mutation {
+  """Administrator-only; refuses quota below current logical usage."""
+  adminSetQuota(userId: ID!, quotaBytes: String!): AdminUser!
+  """Administrator-only; disabling revokes user sessions and owned sharing links."""
+  adminSetUserDisabled(userId: ID!, disabled: Boolean!): AdminUser!
+  """Create an expiring read-only link; null recipient means anyone holding the link."""
+  createShare(input: CreateShareInput!): CreatedShare!
+  """Owner-only revocation, including previously issued byte grants."""
+  revokeShare(id: ID!): Boolean!
+  """Exchange a share token for a short-lived URL bound to this browser session."""
+  createSharedAccess(token: String!, mode: FileAccessMode! = DOWNLOAD): FileAccess!
   """Create anonymous state or recover the CSRF token of a valid existing session. Requires the protected bootstrap transport."""
   beginSession: SessionBootstrap!
+  """Verify credentials using an anonymous cookie and CSRF token, then rotate both."""
+  login(input: LoginInput!): LoginPayload!
+  """Revoke the current authenticated session and expire its browser cookie."""
+  logout: Boolean!
+  """Issue a session-bound URL valid for at most one minute."""
+  createFileAccess(fileId: ID!, mode: FileAccessMode! = DOWNLOAD): FileAccess!
+  """Delete an owned logical file and release its full quota charge."""
+  deleteFile(id: ID!): Boolean!
+  """Publish one bounded multipart upload. Duplicate content still charges logical quota."""
+  uploadFile(file: Upload!, idempotencyKey: ID): VaultFile!
+  """All-or-nothing batch. A lost response is not safe to retry automatically."""
+  uploadFiles(files: [Upload!]!, idempotencyKey: ID): [VaultFile!]!
+}
+
+input LoginInput {
+  loginName: String!
+  password: String!
+}
+
+type LoginPayload {
+  csrfToken: String!
+  user: AuthenticatedUser!
+}
+
+type AuthenticatedUser {
+  id: ID!
+  role: UserRole!
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 """Only CSRF material is returned; authentication tokens are HttpOnly cookies."""
 type SessionBootstrap {
   csrfToken: String!
+}
+
+scalar Upload
+scalar Time
+
+"""Owned logical metadata. No blob hash, physical key or deduplication hint."""
+type VaultFile {
+ id: ID!
+ name: String!
+ """Decimal byte count, not a GraphQL 32-bit Int."""
+ sizeBytes: String!
+ detectedMIME: String!
+ createdAt: Time!
+}
+
+type Quota {
+ usedBytes: String!
+ quotaBytes: String!
+ remainingBytes: String!
+}
+input FileFilter {
+ """Case-insensitive literal substring; percent and underscore are not wildcards."""
+ nameContains: String
+ """Exact detected base MIME, e.g. text/plain. No parameters or wildcards."""
+ mimeType: String
+ """Inclusive nonnegative decimal byte count."""
+ minSizeBytes: String
+ """Inclusive nonnegative decimal byte count."""
+ maxSizeBytes: String
+ """Inclusive creation instant."""
+ createdFrom: Time
+ """Exclusive creation instant."""
+ createdBefore: Time
+}
+type FileConnection {
+ nodes: [VaultFile!]!
+ pageInfo: FilePageInfo!
+}
+type FilePageInfo {
+ endCursor: String
+ hasNextPage: Boolean!
+}
+enum FileAccessMode {
+ DOWNLOAD
+ PREVIEW
+}
+type FileAccess {
+ url: String!
+ expiresAt: Time!
+}
+type StorageStats {
+ fileCount: String!
+ logicalBytes: String!
+ uniqueContentBytes: String!
+ savedBytes: String!
+ savingsPercent: String!
+}
+enum SharePermission {
+ DOWNLOAD
+ PREVIEW_AND_DOWNLOAD
+}
+input CreateShareInput {
+ fileId: ID!
+ permission: SharePermission! = DOWNLOAD
+ """60..2592000 seconds (30 days); required so expiration is explicit."""
+ expiresInSeconds: Int!
+ recipientId: ID
+}
+type FileShare {
+ id: ID!
+ recipientId: ID
+ permission: SharePermission!
+ createdAt: Time!
+ expiresAt: Time!
+}
+type CreatedShare {
+ share: FileShare!
+ """Returned once; token is in the fragment, never a query string."""
+ url: String!
+}
+type FileSharing {
+ shares: [FileShare!]!
+ """Admitted DOWNLOAD GET opens, once per grant; not completed transfers."""
+ downloadStarts: String!
+}
+type SharedFile {
+ name: String!
+ sizeBytes: String!
+ detectedMIME: String!
+ previewAllowed: Boolean!
+ expiresAt: Time!
+}
+
+type AdminUser {
+ id: ID!
+ loginName: String
+ role: UserRole!
+ usedBytes: String!
+ quotaBytes: String!
+ disabledAt: Time
+ createdAt: Time!
+}
+type AdminUserConnection {
+ nodes: [AdminUser!]!
+ pageInfo: FilePageInfo!
+}
+type AdminFile {
+ file: VaultFile!
+ ownerId: ID!
+ loginName: String
+ downloadStarts: String!
+}
+type AdminFileConnection {
+ nodes: [AdminFile!]!
+ pageInfo: FilePageInfo!
+}
+type AdminStorageStats {
+ userCount: String!
+ fileCount: String!
+ logicalBytes: String!
+ referencedBytes: String!
+ pendingDeletionBytes: String!
+ savedBytes: String!
+ savingsPercent: String!
+ downloadStarts: String!
+}
+type AdminAuditEntry {
+ id: ID!
+ actorId: ID!
+ targetUserId: ID!
+ action: String!
+ occurredAt: Time!
+ previousQuota: String!
+ newQuota: String!
+ previousDisabledAt: Time
+ newDisabledAt: Time
+ revokedSessions: String!
+ revokedShares: String!
+}
+type AdminAuditConnection {
+ nodes: [AdminAuditEntry!]!
+ pageInfo: FilePageInfo!
 }

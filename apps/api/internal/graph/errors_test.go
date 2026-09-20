@@ -21,7 +21,40 @@ type failingResolver struct {
 	panicValue any
 }
 
-func (r *failingResolver) Query() QueryResolver       { return r }
+func (r *failingResolver) Query() QueryResolver { return r }
+func (r *failingResolver) AdminUsers(ctx context.Context, first int, after *string) (*model.AdminUserConnection, error) {
+	return (&Resolver{}).Query().AdminUsers(ctx, first, after)
+}
+func (r *failingResolver) AdminFiles(ctx context.Context, first int, after, ownerID *string) (*model.AdminFileConnection, error) {
+	return (&Resolver{}).Query().AdminFiles(ctx, first, after, ownerID)
+}
+func (r *failingResolver) AdminStorageStats(ctx context.Context) (*model.AdminStorageStats, error) {
+	return (&Resolver{}).Query().AdminStorageStats(ctx)
+}
+func (r *failingResolver) AdminAudit(ctx context.Context, first int, after *string) (*model.AdminAuditConnection, error) {
+	return (&Resolver{}).Query().AdminAudit(ctx, first, after)
+}
+func (r *failingResolver) FileShares(ctx context.Context, fileID string) (*model.FileSharing, error) {
+	return (&Resolver{}).Query().FileShares(ctx, fileID)
+}
+func (r *failingResolver) SharedFile(ctx context.Context, token string) (*model.SharedFile, error) {
+	return (&Resolver{}).Query().SharedFile(ctx, token)
+}
+func (r *failingResolver) StorageStats(ctx context.Context) (*model.StorageStats, error) {
+	return (&Resolver{}).Query().StorageStats(ctx)
+}
+func (r *failingResolver) Files(ctx context.Context, first int, after *string, filter *model.FileFilter) (*model.FileConnection, error) {
+	return (&Resolver{}).Query().Files(ctx, first, after, filter)
+}
+func (r *failingResolver) File(ctx context.Context, id string) (*model.VaultFile, error) {
+	return (&Resolver{}).Query().File(ctx, id)
+}
+func (r *failingResolver) Quota(ctx context.Context) (*model.Quota, error) {
+	return (&Resolver{}).Query().Quota(ctx)
+}
+func (r *failingResolver) Me(ctx context.Context) (*model.AuthenticatedUser, error) {
+	return (&Resolver{}).Query().Me(ctx)
+}
 func (r *failingResolver) Mutation() MutationResolver { return (&Resolver{}).Mutation() }
 func (r *failingResolver) ServiceInfo(context.Context) (*model.ServiceInfo, error) {
 	if r.panicValue != nil {
@@ -99,8 +132,8 @@ func TestProtocolErrorsHaveSafeCodes(t *testing.T) {
 			if strings.Contains(w.Body.String(), "private-value") || strings.Contains(logs.String(), "private-value") {
 				t.Fatal("request body leaked")
 			}
-			if tc.name == "invalid field" && !strings.Contains(result.Errors[0].Message, "unknownField") {
-				t.Fatal("useful validation detail lost")
+			if tc.name == "invalid field" && result.Errors[0].Message != "invalid GraphQL operation" {
+				t.Fatal("validation error was not redacted")
 			}
 		})
 	}

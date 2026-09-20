@@ -3,12 +3,14 @@
 Status: Identity source and operator provisioning accepted by the user on 2026-09-15.
 Authenticated PostgreSQL session lifecycle subsequently authorized on 2026-09-16.
 Browser cookie helpers and centralized Origin/session-bound CSRF checks have now been
-authorized and implemented; GraphQL authentication operations remain outstanding.
+authorized and implemented. GraphQL bootstrap/login and the authenticated me query
+are implemented, along with authenticated session logout.
 
 Follow-up: anonymous-session primitives and atomic login rotation were subsequently
 authorized and implemented; see ../architecture/prelogin.md. The subsequent browser
 boundary is documented in ../architecture/browser-security.md. The operation-aware
-bootstrap exception and GraphQL authentication remain separate work.
+bootstrap exception is implemented. Login/me follow-ups are documented in
+../architecture/graphql-login.md and ../architecture/current-user.md.
 
 ## Context and classification
 
@@ -132,7 +134,10 @@ Login throttling must cover unauthenticated clients and identifiers, separately 
 the application's 2 calls/sec/user policy. Require a shared enforcement strategy before
 multi-replica deployment, with bounded cardinality, trustworthy client-IP handling and
 no permanent account lockout that attackers can trigger. Exact budgets/backend are OPEN
-and must be settled before enabling credential verification publicly.
+and must be settled before enabling credential verification publicly. The implemented
+initial policy is documented in ../architecture/graphql-login.md: 60 global attempts
+per minute, 20 per direct peer per minute, and 5 per identifier per fifteen minutes.
+Trusted-proxy support remains deferred; forwarded headers are ignored.
 
 ## Authorization contract
 
@@ -206,7 +211,9 @@ follow-up and its actual validation are recorded in ../architecture/credentials.
 session persistence, pre-login rotation and the browser boundary are now implemented
 and tested. The operation-aware beginSession mutation and shared allocation budget
 are described in [session bootstrap](../architecture/session-bootstrap.md).
-GraphQL login/logout, login throttling and real-browser acceptance remain outstanding.
+GraphQL login, shared throttling, authenticated me and logout are now implemented.
+See ../architecture/graphql-logout.md for revocation and retry semantics.
+Real-browser acceptance and deployment abuse validation remain outstanding.
 
 ## References
 

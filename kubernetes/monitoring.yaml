@@ -1,0 +1,16 @@
+# Optional: requires the Prometheus Operator CRDs and namespace discovery.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+ name: file-vault
+ namespace: file-vault
+spec:
+ selector:
+  matchLabels: { app: file-vault, component: application }
+ podMetricsEndpoints:
+  - port: api
+    interval: 15s
+    relabelings: [{ targetLabel: job, replacement: file-vault-api }]
+  - port: gc-metrics
+    interval: 15s
+    relabelings: [{ targetLabel: job, replacement: file-vault-collector }]

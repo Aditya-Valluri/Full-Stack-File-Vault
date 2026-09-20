@@ -150,3 +150,234 @@ the specified per-user two-calls-per-second policy. Login/me/logout remain out o
 **Verification:** Unit tests, vet and build passed. Isolated PostgreSQL integration
 passed in 11.422 seconds. Migration 000006 applied locally. Real-browser tests, expired
 session cleanup and deployment abuse protection remain outstanding. No commit or push.
+
+## GraphQL login and authenticated current user
+
+**Objective / prompt:** User authorized the next login micro-step, then explicitly
+requested proceeding with next steps while login validation was running. Completed
+login and the subsequent authenticated me query; logout remains separate work.
+
+**AI contribution:** Reused transactional session rotation. Added migration 000007
+with shared global/peer/identifier attempt budgets and expiry pruning. Connected login
+through an anonymous-session/CSRF capability, rejected ambiguous mutation roots, and
+redacted protocol errors that could contain passwords. Added RequireUser and me using
+the freshly checked session context. Updated schema bindings, tests and documentation.
+
+**Decision / disposition:** Fixed initial login budgets are ADR defaults, separate from
+the required strict per-user API limiter. Direct peer IP is authoritative; forwarded
+headers are ignored pending trusted-proxy configuration. Current-user reads use the
+middleware authorization snapshot; later sensitive writes require transactional checks.
+Consulted OWASP Authentication Cheat Sheet for generic errors and identifier throttling.
+
+**Verification:** Login-only PostgreSQL/TLS suite passed in 14.028 seconds. After me,
+unit tests and the full isolated PostgreSQL/TLS suite passed (25.880 seconds), including
+shared throttles, expiry, rotation rollback, secret redaction, two identities, role
+freshness, disabled/revoked sessions and database failure. Migration 000007 applied
+locally. Real-browser/load/deployment acceptance remains outstanding. No commit or push.
+
+## GraphQL logout
+
+**Objective / prompt:** User authorized the next micro-step after login/me: implement
+logout with server-side revocation and matching cookie deletion.
+
+**AI contribution:** Added an authenticated logout capability and Boolean mutation,
+reused SessionStore.Revoke, expanded the single-root operation guard, and wired the
+production handler. Added unit and PostgreSQL/TLS tests for request guards, deletion
+scope, injected revocation failure, concurrent activity, replay and session isolation.
+
+**Decision / disposition:** Clear cookies only after successful revocation. A replay
+after logout receives UNAUTHENTICATED/401 and a clearing cookie from the boundary.
+Storage errors retain the credential for retry. Logout affects the current session,
+not every device. No schema migration or dependency was needed.
+
+**Verification:** Unit tests passed. Full isolated PostgreSQL/TLS integration passed
+in 24.261 seconds, including the existing deterministic renewal/revocation lock test.
+Real-browser acceptance remains outstanding. Changes remain uncommitted/unpushed.
+
+## Bounded upload staging
+
+**Objective / prompt:** User authorized proceeding into the file workflow while
+retaining the one-micro-step-at-a-time approach. Inspected the schema, existing ADRs,
+API transport and the supplied engineering charter before implementation.
+
+**AI contribution:** Added an internal streaming staging primitive with SHA-256,
+bounded MIME detection, random confined temporary paths, byte limits, metadata checks,
+seekable read access and explicit cleanup. Used standard-library APIs only, checking
+Go os.Root and http.DetectContentType documentation. Added real-filesystem tests for
+limits, interrupted streams, cleanup, panic recovery and concurrent staging names.
+
+**Decision / disposition:** Chose disk staging over whole-file memory buffering.
+No HTTP multipart endpoint or logical-file publication was exposed. Identified the
+older derived-usage quota ADR versus the later explicit used_bytes requirement;
+recorded the need for a successor decision at the quota/publication step.
+
+**Verification:** API unit suite passed. Focused staging tests passed again after
+panic cleanup coverage (1.278 seconds); vet and build passed. Tests ran on Windows;
+Unix permission assertions require a Unix run. Database integration was not rerun
+because this addition changes no database behavior. No commit or push performed.
+
+## Multipart transport and quota/publication design
+
+**Objective / prompt:** User explicitly authorized both next listed steps: bounded
+GraphQL multipart transport/cleanup and transactional quota/file-publication design.
+
+**AI contribution:** Inspected pinned gqlgen multipart source and protocol docs.
+Identified its Content-Length-based memory branch and missing project-specific file
+and capacity limits. Implemented a stricter gqlgen Transport using existing staging,
+real Upload values and the gqlgen executor. Added real-filesystem/executor tests.
+Wrote ADR 0005, preserving/superseding ADR 0002's derived-accounting proposal and
+specifying guarded used_bytes, lock ordering, immutable generations and cleanup.
+
+**Decision / disposition:** Disk-only multipart staging with explicit constructor
+limits and a restricted single-operation mapping contract. Transport remains
+unregistered until publication exists. Quota/publication is a reviewed design only;
+no migration, counter, final-object storage or GC worker was claimed as implemented.
+
+**Verification:** Focused multipart tests passed (1.994 seconds), then full unit tests,
+vet and build passed. Coverage includes false/unknown lengths, mappings, limits,
+pre-body security and capacity gates, deadlines, truncation, panic cleanup and handles.
+Design reviewed against concurrent quota/dedup/GC and storage/commit failure scenarios;
+those publication behaviors still require implementation and integration tests.
+No PostgreSQL rerun, production upload enablement, commit or push performed.
+
+## Five-step upload foundation and application integration
+
+**Objective / prompt:** User requested the next five steps after the File Vault rename.
+Inspected the existing schema, authentication, multipart transport, unfinished
+publication service, tests, and engineering charter. Selected five bounded steps:
+publication migration, durable local adapter, transactional publication, distributed
+user admission, and GraphQL upload/quota integration.
+
+**AI contribution:** Completed validation of migration 000008 and the local adapter;
+added real-database concurrency/failure/reconciliation tests; implemented migration
+000009 and a bounded PostgreSQL rolling-window limiter; wired uploadFile, uploadFiles,
+and quota through the production application handler; regenerated pinned gqlgen
+bindings; documented deployment, configuration, recovery, and client contracts.
+
+**Decision / disposition:** Kept GraphQL-only operations, per-logical-file quota,
+random immutable storage generations, and user/session/digest lock ordering. Selected
+PostgreSQL admission over process-local counters or a new Redis dependency. Byte
+counts use decimal strings. No new dependency was introduced. Removed an unused
+quota environment example: operator-configured database quotas remain authoritative.
+Reviewed gqlgen upload, PostgreSQL locking, and Go rooted-filesystem documentation.
+
+**Verification:** Final unit tests, vet, and builds passed. The complete isolated
+PostgreSQL/TLS suite passed in 34.228 seconds, including uploads above the default
+quota, concurrent quota/deduplication, pending-generation replacement, authorization
+rechecks, post-promotion rollback, shared rate admission, pre-body rejection, and
+GraphQL single/batch uploads. Linux storage tests passed in a network-disabled
+container, exercising hard-link promotion and directory sync. Local migrations 8
+and 9 applied successfully; schema_migrations reports version 9, dirty=false.
+
+**Corrections during validation:** Updated the failing-resolver fixture for the new
+quota field and gqlgen Upload pointer types. Corrected the integration fixture to
+share one blob volume with its shared database; separate directories correctly
+triggered missing-content rejection. The first Linux invocation had an incorrectly
+quoted PowerShell test flag; the corrected run passed. A publication-only test
+approval was initially declined; subsequent approval covered the completed suite.
+
+**Remaining limits:** No automatic physical GC, crash-orphan cleanup, upload
+idempotency, ambiguous-network-commit drill, browser UAT, or deployment/load claim.
+Windows development omits directory fsync; Linux filesystem/volume durability still
+requires deployment-specific validation. New work and earlier feature changes remain
+uncommitted and unpushed.
+## Owner-scoped file listing, search, and metadata
+
+**Objective / prompt:** User authorized the next step after uploads/quota/rate limiting.
+Selected file listing/search, including an owned-file metadata lookup, without starting
+download transport or deletion/GC.
+
+**AI contribution:** Added internal/files with validated SQL filters and keyset cursors;
+exposed files and file(id) through gqlgen; wired the reader into the authenticated
+application; added safe NOT_FOUND/INVALID_INPUT handling and list-cardinality complexity
+weighting. Updated README and the file-query guide. No migration or dependency added.
+
+**Decision / disposition:** Reused the owner/creation/UUID index rather than offsets or
+an unmeasured trigram index. Every query includes the session-derived owner; even admin
+users receive only their own files. Current authorization is rechecked under the existing
+user/session lock protocol. Cursors encode positions, not authorization, and pages are
+not a cross-request snapshot. Exact detected MIME, literal filename substring, inclusive
+size bounds, and half-open date ranges combine with AND. Total-count aggregation is omitted.
+
+**Verification:** Unit tests, vet, and build passed. Full PostgreSQL/TLS integration
+passed in 30.230 seconds. Review found and corrected a legacy NULL-MIME filter inconsistency;
+affected files/GraphQL unit tests and the targeted PostgreSQL/TLS suite then passed
+(23.916 seconds). Coverage includes timestamp ties, inserts between pages, literal
+wildcard characters, combined filters, zero size, cross-user shared blobs, admin
+non-bypass, revoked sessions, CSRF, safe missing-ID errors, legacy MIME fallback,
+complexity rejection of aliased lists, and unavailable storage. git diff --check passed.
+
+**Remaining limits:** Substring scans need production-scale profiling; statement/page
+limits are enforced but do not guarantee index-only filtered searches. No frontend UAT,
+download authorization/transport, or deletion/GC was implemented. Changes remain saved
+locally, uncommitted and unpushed. Database schema remains at version 9.
+## Ten-step file lifecycle increment
+
+**Objective / prompt:** User authorized the next ten steps. Scope: safe object reads,
+hashed access grants, GraphQL grant issuance, HTTP byte transport, restricted previews,
+logical deletion/quota release, published GC, orphan-intent recovery, a managed worker,
+and owner-only storage statistics.
+
+**AI contribution:** Implemented migrations 000010/000011, rooted read/removal operations,
+session-bound content authorization, GraphQL lifecycle resolvers and regenerated bindings,
+GET/HEAD/single-range transport, transactional logical deletion and statistics, and the
+separately privileged cleanup command/launcher. Added lifecycle and cleanup integration
+coverage and updated the README, runbook, and ADR 0005.
+
+**Decision / disposition:** Opaque grants expire within 60 seconds, are hashed at rest,
+and require their issuing session. Inline previews allow detected PNG/JPEG/WebP only.
+Deletion cascades grants and releases logical quota in one transaction. Cleanup commits
+a durable DELETING fence and detaches unreferenced blob metadata BEFORE filesystem I/O;
+holding database locks through an unlink would be unsafe if the transaction were lost.
+Retained tombstones recover late promotions. Statistics reveal no other owner's savings.
+Application operations remain GraphQL-only.
+
+**Verification:** Go unit tests, vet, build, and PowerShell syntax checks passed. The full
+isolated PostgreSQL/TLS suite passed in 15.847 seconds, including migration up/down rounds,
+expiry/caps/session isolation, deletion rollback/quota, protected previews/ranges, narrow
+worker privileges, delayed-removal vs new-publication, live-reference protection, held
+digest locks, failed retirement, lost removal acknowledgement, late orphan recovery, and
+concurrent workers. Linux storage tests passed in a disposable read-only container with
+writable tmpfs, exercising file/directory sync and read-after-unlink semantics.
+
+Docker Desktop was initially stopped and was started for validation. Local migrations
+10 and 11 applied; schema_migrations reports version 11, dirty=false. First local worker
+startup exposed a missing development directory. Added development-only directory creation,
+matching the API; worker checks/vet/build then passed and start-gc.ps1 -Once completed with
+zero pending records. The generated worker credential is ignored; no secrets were printed.
+Removed the temporary local worker build artifact.
+
+**Remaining limits:** Tombstones are retained indefinitely; safe compaction needs a
+writer-lifetime proof. Crash-abandoned temporary staging/prepared files need separate lease
+recovery. Upload idempotency, power-loss/volume-driver/load drills, sharing/admin/frontend,
+and browser UAT remain follow-ups. Already-open streams may complete after revocation.
+All feature changes remain saved locally, uncommitted and unpushed.
+
+## Sharing and administration
+
+User authorized the remaining roadmap in order, then confirmed continuation.
+Implemented read-only public/recipient sharing, expiry/revocation, anonymous browser
+session binding and rate admission, download-start counts, then admin metadata/users,
+quota/status controls, global statistics, and transactional append-only audit records.
+The sharing suite passed in 50.009 seconds. The full suite including administration
+passed in 53.734 seconds; unit tests, vet, and build also passed. Migration 12 was applied
+locally. The admin migration is being applied next. Source policy, trade-offs, APIs,
+and limits are documented in architecture/sharing.md and architecture/administration.md.
+Frontend and the remaining roadmap are still in progress; no commit/push yet.
+
+## Frontend, recovery, deployment, and operations continuation
+
+Implemented the React/TypeScript UI and explicit same-key upload retry behavior selected
+by the user. Added immutable upload receipts (migration 14), lease-aware temporary-file
+recovery, non-root runtime images, HTTPS rehearsal, CI, Kubernetes templates, and bounded
+Prometheus metrics. Four browser scenarios passed, including response-loss retry and
+accessibility checks; Linux storage/crash cleanup tests and Go unit/vet checks passed.
+Production-mode HTTPS upload/download/delete and secure-cookie checks passed.
+Prometheus validated all ten rules and scraped both internal targets successfully.
+
+Added paired database/file backups with authenticated encryption and separate local key
+storage. Initial isolated database restoration and tamper-rejection checks passed.
+The user selected private encrypted object storage for production; no provider/bucket
+credentials or actual off-host destination are configured. Current production boundaries
+are documented in architecture/operations.md. Earlier remaining-work notes above describe
+historical checkpoints, not the current feature inventory. Final review is still ongoing.

@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: file-vault
+spec:
+ replicas: 1
+ strategy: { type: Recreate }
+ selector:
+  matchLabels: { app: file-vault, component: application }
+ template:
+  metadata:
+   labels: { app: file-vault, component: application }
+  spec:
+   automountServiceAccountToken: false
+   terminationGracePeriodSeconds: 30
+   nodeSelector: { kubernetes.io/os: linux }
+   securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    fsGroup: 65532
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile: { type: RuntimeDefault }
+   initContainers:
+    - name: initialize-storage
+      image: file-vault-api:local
+      command: ["/app/init-storage"]
+      securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+      resources: { requests: { cpu: 10m, memory: 16Mi }, limits: { cpu: 100m, memory: 32Mi } }
+      volumeMounts: [{ name: files, mountPath: /data }]
+   containers:
+    - name: api
+      image: file-vault-api:local
+      envFrom: [{ configMapRef: { name: file-vault-config } }]
+      env: [{ name: DATABASE_URL_FILE, value: /run/secrets/database-url }]
+      ports: [{ name: api, containerPort: 8080 }]
+      securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+      resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: "2", memory: 512Mi } }
+      startupProbe: { httpGet: { path: /readyz, port: api }, failureThreshold: 30, periodSeconds: 5 }
+      readinessProbe: { httpGet: { path: /readyz, port: api }, periodSeconds: 10, timeoutSeconds: 3 }
+      livenessProbe: { httpGet: { path: /healthz, port: api }, periodSeconds: 15, timeoutSeconds: 3 }
+      volumeMounts:
+       - { name: files, mountPath: /data }
+       - { name: runtime-secret, mountPath: /run/secrets, readOnly: true }
+       - { name: api-temp, mountPath: /tmp }
+    - name: web
+      image: file-vault-web:local
+      ports: [{ name: web, containerPort: 8081 }]
+      securityContext: { runAsUser: 101, runAsGroup: 101, allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+      resources: { requests: { cpu: 25m, memory: 32Mi }, limits: { cpu: 500m, memory: 128Mi } }
+      readinessProbe: { httpGet: { path: /healthz, port: web }, periodSeconds: 10 }
+      livenessProbe: { httpGet: { path: /healthz, port: web }, periodSeconds: 15 }
+      volumeMounts: [{ name: web-temp, mountPath: /tmp }]
+    - name: collector
+      image: file-vault-api:local
+      command: ["/app/collect"]
+      envFrom: [{ configMapRef: { name: file-vault-config } }]
+      env: [{ name: GC_DATABASE_URL_FILE, value: /run/secrets/database-url }, { name: GC_METRICS_ADDR, value: "0.0.0.0:8082" }]
+      ports: [{ name: gc-metrics, containerPort: 8082 }]
+      securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+      resources: { requests: { cpu: 25m, memory: 32Mi }, limits: { cpu: 500m, memory: 128Mi } }
+      volumeMounts:
+       - { name: files, mountPath: /data }
+       - { name: gc-secret, mountPath: /run/secrets, readOnly: true }
+   volumes:
+    - { name: files, persistentVolumeClaim: { claimName: file-vault-files } }
+    - { name: runtime-secret, secret: { secretName: file-vault-runtime, defaultMode: 288, items: [{ key: database-url, path: database-url }] } }
+    - { name: gc-secret, secret: { secretName: file-vault-gc, defaultMode: 288, items: [{ key: database-url, path: database-url }] } }
+    - { name: api-temp, emptyDir: { sizeLimit: 16Mi } }
+    - { name: web-temp, emptyDir: { sizeLimit: 32Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: file-vault-web
+spec:
+ selector: { app: file-vault, component: application }
+ ports: [{ name: http, port: 80, targetPort: web }]

@@ -1,9 +1,14 @@
 package graph
 
 import (
-	"file-vault.local/api/internal/auth"
 	"context"
 	"errors"
+	"file-vault.local/api/internal/admin"
+	"file-vault.local/api/internal/auth"
+	"file-vault.local/api/internal/files"
+	"file-vault.local/api/internal/sharing"
+	"file-vault.local/api/internal/telemetry"
+	"file-vault.local/api/internal/upload"
 	"log/slog"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -22,7 +27,62 @@ const (
 // are private by default, even if wrapped as gqlerror with a protocol-looking code.
 // Introduce explicitly typed public domain errors alongside future business rules.
 func errorPresenter(logger *slog.Logger) graphql.ErrorPresenterFunc {
+	present := domainErrorPresenter(logger)
 	return func(ctx context.Context, err error) *gqlerror.Error {
+		result := present(ctx, err)
+		code, _ := result.Extensions["code"].(string)
+		telemetry.Default.GraphQLError(code)
+		return result
+	}
+}
+func domainErrorPresenter(logger *slog.Logger) graphql.ErrorPresenterFunc {
+	return func(ctx context.Context, err error) *gqlerror.Error {
+		if errors.Is(err, files.ErrPreviewUnsupported) {
+			return &gqlerror.Error{Message: "preview unavailable for this content type", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "UNSUPPORTED_MEDIA_TYPE"}}
+		}
+		if errors.Is(err, admin.ErrForbidden) {
+			return &gqlerror.Error{Message: "administrator access required", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "FORBIDDEN"}}
+		}
+		if errors.Is(err, upload.ErrRetryConflict) {
+			return &gqlerror.Error{Message: "upload retry content differs", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "UPLOAD_RETRY_CONFLICT"}}
+		}
+		if errors.Is(err, admin.ErrConflict) {
+			return &gqlerror.Error{Message: "change conflicts with current user state", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "CONFLICT"}}
+		}
+		if errors.Is(err, sharing.ErrLimit) {
+			return &gqlerror.Error{Message: "sharing capacity reached", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "RATE_LIMITED"}}
+		}
+		if errors.Is(err, files.ErrAccessLimit) {
+			return &gqlerror.Error{Message: "too many active file access grants", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "RATE_LIMITED"}}
+		}
+		if errors.Is(err, files.ErrNotFound) {
+			return &gqlerror.Error{Message: "file not found", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "NOT_FOUND"}}
+		}
+		if errors.Is(err, files.ErrInvalidInput) {
+			return &gqlerror.Error{Message: "invalid file query", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": codeInvalidInput}}
+		}
+		var rateError *auth.RateLimitError
+		if errors.As(err, &rateError) {
+			return &gqlerror.Error{Message: "user request rate exceeded", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "RATE_LIMITED"}}
+		}
+		if errors.Is(err, upload.ErrQuotaExceeded) {
+			return &gqlerror.Error{Message: "storage quota exceeded", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "QUOTA_EXCEEDED"}}
+		}
+		if errors.Is(err, upload.ErrInvalidInput) {
+			return &gqlerror.Error{Message: "invalid upload", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": codeInvalidInput}}
+		}
+		if errors.Is(err, auth.ErrUnauthenticated) {
+			return &gqlerror.Error{Message: "authentication required", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "UNAUTHENTICATED"}}
+		}
+		if errors.Is(err, auth.ErrLoginLimited) {
+			return &gqlerror.Error{Message: "login temporarily limited", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "RATE_LIMITED"}}
+		}
+		if errors.Is(err, auth.ErrLoginRejected) {
+			return &gqlerror.Error{Message: "invalid login credentials", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "UNAUTHENTICATED"}}
+		}
+		if errors.Is(err, auth.ErrLoginForbidden) {
+			return &gqlerror.Error{Message: "login requires an anonymous session", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "FORBIDDEN"}}
+		}
 		if errors.Is(err, auth.ErrBootstrapLimited) {
 			return &gqlerror.Error{Message: "session creation temporarily limited", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "RATE_LIMITED"}}
 		}
@@ -35,7 +95,9 @@ func errorPresenter(logger *slog.Logger) graphql.ErrorPresenterFunc {
 				code, _ := protocol.Extensions["code"].(string)
 				switch code {
 				case "GRAPHQL_PARSE_FAILED", "GRAPHQL_VALIDATION_FAILED", "COMPLEXITY_LIMIT_EXCEEDED":
-					return &gqlerror.Error{Message: protocol.Message, Locations: protocol.Locations,
+					// Validation/coercion messages can quote passwords supplied as literals
+					// or variables. Keep the code and locations, never the supplied value.
+					return &gqlerror.Error{Message: "invalid GraphQL operation", Locations: protocol.Locations,
 						Extensions: map[string]any{"code": code}}
 				}
 			}

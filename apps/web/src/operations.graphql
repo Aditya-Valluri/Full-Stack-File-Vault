@@ -1,0 +1,44 @@
+mutation Bootstrap { beginSession { csrfToken } }
+mutation Login($input: LoginInput!) { login(input: $input) { csrfToken user { id role } } }
+mutation Logout { logout }
+query Identity { me { id role } }
+query Vault($first: Int!, $after: String, $filter: FileFilter) {
+ quota { usedBytes quotaBytes remainingBytes }
+ storageStats { fileCount logicalBytes uniqueContentBytes savedBytes savingsPercent }
+ files(first: $first, after: $after, filter: $filter) {
+  nodes { id name sizeBytes detectedMIME createdAt }
+  pageInfo { endCursor hasNextPage }
+ }
+}
+mutation UploadOne($file: Upload!, $idempotencyKey: ID!) { uploadFile(file: $file, idempotencyKey: $idempotencyKey) { id name sizeBytes detectedMIME createdAt } }
+mutation UploadMany($files: [Upload!]!, $idempotencyKey: ID!) { uploadFiles(files: $files, idempotencyKey: $idempotencyKey) { id name sizeBytes detectedMIME createdAt } }
+mutation DeleteFile($id: ID!) { deleteFile(id: $id) }
+mutation FileAccess($id: ID!, $mode: FileAccessMode!) { createFileAccess(fileId: $id, mode: $mode) { url expiresAt } }
+query FileShares($id: ID!) { fileShares(fileId: $id) { downloadStarts shares { id recipientId permission createdAt expiresAt } } }
+mutation CreateShare($input: CreateShareInput!) { createShare(input: $input) { url share { id permission recipientId expiresAt } } }
+mutation RevokeShare($id: ID!) { revokeShare(id: $id) }
+query SharedFile($token: String!) { sharedFile(token: $token) { name sizeBytes detectedMIME previewAllowed expiresAt } }
+mutation SharedAccess($token: String!, $mode: FileAccessMode!) { createSharedAccess(token: $token, mode: $mode) { url expiresAt } }
+query AdminOverview {
+ adminStorageStats { userCount fileCount logicalBytes referencedBytes pendingDeletionBytes savedBytes savingsPercent downloadStarts }
+}
+query AdminUsers($first: Int!, $after: String) {
+ adminUsers(first: $first, after: $after) {
+  nodes { id loginName role usedBytes quotaBytes disabledAt createdAt }
+  pageInfo { endCursor hasNextPage }
+ }
+}
+query AdminFiles($first: Int!, $after: String, $owner: ID) {
+ adminFiles(first: $first, after: $after, ownerId: $owner) {
+  nodes { ownerId loginName downloadStarts file { id name sizeBytes detectedMIME createdAt } }
+  pageInfo { endCursor hasNextPage }
+ }
+}
+query AdminAudit($first: Int!, $after: String) {
+ adminAudit(first: $first, after: $after) {
+  nodes { id actorId targetUserId action occurredAt previousQuota newQuota previousDisabledAt newDisabledAt revokedSessions revokedShares }
+  pageInfo { endCursor hasNextPage }
+ }
+}
+mutation SetQuota($id: ID!, $bytes: String!) { adminSetQuota(userId: $id, quotaBytes: $bytes) { id quotaBytes } }
+mutation SetDisabled($id: ID!, $disabled: Boolean!) { adminSetUserDisabled(userId: $id, disabled: $disabled) { id disabledAt } }

@@ -26,3 +26,7 @@ staging/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Browser test output (ephemeral accounts and links only)
+playwright-report/
+test-results/

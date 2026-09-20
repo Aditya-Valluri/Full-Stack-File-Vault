@@ -11,8 +11,8 @@ import (
 
 var ErrLoginRejected = errors.New("login rejected")
 
-// CreateAnonymous is an internal bootstrap primitive. The future HTTP caller must
-// enforce Origin, bootstrap-header policy and abuse controls before invoking it.
+// CreateAnonymous is an internal bootstrap primitive used by integration tests.
+// Production bootstrap uses BeginSession to enforce the shared allocation budget.
 func (s *SessionStore) CreateAnonymous(ctx context.Context) (string, Session, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -60,7 +60,7 @@ func (s *SessionStore) LookupAnonymous(ctx context.Context, token string) (Sessi
 
 // Login verifies credentials outside locks, then rechecks their security version
 // under a user lock before consuming the anonymous session. Tokens are returned
-// only after commit. This method is not an HTTP login endpoint.
+// only after commit. Browser callers must use LoginBrowser to enforce throttling.
 func (s *SessionStore) Login(ctx context.Context, anonymous, csrf, login string, password []byte) (string, Session, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
@@ -86,8 +86,8 @@ func (s *SessionStore) Login(ctx context.Context, anonymous, csrf, login string,
 	if !found {
 		hash = s.dummyHash
 	}
-	// Per-store semaphore bounds hashing memory. Distributed login rate limiting is
-	// still required before exposing the endpoint, and is not claimed by this gate.
+	// Per-store semaphore bounds hashing memory. LoginBrowser separately enforces
+	// shared request budgets before this internal credential-verification primitive.
 	select {
 	case s.hashSlots <- struct{}{}:
 	case <-ctx.Done():

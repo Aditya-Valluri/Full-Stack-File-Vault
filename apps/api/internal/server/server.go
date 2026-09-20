@@ -9,16 +9,19 @@ import (
 	"net/http"
 	"time"
 
+	"file-vault.local/api/internal/telemetry"
 	"github.com/go-chi/chi/v5"
 )
 
 type Check func(context.Context) error
 
-func New(addr string, ready Check, logger *slog.Logger, graphqlHandler http.Handler) *http.Server {
+func New(addr string, ready Check, logger *slog.Logger, graphqlHandler http.Handler, contentHandlers ...http.Handler) *http.Server {
 	if graphqlHandler == nil {
 		panic("GraphQL handler is required")
 	}
 	r := chi.NewRouter()
+	r.Use(telemetry.Default.Wrap)
+
 	// Avoid logging request URLs or headers: future transport URLs can be secrets.
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -33,6 +36,7 @@ func New(addr string, ready Check, logger *slog.Logger, graphqlHandler http.Hand
 			next.ServeHTTP(w, req)
 		})
 	})
+	r.Get("/metrics", telemetry.Default.Handler().ServeHTTP)
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte("{\"status\":\"ok\"}\n"))
@@ -49,6 +53,12 @@ func New(addr string, ready Check, logger *slog.Logger, graphqlHandler http.Hand
 		_, _ = w.Write([]byte("{\"status\":\"ready\"}\n"))
 	})
 	r.Handle("/graphql", graphqlHandler)
+	if len(contentHandlers) > 0 && contentHandlers[0] != nil {
+		r.Handle("/content/{token}", contentHandlers[0])
+	}
+	if len(contentHandlers) > 1 && contentHandlers[1] != nil {
+		r.Handle("/shared-content/{token}", contentHandlers[1])
+	}
 	return &http.Server{
 		Addr: addr, Handler: r,
 		ReadHeaderTimeout: 5 * time.Second,

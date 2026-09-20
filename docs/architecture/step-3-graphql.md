@@ -50,7 +50,7 @@ not establish an authorization pattern for the protected operations added later.
 
 - JSON POST only; other methods return 405 and other content types return 415.
 - 64 KiB body limit, including unknown-length requests; excess returns 413.
-- Parser limit: 4096 tokens. Query complexity limit: 100.
+- Parser limit: 4096 tokens. Query complexity limit: 500, with list-cardinality weighting added in the [file query step](file-queries.md).
 - Resolver execution context has a 5-second deadline. Future dependency calls must
   honor context cancellation; it is not a hard interruption of arbitrary Go code.
 - Batch arrays are rejected. Multipart uploads are not enabled yet.

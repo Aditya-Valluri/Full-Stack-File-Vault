@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+ generateName: file-vault-migrate-
+ namespace: file-vault
+spec:
+ backoffLimit: 0
+ activeDeadlineSeconds: 300
+ ttlSecondsAfterFinished: 86400
+ template:
+  metadata:
+   labels: { app: file-vault, component: migration }
+  spec:
+   restartPolicy: Never
+   automountServiceAccountToken: false
+   nodeSelector: { kubernetes.io/os: linux }
+   securityContext:
+    runAsNonRoot: true
+    runAsUser: 65532
+    runAsGroup: 65532
+    fsGroup: 65532
+    seccompProfile: { type: RuntimeDefault }
+   containers:
+    - name: migrate
+      image: file-vault-api:local
+      command: ["/app/migrate"]
+      env: [{ name: MIGRATE_DATABASE_URL_FILE, value: /run/secrets/database-url }]
+      securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+      resources: { requests: { cpu: 50m, memory: 64Mi }, limits: { cpu: 500m, memory: 256Mi } }
+      volumeMounts: [{ name: operator, mountPath: /run/secrets, readOnly: true }]
+   volumes:
+    - name: operator
+      secret:
+       secretName: file-vault-operator
+       defaultMode: 288
+       items: [{ key: database-url, path: database-url }]

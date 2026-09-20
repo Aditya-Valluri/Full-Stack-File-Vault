@@ -159,7 +159,7 @@ func TestBrowserBoundary(t *testing.T) {
 			// A claimed bootstrap header never creates an exception in this micro-step.
 			r.Header.Set("X-Vault-CSRF-Bootstrap", "1")
 			if tc.cookie {
-				r.AddCookie(&http.Cookie{Name: "__Host-vault_session", Value: "opaque"})
+				r.AddCookie(&http.Cookie{Name: "__Host-vault_session", Value: strings.Repeat("A", 43)})
 			}
 			if tc.duplicateCookie {
 				r.AddCookie(&http.Cookie{Name: "__Host-vault_session", Value: "another"})

@@ -1,8 +1,16 @@
 package graph
 
-// This file will not be regenerated automatically.
-//
-// It serves as dependency injection for your app, add any dependencies you require
-// here.
+import (
+	"file-vault.local/api/internal/admin"
+	"file-vault.local/api/internal/files"
+	"file-vault.local/api/internal/sharing"
+	"file-vault.local/api/internal/upload"
+)
 
-type Resolver struct{}
+// Resolver holds focused services; ownership and transaction rules stay in them.
+type Resolver struct {
+	Administration *admin.Store
+	Sharing        *sharing.Store
+	Publisher      *upload.Publisher
+	FilesStore     *files.Store
+}

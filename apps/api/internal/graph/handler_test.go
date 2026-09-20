@@ -5,6 +5,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -56,8 +57,8 @@ func TestGraphQLBoundary(t *testing.T) {
 func TestComplexityLimit(t *testing.T) {
 	var query strings.Builder
 	query.WriteString("{")
-	for i := 0; i < 101; i++ {
-		query.WriteString(strings.Repeat("a", i+1) + ":serviceInfo{name} ")
+	for i := 0; i < 251; i++ {
+		query.WriteString("a" + strconv.Itoa(i) + ":serviceInfo{name} ")
 	}
 	query.WriteString("}")
 	body, _ := json.Marshal(map[string]string{"query": query.String()})
@@ -67,5 +68,17 @@ func TestComplexityLimit(t *testing.T) {
 	NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil))).ServeHTTP(w, req)
 	if !strings.Contains(w.Body.String(), "COMPLEXITY_LIMIT_EXCEEDED") {
 		t.Fatalf("expected complexity rejection: %s", w.Body.String())
+	}
+}
+
+func TestFileListComplexityIncludesPageSize(t *testing.T) {
+	query := `{a:files(first:50){nodes{id name sizeBytes detectedMIME createdAt} pageInfo{endCursor hasNextPage}} b:files(first:50){nodes{id name sizeBytes detectedMIME createdAt} pageInfo{endCursor hasNextPage}}}`
+	body, _ := json.Marshal(map[string]string{"query": query})
+	request := httptest.NewRequest("POST", "/graphql", strings.NewReader(string(body)))
+	request.Header.Set("Content-Type", "application/json")
+	response := httptest.NewRecorder()
+	NewHandler(slog.New(slog.NewTextHandler(io.Discard, nil))).ServeHTTP(response, request)
+	if !strings.Contains(response.Body.String(), "COMPLEXITY_LIMIT_EXCEEDED") {
+		t.Fatal("aliased lists bypassed complexity budget", response.Body.String())
 	}
 }

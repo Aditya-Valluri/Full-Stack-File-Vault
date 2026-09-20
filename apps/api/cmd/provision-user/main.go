@@ -2,9 +2,10 @@
 package main
 
 import (
-	"file-vault.local/api/internal/auth"
 	"context"
 	"errors"
+	"file-vault.local/api/internal/auth"
+	"file-vault.local/api/internal/secret"
 	"flag"
 	"fmt"
 	"github.com/jackc/pgx/v5"
@@ -34,7 +35,10 @@ func run() error {
 	if *role != "USER" && *role != "ADMIN" {
 		return errors.New("role must be USER or ADMIN")
 	}
-	dsn := os.Getenv("PROVISION_DATABASE_URL")
+	dsn, err := secret.Read("PROVISION_DATABASE_URL")
+	if err != nil {
+		return err
+	}
 	if dsn == "" {
 		return errors.New("PROVISION_DATABASE_URL is required")
 	}

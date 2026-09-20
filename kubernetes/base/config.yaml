@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+ name: file-vault-config
+data:
+ APP_ENV: production
+ PUBLIC_ORIGIN: https://vault.example.com
+ HTTP_ADDR: "0.0.0.0:8080"
+ BLOB_STORAGE_DIR: /data/blobs
+ UPLOAD_STAGING_DIR: /data/staging
+ USER_CALLS_PER_SECOND: "2"

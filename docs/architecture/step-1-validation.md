@@ -1,6 +1,6 @@
 # Step 1 validation
 
-Run from `D:\file vault` in PowerShell. Stop after any failed command.
+Run from `D:\File Vault` in PowerShell. Stop after any failed command.
 
 ## Prerequisites
 

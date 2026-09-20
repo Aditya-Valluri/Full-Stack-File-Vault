@@ -1,6 +1,8 @@
 # ADR 0002: Logical storage accounting
 
-Status: Working assumption for Step 1; confirm before upload implementation.
+Status: Historical Step 1 working assumption. The derived-usage enforcement proposal
+is superseded by [ADR 0005](0005-quota-and-publication.md); per-logical-file accounting
+is retained. Neither enforcement approach is implemented yet.
 
 ## Context and decision
 

@@ -43,7 +43,10 @@ func Ready(ctx context.Context, pool *pgxpool.Pool) error {
 	if role != "vault_runtime" {
 		return errors.New("database connection must use vault_runtime")
 	}
-	_, err := pool.Exec(ctx, `SELECT u.id, b.id, f.id FROM vault.users u, vault.blobs b, vault.files f LIMIT 0`)
+	_, err := pool.Exec(ctx, `SELECT u.id, b.id, f.id FROM vault.users u, vault.blobs b, vault.files f LIMIT 0;
+ SELECT owner_id FROM vault.upload_receipts LIMIT 0;
+ SELECT id FROM vault.file_shares LIMIT 0;
+ SELECT id FROM vault.admin_audit LIMIT 0`)
 	if err != nil {
 		return errors.New("foundation schema unavailable")
 	}

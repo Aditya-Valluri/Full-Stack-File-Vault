@@ -1,0 +1,10 @@
+# Apply to a dedicated, currently supported Traefik Helm installation in namespace traefik.
+# Opaque content URLs must not be written to access logs.
+logs:
+ access:
+  enabled: false
+ general:
+  level: ERROR
+providers:
+ kubernetesIngress:
+  enabled: true

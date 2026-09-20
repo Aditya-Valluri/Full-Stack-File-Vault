@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: file-vault
+resources:
+ - namespace.yaml
+ - config.yaml
+ - storage.yaml
+ - application.yaml
+ - ingress.yaml
+ - network-policy.yaml
+images:
+ - name: file-vault-api
+   newName: file-vault-api
+   newTag: local
+ - name: file-vault-web
+   newName: file-vault-web
+   newTag: local

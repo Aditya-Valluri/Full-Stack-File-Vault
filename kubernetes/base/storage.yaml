@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+ name: file-vault-files
+spec:
+ accessModes: [ReadWriteOnce]
+ volumeMode: Filesystem
+ resources:
+  requests:
+   storage: 10Gi

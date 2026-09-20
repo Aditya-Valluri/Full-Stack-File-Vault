@@ -4,7 +4,10 @@
 
 The server entry point wraps gqlgen at `/graphql` with `auth.BrowserSecurity`.
 Probes remain outside this boundary. The beginSession mutation issues anonymous
-cookies through the operation-aware bootstrap boundary. Login/logout remain future work.
+cookies through the operation-aware bootstrap boundary. Login now rotates anonymous
+state through [GraphQL login](graphql-login.md); me requires an authenticated identity.
+Logout now revokes the current credential and clears its cookie after success; see
+[GraphQL logout](graphql-logout.md).
 Cookie-less requests can access the current public serviceInfo schema. Future
 protected resolvers must require a nonempty validated UserID: this middleware alone
 is not application or object-level authorization.
@@ -75,8 +78,8 @@ state and gqlgen, including cross-session CSRF mismatch, revocation and DB failu
 Unit tests, vet and build passed; launcher syntax also passed. No migration was needed.
 
 These are Go HTTP tests, not real-browser/Playwright acceptance tests. Cookie behavior
-in browsers, login/logout CSRF, login throttling,
-frontend integration and public-deployment validation remain outstanding.
+in browsers, frontend integration and public-deployment validation remain outstanding.
+Login/logout CSRF and shared login throttling are covered by the newer operation tests.
 
 References: [OWASP CSRF guidance](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
 and [MDN cookie attributes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie).

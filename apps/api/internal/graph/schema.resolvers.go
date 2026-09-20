@@ -7,10 +7,78 @@ package graph
 
 import (
 	"context"
+	"strconv"
 
 	"file-vault.local/api/internal/auth"
+	"file-vault.local/api/internal/files"
 	"file-vault.local/api/internal/graph/model"
+	"file-vault.local/api/internal/upload"
+	"github.com/99designs/gqlgen/graphql"
 )
+
+// AdminSetQuota is the resolver for the adminSetQuota field.
+func (r *mutationResolver) AdminSetQuota(ctx context.Context, userID string, quotaBytes string) (*model.AdminUser, error) {
+	service, err := r.requireAdminService(ctx)
+	if err != nil {
+		return nil, err
+	}
+	user, err := service.SetQuota(ctx, userID, quotaBytes)
+	if err != nil {
+		return nil, err
+	}
+	return adminUserModel(user), nil
+}
+
+// AdminSetUserDisabled is the resolver for the adminSetUserDisabled field.
+func (r *mutationResolver) AdminSetUserDisabled(ctx context.Context, userID string, disabled bool) (*model.AdminUser, error) {
+	service, err := r.requireAdminService(ctx)
+	if err != nil {
+		return nil, err
+	}
+	user, err := service.SetDisabled(ctx, userID, disabled)
+	if err != nil {
+		return nil, err
+	}
+	return adminUserModel(user), nil
+}
+
+// CreateShare is the resolver for the createShare field.
+func (r *mutationResolver) CreateShare(ctx context.Context, input model.CreateShareInput) (*model.CreatedShare, error) {
+	service, err := r.requireSharing(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	created, err := service.Create(ctx, input.FileID, string(input.Permission), input.ExpiresInSeconds, input.RecipientID)
+	if err != nil {
+		return nil, err
+	}
+	return &model.CreatedShare{Share: shareModel(created.Share), URL: created.URL}, nil
+}
+
+// RevokeShare is the resolver for the revokeShare field.
+func (r *mutationResolver) RevokeShare(ctx context.Context, id string) (bool, error) {
+	service, err := r.requireSharing(ctx, true)
+	if err != nil {
+		return false, err
+	}
+	if err = service.Revoke(ctx, id); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// CreateSharedAccess is the resolver for the createSharedAccess field.
+func (r *mutationResolver) CreateSharedAccess(ctx context.Context, token string, mode model.FileAccessMode) (*model.FileAccess, error) {
+	service, err := r.requireSharing(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	grant, err := service.CreateAccess(ctx, token, string(mode))
+	if err != nil {
+		return nil, err
+	}
+	return &model.FileAccess{URL: grant.URL, ExpiresAt: grant.ExpiresAt}, nil
+}
 
 // BeginSession is the resolver for the beginSession field.
 func (r *mutationResolver) BeginSession(ctx context.Context) (*model.SessionBootstrap, error) {
@@ -21,9 +89,242 @@ func (r *mutationResolver) BeginSession(ctx context.Context) (*model.SessionBoot
 	return &model.SessionBootstrap{CsrfToken: state.CSRFToken}, nil
 }
 
+// Login is the resolver for the login field.
+func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.LoginPayload, error) {
+	password := []byte(input.Password)
+	defer clear(password)
+	state, err := auth.LoginFromContext(ctx, input.LoginName, password)
+	if err != nil {
+		return nil, err
+	}
+	return &model.LoginPayload{CsrfToken: state.CSRFToken, User: &model.AuthenticatedUser{ID: state.UserID, Role: model.UserRole(state.Role)}}, nil
+}
+
+// Logout is the resolver for the logout field.
+func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
+	if err := auth.LogoutFromContext(ctx); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// CreateFileAccess is the resolver for the createFileAccess field.
+func (r *mutationResolver) CreateFileAccess(ctx context.Context, fileID string, mode model.FileAccessMode) (*model.FileAccess, error) {
+	if _, err := auth.RequireUser(ctx); err != nil {
+		return nil, err
+	}
+	if r.FilesStore == nil {
+		return nil, files.ErrUnavailable
+	}
+	grant, err := r.FilesStore.CreateAccess(ctx, fileID, string(mode))
+	if err != nil {
+		return nil, err
+	}
+	return &model.FileAccess{URL: grant.URL, ExpiresAt: grant.ExpiresAt}, nil
+}
+
+// DeleteFile is the resolver for the deleteFile field.
+func (r *mutationResolver) DeleteFile(ctx context.Context, id string) (bool, error) {
+	if _, err := auth.RequireUser(ctx); err != nil {
+		return false, err
+	}
+	if r.FilesStore == nil {
+		return false, files.ErrUnavailable
+	}
+	if err := r.FilesStore.Delete(ctx, id); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UploadFile is the resolver for the uploadFile field.
+func (r *mutationResolver) UploadFile(ctx context.Context, file graphql.Upload, idempotencyKey *string) (*model.VaultFile, error) {
+	files, err := r.publish(ctx, []*graphql.Upload{&file}, idempotencyKey)
+	if err != nil {
+		return nil, err
+	}
+	return files[0], nil
+}
+
+// UploadFiles is the resolver for the uploadFiles field.
+func (r *mutationResolver) UploadFiles(ctx context.Context, files []*graphql.Upload, idempotencyKey *string) ([]*model.VaultFile, error) {
+	return r.publish(ctx, files, idempotencyKey)
+}
+
+// AdminUsers is the resolver for the adminUsers field.
+func (r *queryResolver) AdminUsers(ctx context.Context, first int, after *string) (*model.AdminUserConnection, error) {
+	service, err := r.requireAdminService(ctx)
+	if err != nil {
+		return nil, err
+	}
+	page, err := service.Users(ctx, first, after)
+	if err != nil {
+		return nil, err
+	}
+	nodes := make([]*model.AdminUser, 0, len(page.Nodes))
+	for _, user := range page.Nodes {
+		nodes = append(nodes, adminUserModel(user))
+	}
+	return &model.AdminUserConnection{Nodes: nodes, PageInfo: &model.FilePageInfo{EndCursor: page.EndCursor, HasNextPage: page.HasNextPage}}, nil
+}
+
+// AdminFiles is the resolver for the adminFiles field.
+func (r *queryResolver) AdminFiles(ctx context.Context, first int, after *string, ownerID *string) (*model.AdminFileConnection, error) {
+	service, err := r.requireAdminService(ctx)
+	if err != nil {
+		return nil, err
+	}
+	page, err := service.Files(ctx, first, after, ownerID)
+	if err != nil {
+		return nil, err
+	}
+	nodes := make([]*model.AdminFile, 0, len(page.Nodes))
+	for _, file := range page.Nodes {
+		nodes = append(nodes, &model.AdminFile{File: fileModel(file.File), OwnerID: file.OwnerID, LoginName: file.LoginName, DownloadStarts: file.DownloadStarts})
+	}
+	return &model.AdminFileConnection{Nodes: nodes, PageInfo: &model.FilePageInfo{EndCursor: page.EndCursor, HasNextPage: page.HasNextPage}}, nil
+}
+
+// AdminStorageStats is the resolver for the adminStorageStats field.
+func (r *queryResolver) AdminStorageStats(ctx context.Context) (*model.AdminStorageStats, error) {
+	service, err := r.requireAdminService(ctx)
+	if err != nil {
+		return nil, err
+	}
+	stats, err := service.Statistics(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &model.AdminStorageStats{UserCount: stats.UserCount, FileCount: stats.FileCount, LogicalBytes: stats.LogicalBytes, ReferencedBytes: stats.ReferencedBytes, PendingDeletionBytes: stats.PendingDeletionBytes, SavedBytes: stats.SavedBytes, SavingsPercent: stats.SavingsPercent, DownloadStarts: stats.DownloadStarts}, nil
+}
+
+// AdminAudit is the resolver for the adminAudit field.
+func (r *queryResolver) AdminAudit(ctx context.Context, first int, after *string) (*model.AdminAuditConnection, error) {
+	service, err := r.requireAdminService(ctx)
+	if err != nil {
+		return nil, err
+	}
+	page, err := service.Audit(ctx, first, after)
+	if err != nil {
+		return nil, err
+	}
+	nodes := make([]*model.AdminAuditEntry, 0, len(page.Nodes))
+	for _, entry := range page.Nodes {
+		nodes = append(nodes, &model.AdminAuditEntry{ID: entry.ID, ActorID: entry.ActorID, TargetUserID: entry.TargetUserID, Action: entry.Action, OccurredAt: entry.OccurredAt, PreviousQuota: entry.PreviousQuota, NewQuota: entry.NewQuota, PreviousDisabledAt: entry.PreviousDisabledAt, NewDisabledAt: entry.NewDisabledAt, RevokedSessions: entry.RevokedSessions, RevokedShares: entry.RevokedShares})
+	}
+	return &model.AdminAuditConnection{Nodes: nodes, PageInfo: &model.FilePageInfo{EndCursor: page.EndCursor, HasNextPage: page.HasNextPage}}, nil
+}
+
+// FileShares is the resolver for the fileShares field.
+func (r *queryResolver) FileShares(ctx context.Context, fileID string) (*model.FileSharing, error) {
+	service, err := r.requireSharing(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	overview, err := service.List(ctx, fileID)
+	if err != nil {
+		return nil, err
+	}
+	shares := make([]*model.FileShare, 0, len(overview.Shares))
+	for _, sh := range overview.Shares {
+		shares = append(shares, shareModel(sh))
+	}
+	return &model.FileSharing{Shares: shares, DownloadStarts: strconv.FormatInt(overview.DownloadStarts, 10)}, nil
+}
+
+// SharedFile is the resolver for the sharedFile field.
+func (r *queryResolver) SharedFile(ctx context.Context, token string) (*model.SharedFile, error) {
+	service, err := r.requireSharing(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	file, err := service.Inspect(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	return &model.SharedFile{Name: file.Name, SizeBytes: strconv.FormatInt(file.SizeBytes, 10), DetectedMime: file.DetectedMIME, PreviewAllowed: file.PreviewAllowed, ExpiresAt: file.ExpiresAt}, nil
+}
+
 // ServiceInfo is the resolver for the serviceInfo field.
 func (r *queryResolver) ServiceInfo(ctx context.Context) (*model.ServiceInfo, error) {
 	return &model.ServiceInfo{Name: "File Vault"}, nil
+}
+
+// Me is the resolver for the me field.
+func (r *queryResolver) Me(ctx context.Context) (*model.AuthenticatedUser, error) {
+	state, err := auth.RequireUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &model.AuthenticatedUser{ID: state.UserID, Role: model.UserRole(state.Role)}, nil
+}
+
+// Quota is the resolver for the quota field.
+func (r *queryResolver) Quota(ctx context.Context) (*model.Quota, error) {
+	if _, err := auth.RequireUser(ctx); err != nil {
+		return nil, err
+	}
+	if r.Publisher == nil {
+		return nil, upload.ErrPublication
+	}
+	usage, err := r.Publisher.Quota(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &model.Quota{UsedBytes: strconv.FormatInt(usage.StoredBytes, 10), QuotaBytes: strconv.FormatInt(usage.QuotaBytes, 10), RemainingBytes: strconv.FormatInt(usage.QuotaBytes-usage.StoredBytes, 10)}, nil
+}
+
+// StorageStats is the resolver for the storageStats field.
+func (r *queryResolver) StorageStats(ctx context.Context) (*model.StorageStats, error) {
+	if _, err := auth.RequireUser(ctx); err != nil {
+		return nil, err
+	}
+	if r.FilesStore == nil {
+		return nil, files.ErrUnavailable
+	}
+	stats, err := r.FilesStore.Statistics(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &model.StorageStats{FileCount: strconv.FormatInt(stats.FileCount, 10), LogicalBytes: strconv.FormatInt(stats.LogicalBytes, 10), UniqueContentBytes: strconv.FormatInt(stats.UniqueContentBytes, 10), SavedBytes: strconv.FormatInt(stats.SavedBytes, 10), SavingsPercent: stats.SavingsPercent}, nil
+}
+
+// Files is the resolver for the files field.
+func (r *queryResolver) Files(ctx context.Context, first int, after *string, filter *model.FileFilter) (*model.FileConnection, error) {
+	if _, err := auth.RequireUser(ctx); err != nil {
+		return nil, err
+	}
+	if r.FilesStore == nil {
+		return nil, files.ErrUnavailable
+	}
+	options := files.ListOptions{First: first, After: after}
+	if filter != nil {
+		options.Filter = files.Filter{NameContains: filter.NameContains, MIMEType: filter.MimeType, MinSizeBytes: filter.MinSizeBytes, MaxSizeBytes: filter.MaxSizeBytes, CreatedFrom: filter.CreatedFrom, CreatedBefore: filter.CreatedBefore}
+	}
+	page, err := r.FilesStore.List(ctx, options)
+	if err != nil {
+		return nil, err
+	}
+	nodes := make([]*model.VaultFile, 0, len(page.Nodes))
+	for _, file := range page.Nodes {
+		nodes = append(nodes, fileModel(file))
+	}
+	return &model.FileConnection{Nodes: nodes, PageInfo: &model.FilePageInfo{EndCursor: page.EndCursor, HasNextPage: page.HasNextPage}}, nil
+}
+
+// File is the resolver for the file field.
+func (r *queryResolver) File(ctx context.Context, id string) (*model.VaultFile, error) {
+	if _, err := auth.RequireUser(ctx); err != nil {
+		return nil, err
+	}
+	if r.FilesStore == nil {
+		return nil, files.ErrUnavailable
+	}
+	file, err := r.FilesStore.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return fileModel(file), nil
 }
 
 // Mutation returns MutationResolver implementation.

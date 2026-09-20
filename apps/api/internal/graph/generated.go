@@ -11,6 +11,7 @@ import (
 	"math"
 	"strconv"
 	"sync/atomic"
+	"time"
 
 	"file-vault.local/api/internal/graph/model"
 	"github.com/99designs/gqlgen/graphql"
@@ -37,12 +38,140 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	AdminAuditConnection struct {
+		Nodes    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	AdminAuditEntry struct {
+		Action             func(childComplexity int) int
+		ActorID            func(childComplexity int) int
+		ID                 func(childComplexity int) int
+		NewDisabledAt      func(childComplexity int) int
+		NewQuota           func(childComplexity int) int
+		OccurredAt         func(childComplexity int) int
+		PreviousDisabledAt func(childComplexity int) int
+		PreviousQuota      func(childComplexity int) int
+		RevokedSessions    func(childComplexity int) int
+		RevokedShares      func(childComplexity int) int
+		TargetUserID       func(childComplexity int) int
+	}
+
+	AdminFile struct {
+		DownloadStarts func(childComplexity int) int
+		File           func(childComplexity int) int
+		LoginName      func(childComplexity int) int
+		OwnerID        func(childComplexity int) int
+	}
+
+	AdminFileConnection struct {
+		Nodes    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	AdminStorageStats struct {
+		DownloadStarts       func(childComplexity int) int
+		FileCount            func(childComplexity int) int
+		LogicalBytes         func(childComplexity int) int
+		PendingDeletionBytes func(childComplexity int) int
+		ReferencedBytes      func(childComplexity int) int
+		SavedBytes           func(childComplexity int) int
+		SavingsPercent       func(childComplexity int) int
+		UserCount            func(childComplexity int) int
+	}
+
+	AdminUser struct {
+		CreatedAt  func(childComplexity int) int
+		DisabledAt func(childComplexity int) int
+		ID         func(childComplexity int) int
+		LoginName  func(childComplexity int) int
+		QuotaBytes func(childComplexity int) int
+		Role       func(childComplexity int) int
+		UsedBytes  func(childComplexity int) int
+	}
+
+	AdminUserConnection struct {
+		Nodes    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	AuthenticatedUser struct {
+		ID   func(childComplexity int) int
+		Role func(childComplexity int) int
+	}
+
+	CreatedShare struct {
+		Share func(childComplexity int) int
+		URL   func(childComplexity int) int
+	}
+
+	FileAccess struct {
+		ExpiresAt func(childComplexity int) int
+		URL       func(childComplexity int) int
+	}
+
+	FileConnection struct {
+		Nodes    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	FilePageInfo struct {
+		EndCursor   func(childComplexity int) int
+		HasNextPage func(childComplexity int) int
+	}
+
+	FileShare struct {
+		CreatedAt   func(childComplexity int) int
+		ExpiresAt   func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Permission  func(childComplexity int) int
+		RecipientID func(childComplexity int) int
+	}
+
+	FileSharing struct {
+		DownloadStarts func(childComplexity int) int
+		Shares         func(childComplexity int) int
+	}
+
+	LoginPayload struct {
+		CsrfToken func(childComplexity int) int
+		User      func(childComplexity int) int
+	}
+
 	Mutation struct {
-		BeginSession func(childComplexity int) int
+		AdminSetQuota        func(childComplexity int, userID string, quotaBytes string) int
+		AdminSetUserDisabled func(childComplexity int, userID string, disabled bool) int
+		BeginSession         func(childComplexity int) int
+		CreateFileAccess     func(childComplexity int, fileID string, mode model.FileAccessMode) int
+		CreateShare          func(childComplexity int, input model.CreateShareInput) int
+		CreateSharedAccess   func(childComplexity int, token string, mode model.FileAccessMode) int
+		DeleteFile           func(childComplexity int, id string) int
+		Login                func(childComplexity int, input model.LoginInput) int
+		Logout               func(childComplexity int) int
+		RevokeShare          func(childComplexity int, id string) int
+		UploadFile           func(childComplexity int, file graphql.Upload, idempotencyKey *string) int
+		UploadFiles          func(childComplexity int, files []*graphql.Upload, idempotencyKey *string) int
 	}
 
 	Query struct {
-		ServiceInfo func(childComplexity int) int
+		AdminAudit        func(childComplexity int, first int, after *string) int
+		AdminFiles        func(childComplexity int, first int, after *string, ownerID *string) int
+		AdminStorageStats func(childComplexity int) int
+		AdminUsers        func(childComplexity int, first int, after *string) int
+		File              func(childComplexity int, id string) int
+		FileShares        func(childComplexity int, fileID string) int
+		Files             func(childComplexity int, first int, after *string, filter *model.FileFilter) int
+		Me                func(childComplexity int) int
+		Quota             func(childComplexity int) int
+		ServiceInfo       func(childComplexity int) int
+		SharedFile        func(childComplexity int, token string) int
+		StorageStats      func(childComplexity int) int
+	}
+
+	Quota struct {
+		QuotaBytes     func(childComplexity int) int
+		RemainingBytes func(childComplexity int) int
+		UsedBytes      func(childComplexity int) int
 	}
 
 	ServiceInfo struct {
@@ -52,6 +181,30 @@ type ComplexityRoot struct {
 	SessionBootstrap struct {
 		CsrfToken func(childComplexity int) int
 	}
+
+	SharedFile struct {
+		DetectedMime   func(childComplexity int) int
+		ExpiresAt      func(childComplexity int) int
+		Name           func(childComplexity int) int
+		PreviewAllowed func(childComplexity int) int
+		SizeBytes      func(childComplexity int) int
+	}
+
+	StorageStats struct {
+		FileCount          func(childComplexity int) int
+		LogicalBytes       func(childComplexity int) int
+		SavedBytes         func(childComplexity int) int
+		SavingsPercent     func(childComplexity int) int
+		UniqueContentBytes func(childComplexity int) int
+	}
+
+	VaultFile struct {
+		CreatedAt    func(childComplexity int) int
+		DetectedMime func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Name         func(childComplexity int) int
+		SizeBytes    func(childComplexity int) int
+	}
 }
 
 // endregion ***************************** api!.gotpl *****************************
@@ -59,10 +212,32 @@ type ComplexityRoot struct {
 // region    ************************** generated!.gotpl **************************
 
 type MutationResolver interface {
+	AdminSetQuota(ctx context.Context, userID string, quotaBytes string) (*model.AdminUser, error)
+	AdminSetUserDisabled(ctx context.Context, userID string, disabled bool) (*model.AdminUser, error)
+	CreateShare(ctx context.Context, input model.CreateShareInput) (*model.CreatedShare, error)
+	RevokeShare(ctx context.Context, id string) (bool, error)
+	CreateSharedAccess(ctx context.Context, token string, mode model.FileAccessMode) (*model.FileAccess, error)
 	BeginSession(ctx context.Context) (*model.SessionBootstrap, error)
+	Login(ctx context.Context, input model.LoginInput) (*model.LoginPayload, error)
+	Logout(ctx context.Context) (bool, error)
+	CreateFileAccess(ctx context.Context, fileID string, mode model.FileAccessMode) (*model.FileAccess, error)
+	DeleteFile(ctx context.Context, id string) (bool, error)
+	UploadFile(ctx context.Context, file graphql.Upload, idempotencyKey *string) (*model.VaultFile, error)
+	UploadFiles(ctx context.Context, files []*graphql.Upload, idempotencyKey *string) ([]*model.VaultFile, error)
 }
 type QueryResolver interface {
+	AdminUsers(ctx context.Context, first int, after *string) (*model.AdminUserConnection, error)
+	AdminFiles(ctx context.Context, first int, after *string, ownerID *string) (*model.AdminFileConnection, error)
+	AdminStorageStats(ctx context.Context) (*model.AdminStorageStats, error)
+	AdminAudit(ctx context.Context, first int, after *string) (*model.AdminAuditConnection, error)
+	FileShares(ctx context.Context, fileID string) (*model.FileSharing, error)
+	SharedFile(ctx context.Context, token string) (*model.SharedFile, error)
 	ServiceInfo(ctx context.Context) (*model.ServiceInfo, error)
+	Me(ctx context.Context) (*model.AuthenticatedUser, error)
+	Quota(ctx context.Context) (*model.Quota, error)
+	StorageStats(ctx context.Context) (*model.StorageStats, error)
+	Files(ctx context.Context, first int, after *string, filter *model.FileFilter) (*model.FileConnection, error)
+	File(ctx context.Context, id string) (*model.VaultFile, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -83,19 +258,601 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
+	case "AdminAuditConnection.nodes":
+		if e.ComplexityRoot.AdminAuditConnection.Nodes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditConnection.Nodes(childComplexity), true
+	case "AdminAuditConnection.pageInfo":
+		if e.ComplexityRoot.AdminAuditConnection.PageInfo == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditConnection.PageInfo(childComplexity), true
+
+	case "AdminAuditEntry.action":
+		if e.ComplexityRoot.AdminAuditEntry.Action == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditEntry.Action(childComplexity), true
+	case "AdminAuditEntry.actorId":
+		if e.ComplexityRoot.AdminAuditEntry.ActorID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditEntry.ActorID(childComplexity), true
+	case "AdminAuditEntry.id":
+		if e.ComplexityRoot.AdminAuditEntry.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditEntry.ID(childComplexity), true
+	case "AdminAuditEntry.newDisabledAt":
+		if e.ComplexityRoot.AdminAuditEntry.NewDisabledAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditEntry.NewDisabledAt(childComplexity), true
+	case "AdminAuditEntry.newQuota":
+		if e.ComplexityRoot.AdminAuditEntry.NewQuota == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditEntry.NewQuota(childComplexity), true
+	case "AdminAuditEntry.occurredAt":
+		if e.ComplexityRoot.AdminAuditEntry.OccurredAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditEntry.OccurredAt(childComplexity), true
+	case "AdminAuditEntry.previousDisabledAt":
+		if e.ComplexityRoot.AdminAuditEntry.PreviousDisabledAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditEntry.PreviousDisabledAt(childComplexity), true
+	case "AdminAuditEntry.previousQuota":
+		if e.ComplexityRoot.AdminAuditEntry.PreviousQuota == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditEntry.PreviousQuota(childComplexity), true
+	case "AdminAuditEntry.revokedSessions":
+		if e.ComplexityRoot.AdminAuditEntry.RevokedSessions == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditEntry.RevokedSessions(childComplexity), true
+	case "AdminAuditEntry.revokedShares":
+		if e.ComplexityRoot.AdminAuditEntry.RevokedShares == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditEntry.RevokedShares(childComplexity), true
+	case "AdminAuditEntry.targetUserId":
+		if e.ComplexityRoot.AdminAuditEntry.TargetUserID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminAuditEntry.TargetUserID(childComplexity), true
+
+	case "AdminFile.downloadStarts":
+		if e.ComplexityRoot.AdminFile.DownloadStarts == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminFile.DownloadStarts(childComplexity), true
+	case "AdminFile.file":
+		if e.ComplexityRoot.AdminFile.File == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminFile.File(childComplexity), true
+	case "AdminFile.loginName":
+		if e.ComplexityRoot.AdminFile.LoginName == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminFile.LoginName(childComplexity), true
+	case "AdminFile.ownerId":
+		if e.ComplexityRoot.AdminFile.OwnerID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminFile.OwnerID(childComplexity), true
+
+	case "AdminFileConnection.nodes":
+		if e.ComplexityRoot.AdminFileConnection.Nodes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminFileConnection.Nodes(childComplexity), true
+	case "AdminFileConnection.pageInfo":
+		if e.ComplexityRoot.AdminFileConnection.PageInfo == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminFileConnection.PageInfo(childComplexity), true
+
+	case "AdminStorageStats.downloadStarts":
+		if e.ComplexityRoot.AdminStorageStats.DownloadStarts == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminStorageStats.DownloadStarts(childComplexity), true
+	case "AdminStorageStats.fileCount":
+		if e.ComplexityRoot.AdminStorageStats.FileCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminStorageStats.FileCount(childComplexity), true
+	case "AdminStorageStats.logicalBytes":
+		if e.ComplexityRoot.AdminStorageStats.LogicalBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminStorageStats.LogicalBytes(childComplexity), true
+	case "AdminStorageStats.pendingDeletionBytes":
+		if e.ComplexityRoot.AdminStorageStats.PendingDeletionBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminStorageStats.PendingDeletionBytes(childComplexity), true
+	case "AdminStorageStats.referencedBytes":
+		if e.ComplexityRoot.AdminStorageStats.ReferencedBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminStorageStats.ReferencedBytes(childComplexity), true
+	case "AdminStorageStats.savedBytes":
+		if e.ComplexityRoot.AdminStorageStats.SavedBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminStorageStats.SavedBytes(childComplexity), true
+	case "AdminStorageStats.savingsPercent":
+		if e.ComplexityRoot.AdminStorageStats.SavingsPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminStorageStats.SavingsPercent(childComplexity), true
+	case "AdminStorageStats.userCount":
+		if e.ComplexityRoot.AdminStorageStats.UserCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminStorageStats.UserCount(childComplexity), true
+
+	case "AdminUser.createdAt":
+		if e.ComplexityRoot.AdminUser.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminUser.CreatedAt(childComplexity), true
+	case "AdminUser.disabledAt":
+		if e.ComplexityRoot.AdminUser.DisabledAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminUser.DisabledAt(childComplexity), true
+	case "AdminUser.id":
+		if e.ComplexityRoot.AdminUser.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminUser.ID(childComplexity), true
+	case "AdminUser.loginName":
+		if e.ComplexityRoot.AdminUser.LoginName == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminUser.LoginName(childComplexity), true
+	case "AdminUser.quotaBytes":
+		if e.ComplexityRoot.AdminUser.QuotaBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminUser.QuotaBytes(childComplexity), true
+	case "AdminUser.role":
+		if e.ComplexityRoot.AdminUser.Role == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminUser.Role(childComplexity), true
+	case "AdminUser.usedBytes":
+		if e.ComplexityRoot.AdminUser.UsedBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminUser.UsedBytes(childComplexity), true
+
+	case "AdminUserConnection.nodes":
+		if e.ComplexityRoot.AdminUserConnection.Nodes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminUserConnection.Nodes(childComplexity), true
+	case "AdminUserConnection.pageInfo":
+		if e.ComplexityRoot.AdminUserConnection.PageInfo == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AdminUserConnection.PageInfo(childComplexity), true
+
+	case "AuthenticatedUser.id":
+		if e.ComplexityRoot.AuthenticatedUser.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AuthenticatedUser.ID(childComplexity), true
+	case "AuthenticatedUser.role":
+		if e.ComplexityRoot.AuthenticatedUser.Role == nil {
+			break
+		}
+
+		return e.ComplexityRoot.AuthenticatedUser.Role(childComplexity), true
+
+	case "CreatedShare.share":
+		if e.ComplexityRoot.CreatedShare.Share == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CreatedShare.Share(childComplexity), true
+	case "CreatedShare.url":
+		if e.ComplexityRoot.CreatedShare.URL == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CreatedShare.URL(childComplexity), true
+
+	case "FileAccess.expiresAt":
+		if e.ComplexityRoot.FileAccess.ExpiresAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FileAccess.ExpiresAt(childComplexity), true
+	case "FileAccess.url":
+		if e.ComplexityRoot.FileAccess.URL == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FileAccess.URL(childComplexity), true
+
+	case "FileConnection.nodes":
+		if e.ComplexityRoot.FileConnection.Nodes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FileConnection.Nodes(childComplexity), true
+	case "FileConnection.pageInfo":
+		if e.ComplexityRoot.FileConnection.PageInfo == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FileConnection.PageInfo(childComplexity), true
+
+	case "FilePageInfo.endCursor":
+		if e.ComplexityRoot.FilePageInfo.EndCursor == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FilePageInfo.EndCursor(childComplexity), true
+	case "FilePageInfo.hasNextPage":
+		if e.ComplexityRoot.FilePageInfo.HasNextPage == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FilePageInfo.HasNextPage(childComplexity), true
+
+	case "FileShare.createdAt":
+		if e.ComplexityRoot.FileShare.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FileShare.CreatedAt(childComplexity), true
+	case "FileShare.expiresAt":
+		if e.ComplexityRoot.FileShare.ExpiresAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FileShare.ExpiresAt(childComplexity), true
+	case "FileShare.id":
+		if e.ComplexityRoot.FileShare.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FileShare.ID(childComplexity), true
+	case "FileShare.permission":
+		if e.ComplexityRoot.FileShare.Permission == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FileShare.Permission(childComplexity), true
+	case "FileShare.recipientId":
+		if e.ComplexityRoot.FileShare.RecipientID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FileShare.RecipientID(childComplexity), true
+
+	case "FileSharing.downloadStarts":
+		if e.ComplexityRoot.FileSharing.DownloadStarts == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FileSharing.DownloadStarts(childComplexity), true
+	case "FileSharing.shares":
+		if e.ComplexityRoot.FileSharing.Shares == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FileSharing.Shares(childComplexity), true
+
+	case "LoginPayload.csrfToken":
+		if e.ComplexityRoot.LoginPayload.CsrfToken == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LoginPayload.CsrfToken(childComplexity), true
+	case "LoginPayload.user":
+		if e.ComplexityRoot.LoginPayload.User == nil {
+			break
+		}
+
+		return e.ComplexityRoot.LoginPayload.User(childComplexity), true
+
+	case "Mutation.adminSetQuota":
+		if e.ComplexityRoot.Mutation.AdminSetQuota == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_adminSetQuota_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.AdminSetQuota(childComplexity, args["userId"].(string), args["quotaBytes"].(string)), true
+	case "Mutation.adminSetUserDisabled":
+		if e.ComplexityRoot.Mutation.AdminSetUserDisabled == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_adminSetUserDisabled_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.AdminSetUserDisabled(childComplexity, args["userId"].(string), args["disabled"].(bool)), true
 	case "Mutation.beginSession":
 		if e.ComplexityRoot.Mutation.BeginSession == nil {
 			break
 		}
 
 		return e.ComplexityRoot.Mutation.BeginSession(childComplexity), true
+	case "Mutation.createFileAccess":
+		if e.ComplexityRoot.Mutation.CreateFileAccess == nil {
+			break
+		}
 
+		args, err := ec.field_Mutation_createFileAccess_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateFileAccess(childComplexity, args["fileId"].(string), args["mode"].(model.FileAccessMode)), true
+	case "Mutation.createShare":
+		if e.ComplexityRoot.Mutation.CreateShare == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createShare_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateShare(childComplexity, args["input"].(model.CreateShareInput)), true
+	case "Mutation.createSharedAccess":
+		if e.ComplexityRoot.Mutation.CreateSharedAccess == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createSharedAccess_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateSharedAccess(childComplexity, args["token"].(string), args["mode"].(model.FileAccessMode)), true
+	case "Mutation.deleteFile":
+		if e.ComplexityRoot.Mutation.DeleteFile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteFile_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DeleteFile(childComplexity, args["id"].(string)), true
+	case "Mutation.login":
+		if e.ComplexityRoot.Mutation.Login == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_login_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.Login(childComplexity, args["input"].(model.LoginInput)), true
+	case "Mutation.logout":
+		if e.ComplexityRoot.Mutation.Logout == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Mutation.Logout(childComplexity), true
+	case "Mutation.revokeShare":
+		if e.ComplexityRoot.Mutation.RevokeShare == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_revokeShare_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.RevokeShare(childComplexity, args["id"].(string)), true
+	case "Mutation.uploadFile":
+		if e.ComplexityRoot.Mutation.UploadFile == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_uploadFile_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.UploadFile(childComplexity, args["file"].(graphql.Upload), args["idempotencyKey"].(*string)), true
+	case "Mutation.uploadFiles":
+		if e.ComplexityRoot.Mutation.UploadFiles == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_uploadFiles_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.UploadFiles(childComplexity, args["files"].([]*graphql.Upload), args["idempotencyKey"].(*string)), true
+
+	case "Query.adminAudit":
+		if e.ComplexityRoot.Query.AdminAudit == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminAudit_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.AdminAudit(childComplexity, args["first"].(int), args["after"].(*string)), true
+	case "Query.adminFiles":
+		if e.ComplexityRoot.Query.AdminFiles == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminFiles_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.AdminFiles(childComplexity, args["first"].(int), args["after"].(*string), args["ownerId"].(*string)), true
+	case "Query.adminStorageStats":
+		if e.ComplexityRoot.Query.AdminStorageStats == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.AdminStorageStats(childComplexity), true
+	case "Query.adminUsers":
+		if e.ComplexityRoot.Query.AdminUsers == nil {
+			break
+		}
+
+		args, err := ec.field_Query_adminUsers_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.AdminUsers(childComplexity, args["first"].(int), args["after"].(*string)), true
+	case "Query.file":
+		if e.ComplexityRoot.Query.File == nil {
+			break
+		}
+
+		args, err := ec.field_Query_file_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.File(childComplexity, args["id"].(string)), true
+	case "Query.fileShares":
+		if e.ComplexityRoot.Query.FileShares == nil {
+			break
+		}
+
+		args, err := ec.field_Query_fileShares_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.FileShares(childComplexity, args["fileId"].(string)), true
+	case "Query.files":
+		if e.ComplexityRoot.Query.Files == nil {
+			break
+		}
+
+		args, err := ec.field_Query_files_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Files(childComplexity, args["first"].(int), args["after"].(*string), args["filter"].(*model.FileFilter)), true
+
+	case "Query.me":
+		if e.ComplexityRoot.Query.Me == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.Me(childComplexity), true
+	case "Query.quota":
+		if e.ComplexityRoot.Query.Quota == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.Quota(childComplexity), true
 	case "Query.serviceInfo":
 		if e.ComplexityRoot.Query.ServiceInfo == nil {
 			break
 		}
 
 		return e.ComplexityRoot.Query.ServiceInfo(childComplexity), true
+	case "Query.sharedFile":
+		if e.ComplexityRoot.Query.SharedFile == nil {
+			break
+		}
+
+		args, err := ec.field_Query_sharedFile_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.SharedFile(childComplexity, args["token"].(string)), true
+	case "Query.storageStats":
+		if e.ComplexityRoot.Query.StorageStats == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.StorageStats(childComplexity), true
+
+	case "Quota.quotaBytes":
+		if e.ComplexityRoot.Quota.QuotaBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Quota.QuotaBytes(childComplexity), true
+	case "Quota.remainingBytes":
+		if e.ComplexityRoot.Quota.RemainingBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Quota.RemainingBytes(childComplexity), true
+	case "Quota.usedBytes":
+		if e.ComplexityRoot.Quota.UsedBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Quota.UsedBytes(childComplexity), true
 
 	case "ServiceInfo.name":
 		if e.ComplexityRoot.ServiceInfo.Name == nil {
@@ -111,6 +868,99 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.SessionBootstrap.CsrfToken(childComplexity), true
 
+	case "SharedFile.detectedMIME":
+		if e.ComplexityRoot.SharedFile.DetectedMime == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SharedFile.DetectedMime(childComplexity), true
+	case "SharedFile.expiresAt":
+		if e.ComplexityRoot.SharedFile.ExpiresAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SharedFile.ExpiresAt(childComplexity), true
+	case "SharedFile.name":
+		if e.ComplexityRoot.SharedFile.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SharedFile.Name(childComplexity), true
+	case "SharedFile.previewAllowed":
+		if e.ComplexityRoot.SharedFile.PreviewAllowed == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SharedFile.PreviewAllowed(childComplexity), true
+	case "SharedFile.sizeBytes":
+		if e.ComplexityRoot.SharedFile.SizeBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.SharedFile.SizeBytes(childComplexity), true
+
+	case "StorageStats.fileCount":
+		if e.ComplexityRoot.StorageStats.FileCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.StorageStats.FileCount(childComplexity), true
+	case "StorageStats.logicalBytes":
+		if e.ComplexityRoot.StorageStats.LogicalBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.StorageStats.LogicalBytes(childComplexity), true
+	case "StorageStats.savedBytes":
+		if e.ComplexityRoot.StorageStats.SavedBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.StorageStats.SavedBytes(childComplexity), true
+	case "StorageStats.savingsPercent":
+		if e.ComplexityRoot.StorageStats.SavingsPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.StorageStats.SavingsPercent(childComplexity), true
+	case "StorageStats.uniqueContentBytes":
+		if e.ComplexityRoot.StorageStats.UniqueContentBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.StorageStats.UniqueContentBytes(childComplexity), true
+
+	case "VaultFile.createdAt":
+		if e.ComplexityRoot.VaultFile.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.VaultFile.CreatedAt(childComplexity), true
+	case "VaultFile.detectedMIME":
+		if e.ComplexityRoot.VaultFile.DetectedMime == nil {
+			break
+		}
+
+		return e.ComplexityRoot.VaultFile.DetectedMime(childComplexity), true
+	case "VaultFile.id":
+		if e.ComplexityRoot.VaultFile.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.VaultFile.ID(childComplexity), true
+	case "VaultFile.name":
+		if e.ComplexityRoot.VaultFile.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.VaultFile.Name(childComplexity), true
+	case "VaultFile.sizeBytes":
+		if e.ComplexityRoot.VaultFile.SizeBytes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.VaultFile.SizeBytes(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -118,7 +968,11 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
-	inputUnmarshalMap := graphql.BuildUnmarshalerMap()
+	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputCreateShareInput,
+		ec.unmarshalInputFileFilter,
+		ec.unmarshalInputLoginInput,
+	)
 	first := true
 
 	switch opCtx.Operation.Operation {
@@ -212,6 +1066,218 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // Each function is generated once per unique object type, deduplicating the
 // switch statements that were previously inlined in every fieldContext_* function.
 
+func (ec *executionContext) childFields_AdminAuditConnection(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "nodes":
+		return ec.fieldContext_AdminAuditConnection_nodes(ctx, field)
+	case "pageInfo":
+		return ec.fieldContext_AdminAuditConnection_pageInfo(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type AdminAuditConnection", field.Name)
+}
+
+func (ec *executionContext) childFields_AdminAuditEntry(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_AdminAuditEntry_id(ctx, field)
+	case "actorId":
+		return ec.fieldContext_AdminAuditEntry_actorId(ctx, field)
+	case "targetUserId":
+		return ec.fieldContext_AdminAuditEntry_targetUserId(ctx, field)
+	case "action":
+		return ec.fieldContext_AdminAuditEntry_action(ctx, field)
+	case "occurredAt":
+		return ec.fieldContext_AdminAuditEntry_occurredAt(ctx, field)
+	case "previousQuota":
+		return ec.fieldContext_AdminAuditEntry_previousQuota(ctx, field)
+	case "newQuota":
+		return ec.fieldContext_AdminAuditEntry_newQuota(ctx, field)
+	case "previousDisabledAt":
+		return ec.fieldContext_AdminAuditEntry_previousDisabledAt(ctx, field)
+	case "newDisabledAt":
+		return ec.fieldContext_AdminAuditEntry_newDisabledAt(ctx, field)
+	case "revokedSessions":
+		return ec.fieldContext_AdminAuditEntry_revokedSessions(ctx, field)
+	case "revokedShares":
+		return ec.fieldContext_AdminAuditEntry_revokedShares(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type AdminAuditEntry", field.Name)
+}
+
+func (ec *executionContext) childFields_AdminFile(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "file":
+		return ec.fieldContext_AdminFile_file(ctx, field)
+	case "ownerId":
+		return ec.fieldContext_AdminFile_ownerId(ctx, field)
+	case "loginName":
+		return ec.fieldContext_AdminFile_loginName(ctx, field)
+	case "downloadStarts":
+		return ec.fieldContext_AdminFile_downloadStarts(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type AdminFile", field.Name)
+}
+
+func (ec *executionContext) childFields_AdminFileConnection(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "nodes":
+		return ec.fieldContext_AdminFileConnection_nodes(ctx, field)
+	case "pageInfo":
+		return ec.fieldContext_AdminFileConnection_pageInfo(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type AdminFileConnection", field.Name)
+}
+
+func (ec *executionContext) childFields_AdminStorageStats(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "userCount":
+		return ec.fieldContext_AdminStorageStats_userCount(ctx, field)
+	case "fileCount":
+		return ec.fieldContext_AdminStorageStats_fileCount(ctx, field)
+	case "logicalBytes":
+		return ec.fieldContext_AdminStorageStats_logicalBytes(ctx, field)
+	case "referencedBytes":
+		return ec.fieldContext_AdminStorageStats_referencedBytes(ctx, field)
+	case "pendingDeletionBytes":
+		return ec.fieldContext_AdminStorageStats_pendingDeletionBytes(ctx, field)
+	case "savedBytes":
+		return ec.fieldContext_AdminStorageStats_savedBytes(ctx, field)
+	case "savingsPercent":
+		return ec.fieldContext_AdminStorageStats_savingsPercent(ctx, field)
+	case "downloadStarts":
+		return ec.fieldContext_AdminStorageStats_downloadStarts(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type AdminStorageStats", field.Name)
+}
+
+func (ec *executionContext) childFields_AdminUser(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_AdminUser_id(ctx, field)
+	case "loginName":
+		return ec.fieldContext_AdminUser_loginName(ctx, field)
+	case "role":
+		return ec.fieldContext_AdminUser_role(ctx, field)
+	case "usedBytes":
+		return ec.fieldContext_AdminUser_usedBytes(ctx, field)
+	case "quotaBytes":
+		return ec.fieldContext_AdminUser_quotaBytes(ctx, field)
+	case "disabledAt":
+		return ec.fieldContext_AdminUser_disabledAt(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_AdminUser_createdAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type AdminUser", field.Name)
+}
+
+func (ec *executionContext) childFields_AdminUserConnection(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "nodes":
+		return ec.fieldContext_AdminUserConnection_nodes(ctx, field)
+	case "pageInfo":
+		return ec.fieldContext_AdminUserConnection_pageInfo(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type AdminUserConnection", field.Name)
+}
+
+func (ec *executionContext) childFields_AuthenticatedUser(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_AuthenticatedUser_id(ctx, field)
+	case "role":
+		return ec.fieldContext_AuthenticatedUser_role(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type AuthenticatedUser", field.Name)
+}
+
+func (ec *executionContext) childFields_CreatedShare(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "share":
+		return ec.fieldContext_CreatedShare_share(ctx, field)
+	case "url":
+		return ec.fieldContext_CreatedShare_url(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CreatedShare", field.Name)
+}
+
+func (ec *executionContext) childFields_FileAccess(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "url":
+		return ec.fieldContext_FileAccess_url(ctx, field)
+	case "expiresAt":
+		return ec.fieldContext_FileAccess_expiresAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type FileAccess", field.Name)
+}
+
+func (ec *executionContext) childFields_FileConnection(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "nodes":
+		return ec.fieldContext_FileConnection_nodes(ctx, field)
+	case "pageInfo":
+		return ec.fieldContext_FileConnection_pageInfo(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type FileConnection", field.Name)
+}
+
+func (ec *executionContext) childFields_FilePageInfo(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "endCursor":
+		return ec.fieldContext_FilePageInfo_endCursor(ctx, field)
+	case "hasNextPage":
+		return ec.fieldContext_FilePageInfo_hasNextPage(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type FilePageInfo", field.Name)
+}
+
+func (ec *executionContext) childFields_FileShare(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_FileShare_id(ctx, field)
+	case "recipientId":
+		return ec.fieldContext_FileShare_recipientId(ctx, field)
+	case "permission":
+		return ec.fieldContext_FileShare_permission(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_FileShare_createdAt(ctx, field)
+	case "expiresAt":
+		return ec.fieldContext_FileShare_expiresAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type FileShare", field.Name)
+}
+
+func (ec *executionContext) childFields_FileSharing(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "shares":
+		return ec.fieldContext_FileSharing_shares(ctx, field)
+	case "downloadStarts":
+		return ec.fieldContext_FileSharing_downloadStarts(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type FileSharing", field.Name)
+}
+
+func (ec *executionContext) childFields_LoginPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "csrfToken":
+		return ec.fieldContext_LoginPayload_csrfToken(ctx, field)
+	case "user":
+		return ec.fieldContext_LoginPayload_user(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type LoginPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_Quota(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "usedBytes":
+		return ec.fieldContext_Quota_usedBytes(ctx, field)
+	case "quotaBytes":
+		return ec.fieldContext_Quota_quotaBytes(ctx, field)
+	case "remainingBytes":
+		return ec.fieldContext_Quota_remainingBytes(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Quota", field.Name)
+}
+
 func (ec *executionContext) childFields_ServiceInfo(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "name":
@@ -226,6 +1292,54 @@ func (ec *executionContext) childFields_SessionBootstrap(ctx context.Context, fi
 		return ec.fieldContext_SessionBootstrap_csrfToken(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type SessionBootstrap", field.Name)
+}
+
+func (ec *executionContext) childFields_SharedFile(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "name":
+		return ec.fieldContext_SharedFile_name(ctx, field)
+	case "sizeBytes":
+		return ec.fieldContext_SharedFile_sizeBytes(ctx, field)
+	case "detectedMIME":
+		return ec.fieldContext_SharedFile_detectedMIME(ctx, field)
+	case "previewAllowed":
+		return ec.fieldContext_SharedFile_previewAllowed(ctx, field)
+	case "expiresAt":
+		return ec.fieldContext_SharedFile_expiresAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type SharedFile", field.Name)
+}
+
+func (ec *executionContext) childFields_StorageStats(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "fileCount":
+		return ec.fieldContext_StorageStats_fileCount(ctx, field)
+	case "logicalBytes":
+		return ec.fieldContext_StorageStats_logicalBytes(ctx, field)
+	case "uniqueContentBytes":
+		return ec.fieldContext_StorageStats_uniqueContentBytes(ctx, field)
+	case "savedBytes":
+		return ec.fieldContext_StorageStats_savedBytes(ctx, field)
+	case "savingsPercent":
+		return ec.fieldContext_StorageStats_savingsPercent(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type StorageStats", field.Name)
+}
+
+func (ec *executionContext) childFields_VaultFile(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_VaultFile_id(ctx, field)
+	case "name":
+		return ec.fieldContext_VaultFile_name(ctx, field)
+	case "sizeBytes":
+		return ec.fieldContext_VaultFile_sizeBytes(ctx, field)
+	case "detectedMIME":
+		return ec.fieldContext_VaultFile_detectedMIME(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_VaultFile_createdAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type VaultFile", field.Name)
 }
 
 func (ec *executionContext) childFields___Directive(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -344,6 +1458,194 @@ func (ec *executionContext) childFields___Type(ctx context.Context, field graphq
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Mutation_adminSetQuota_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "quotaBytes",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["quotaBytes"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_adminSetUserDisabled_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "userId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["userId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "disabled",
+		func(ctx context.Context, v any) (bool, error) {
+			return ec.unmarshalNBoolean2bool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["disabled"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createFileAccess_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "fileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["fileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "mode",
+		func(ctx context.Context, v any) (model.FileAccessMode, error) {
+			return ec.unmarshalNFileAccessMode2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccessMode(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mode"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createShare_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.CreateShareInput, error) {
+			return ec.unmarshalNCreateShareInput2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐCreateShareInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createSharedAccess_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "token",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["token"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "mode",
+		func(ctx context.Context, v any) (model.FileAccessMode, error) {
+			return ec.unmarshalNFileAccessMode2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccessMode(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["mode"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteFile_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.LoginInput, error) {
+			return ec.unmarshalNLoginInput2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐLoginInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_revokeShare_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_uploadFile_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "file",
+		func(ctx context.Context, v any) (graphql.Upload, error) {
+			return ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["file"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "idempotencyKey",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOID2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["idempotencyKey"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_uploadFiles_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "files",
+		func(ctx context.Context, v any) ([]*graphql.Upload, error) {
+			return ec.unmarshalNUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["files"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "idempotencyKey",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOID2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["idempotencyKey"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -355,6 +1657,152 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_adminAudit_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "first",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNInt2int(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_adminFiles_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "first",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNInt2int(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "ownerId",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOID2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["ownerId"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_adminUsers_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "first",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNInt2int(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_fileShares_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "fileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["fileId"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_file_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_files_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "first",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNInt2int(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "filter",
+		func(ctx context.Context, v any) (*model.FileFilter, error) {
+			return ec.unmarshalOFileFilter2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileFilter(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_sharedFile_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "token",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["token"] = arg0
 	return args, nil
 }
 
@@ -418,6 +1866,1599 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _AdminAuditConnection_nodes(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditConnection_nodes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Nodes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.AdminAuditEntry) graphql.Marshaler {
+			return ec.marshalNAdminAuditEntry2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditEntryᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditConnection_nodes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdminAuditConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_AdminAuditEntry(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AdminAuditConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditConnection_pageInfo(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.FilePageInfo) graphql.Marshaler {
+			return ec.marshalNFilePageInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdminAuditConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FilePageInfo(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AdminAuditEntry_id(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditEntry_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditEntry_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminAuditEntry", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _AdminAuditEntry_actorId(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditEntry_actorId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ActorID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditEntry_actorId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminAuditEntry", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _AdminAuditEntry_targetUserId(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditEntry_targetUserId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TargetUserID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditEntry_targetUserId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminAuditEntry", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _AdminAuditEntry_action(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditEntry_action(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Action, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditEntry_action(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminAuditEntry", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminAuditEntry_occurredAt(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditEntry_occurredAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.OccurredAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditEntry_occurredAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminAuditEntry", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
+func (ec *executionContext) _AdminAuditEntry_previousQuota(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditEntry_previousQuota(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PreviousQuota, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditEntry_previousQuota(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminAuditEntry", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminAuditEntry_newQuota(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditEntry_newQuota(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NewQuota, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditEntry_newQuota(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminAuditEntry", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminAuditEntry_previousDisabledAt(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditEntry_previousDisabledAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PreviousDisabledAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *time.Time) graphql.Marshaler {
+			return ec.marshalOTime2ᚖtimeᚐTime(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditEntry_previousDisabledAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminAuditEntry", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
+func (ec *executionContext) _AdminAuditEntry_newDisabledAt(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditEntry_newDisabledAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NewDisabledAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *time.Time) graphql.Marshaler {
+			return ec.marshalOTime2ᚖtimeᚐTime(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditEntry_newDisabledAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminAuditEntry", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
+func (ec *executionContext) _AdminAuditEntry_revokedSessions(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditEntry_revokedSessions(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RevokedSessions, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditEntry_revokedSessions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminAuditEntry", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminAuditEntry_revokedShares(ctx context.Context, field graphql.CollectedField, obj *model.AdminAuditEntry) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminAuditEntry_revokedShares(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RevokedShares, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminAuditEntry_revokedShares(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminAuditEntry", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminFile_file(ctx context.Context, field graphql.CollectedField, obj *model.AdminFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminFile_file(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.File, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.VaultFile) graphql.Marshaler {
+			return ec.marshalNVaultFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminFile_file(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdminFile",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_VaultFile(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AdminFile_ownerId(ctx context.Context, field graphql.CollectedField, obj *model.AdminFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminFile_ownerId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.OwnerID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminFile_ownerId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminFile", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _AdminFile_loginName(ctx context.Context, field graphql.CollectedField, obj *model.AdminFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminFile_loginName(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LoginName, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_AdminFile_loginName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminFile", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminFile_downloadStarts(ctx context.Context, field graphql.CollectedField, obj *model.AdminFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminFile_downloadStarts(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DownloadStarts, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminFile_downloadStarts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminFile", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminFileConnection_nodes(ctx context.Context, field graphql.CollectedField, obj *model.AdminFileConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminFileConnection_nodes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Nodes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.AdminFile) graphql.Marshaler {
+			return ec.marshalNAdminFile2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFileᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminFileConnection_nodes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdminFileConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_AdminFile(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AdminFileConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.AdminFileConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminFileConnection_pageInfo(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.FilePageInfo) graphql.Marshaler {
+			return ec.marshalNFilePageInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminFileConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdminFileConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FilePageInfo(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AdminStorageStats_userCount(ctx context.Context, field graphql.CollectedField, obj *model.AdminStorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminStorageStats_userCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UserCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminStorageStats_userCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminStorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminStorageStats_fileCount(ctx context.Context, field graphql.CollectedField, obj *model.AdminStorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminStorageStats_fileCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FileCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminStorageStats_fileCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminStorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminStorageStats_logicalBytes(ctx context.Context, field graphql.CollectedField, obj *model.AdminStorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminStorageStats_logicalBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LogicalBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminStorageStats_logicalBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminStorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminStorageStats_referencedBytes(ctx context.Context, field graphql.CollectedField, obj *model.AdminStorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminStorageStats_referencedBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ReferencedBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminStorageStats_referencedBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminStorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminStorageStats_pendingDeletionBytes(ctx context.Context, field graphql.CollectedField, obj *model.AdminStorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminStorageStats_pendingDeletionBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PendingDeletionBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminStorageStats_pendingDeletionBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminStorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminStorageStats_savedBytes(ctx context.Context, field graphql.CollectedField, obj *model.AdminStorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminStorageStats_savedBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SavedBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminStorageStats_savedBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminStorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminStorageStats_savingsPercent(ctx context.Context, field graphql.CollectedField, obj *model.AdminStorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminStorageStats_savingsPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SavingsPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminStorageStats_savingsPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminStorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminStorageStats_downloadStarts(ctx context.Context, field graphql.CollectedField, obj *model.AdminStorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminStorageStats_downloadStarts(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DownloadStarts, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminStorageStats_downloadStarts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminStorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminUser_id(ctx context.Context, field graphql.CollectedField, obj *model.AdminUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminUser_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminUser_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminUser", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _AdminUser_loginName(ctx context.Context, field graphql.CollectedField, obj *model.AdminUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminUser_loginName(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LoginName, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_AdminUser_loginName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminUser", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminUser_role(ctx context.Context, field graphql.CollectedField, obj *model.AdminUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminUser_role(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Role, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.UserRole) graphql.Marshaler {
+			return ec.marshalNUserRole2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐUserRole(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminUser_role(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminUser", field, false, false, errors.New("field of type UserRole does not have child fields"))
+}
+
+func (ec *executionContext) _AdminUser_usedBytes(ctx context.Context, field graphql.CollectedField, obj *model.AdminUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminUser_usedBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UsedBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminUser_usedBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminUser", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminUser_quotaBytes(ctx context.Context, field graphql.CollectedField, obj *model.AdminUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminUser_quotaBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.QuotaBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminUser_quotaBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminUser", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _AdminUser_disabledAt(ctx context.Context, field graphql.CollectedField, obj *model.AdminUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminUser_disabledAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DisabledAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *time.Time) graphql.Marshaler {
+			return ec.marshalOTime2ᚖtimeᚐTime(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_AdminUser_disabledAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminUser", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
+func (ec *executionContext) _AdminUser_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.AdminUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminUser_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminUser_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AdminUser", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
+func (ec *executionContext) _AdminUserConnection_nodes(ctx context.Context, field graphql.CollectedField, obj *model.AdminUserConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminUserConnection_nodes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Nodes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.AdminUser) graphql.Marshaler {
+			return ec.marshalNAdminUser2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUserᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminUserConnection_nodes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdminUserConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_AdminUser(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AdminUserConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.AdminUserConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AdminUserConnection_pageInfo(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.FilePageInfo) graphql.Marshaler {
+			return ec.marshalNFilePageInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AdminUserConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AdminUserConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FilePageInfo(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AuthenticatedUser_id(ctx context.Context, field graphql.CollectedField, obj *model.AuthenticatedUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthenticatedUser_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AuthenticatedUser_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AuthenticatedUser", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _AuthenticatedUser_role(ctx context.Context, field graphql.CollectedField, obj *model.AuthenticatedUser) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_AuthenticatedUser_role(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Role, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.UserRole) graphql.Marshaler {
+			return ec.marshalNUserRole2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐUserRole(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_AuthenticatedUser_role(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("AuthenticatedUser", field, false, false, errors.New("field of type UserRole does not have child fields"))
+}
+
+func (ec *executionContext) _CreatedShare_share(ctx context.Context, field graphql.CollectedField, obj *model.CreatedShare) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CreatedShare_share(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Share, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.FileShare) graphql.Marshaler {
+			return ec.marshalNFileShare2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShare(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CreatedShare_share(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CreatedShare",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FileShare(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CreatedShare_url(ctx context.Context, field graphql.CollectedField, obj *model.CreatedShare) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CreatedShare_url(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.URL, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CreatedShare_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CreatedShare", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FileAccess_url(ctx context.Context, field graphql.CollectedField, obj *model.FileAccess) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FileAccess_url(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.URL, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FileAccess_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FileAccess", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FileAccess_expiresAt(ctx context.Context, field graphql.CollectedField, obj *model.FileAccess) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FileAccess_expiresAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ExpiresAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FileAccess_expiresAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FileAccess", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
+func (ec *executionContext) _FileConnection_nodes(ctx context.Context, field graphql.CollectedField, obj *model.FileConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FileConnection_nodes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Nodes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.VaultFile) graphql.Marshaler {
+			return ec.marshalNVaultFile2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFileᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FileConnection_nodes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_VaultFile(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.FileConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FileConnection_pageInfo(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.FilePageInfo) graphql.Marshaler {
+			return ec.marshalNFilePageInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FileConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FilePageInfo(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FilePageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *model.FilePageInfo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FilePageInfo_endCursor(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.EndCursor, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_FilePageInfo_endCursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FilePageInfo", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FilePageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model.FilePageInfo) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FilePageInfo_hasNextPage(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HasNextPage, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FilePageInfo_hasNextPage(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FilePageInfo", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _FileShare_id(ctx context.Context, field graphql.CollectedField, obj *model.FileShare) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FileShare_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FileShare_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FileShare", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _FileShare_recipientId(ctx context.Context, field graphql.CollectedField, obj *model.FileShare) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FileShare_recipientId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RecipientID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOID2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_FileShare_recipientId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FileShare", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _FileShare_permission(ctx context.Context, field graphql.CollectedField, obj *model.FileShare) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FileShare_permission(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Permission, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.SharePermission) graphql.Marshaler {
+			return ec.marshalNSharePermission2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FileShare_permission(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FileShare", field, false, false, errors.New("field of type SharePermission does not have child fields"))
+}
+
+func (ec *executionContext) _FileShare_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.FileShare) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FileShare_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FileShare_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FileShare", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
+func (ec *executionContext) _FileShare_expiresAt(ctx context.Context, field graphql.CollectedField, obj *model.FileShare) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FileShare_expiresAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ExpiresAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FileShare_expiresAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FileShare", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
+func (ec *executionContext) _FileSharing_shares(ctx context.Context, field graphql.CollectedField, obj *model.FileSharing) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FileSharing_shares(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Shares, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.FileShare) graphql.Marshaler {
+			return ec.marshalNFileShare2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShareᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FileSharing_shares(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileSharing",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FileShare(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FileSharing_downloadStarts(ctx context.Context, field graphql.CollectedField, obj *model.FileSharing) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FileSharing_downloadStarts(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DownloadStarts, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FileSharing_downloadStarts(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FileSharing", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _LoginPayload_csrfToken(ctx context.Context, field graphql.CollectedField, obj *model.LoginPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LoginPayload_csrfToken(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CsrfToken, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LoginPayload_csrfToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("LoginPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _LoginPayload_user(ctx context.Context, field graphql.CollectedField, obj *model.LoginPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_LoginPayload_user(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.User, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.AuthenticatedUser) graphql.Marshaler {
+			return ec.marshalNAuthenticatedUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAuthenticatedUser(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_LoginPayload_user(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "LoginPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_AuthenticatedUser(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_adminSetQuota(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_adminSetQuota(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().AdminSetQuota(ctx, fc.Args["userId"].(string), fc.Args["quotaBytes"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.AdminUser) graphql.Marshaler {
+			return ec.marshalNAdminUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUser(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_adminSetQuota(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_AdminUser(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_adminSetQuota_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_adminSetUserDisabled(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_adminSetUserDisabled(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().AdminSetUserDisabled(ctx, fc.Args["userId"].(string), fc.Args["disabled"].(bool))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.AdminUser) graphql.Marshaler {
+			return ec.marshalNAdminUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUser(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_adminSetUserDisabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_AdminUser(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_adminSetUserDisabled_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createShare(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createShare(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateShare(ctx, fc.Args["input"].(model.CreateShareInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.CreatedShare) graphql.Marshaler {
+			return ec.marshalNCreatedShare2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐCreatedShare(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_createShare(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_CreatedShare(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createShare_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_revokeShare(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_revokeShare(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().RevokeShare(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_revokeShare(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_revokeShare_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createSharedAccess(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createSharedAccess(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateSharedAccess(ctx, fc.Args["token"].(string), fc.Args["mode"].(model.FileAccessMode))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.FileAccess) graphql.Marshaler {
+			return ec.marshalNFileAccess2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccess(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_createSharedAccess(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FileAccess(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createSharedAccess_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_beginSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -450,6 +3491,501 @@ func (ec *executionContext) fieldContext_Mutation_beginSession(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_login(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().Login(ctx, fc.Args["input"].(model.LoginInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.LoginPayload) graphql.Marshaler {
+			return ec.marshalNLoginPayload2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐLoginPayload(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_LoginPayload(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_login_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_logout(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_logout(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Mutation().Logout(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_logout(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Mutation", field, true, true, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Mutation_createFileAccess(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createFileAccess(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateFileAccess(ctx, fc.Args["fileId"].(string), fc.Args["mode"].(model.FileAccessMode))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.FileAccess) graphql.Marshaler {
+			return ec.marshalNFileAccess2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccess(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_createFileAccess(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FileAccess(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createFileAccess_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteFile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteFile(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DeleteFile(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_deleteFile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteFile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_uploadFile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_uploadFile(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UploadFile(ctx, fc.Args["file"].(graphql.Upload), fc.Args["idempotencyKey"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.VaultFile) graphql.Marshaler {
+			return ec.marshalNVaultFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_uploadFile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_VaultFile(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_uploadFile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_uploadFiles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_uploadFiles(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UploadFiles(ctx, fc.Args["files"].([]*graphql.Upload), fc.Args["idempotencyKey"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.VaultFile) graphql.Marshaler {
+			return ec.marshalNVaultFile2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFileᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_uploadFiles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_VaultFile(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_uploadFiles_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminUsers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_adminUsers(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().AdminUsers(ctx, fc.Args["first"].(int), fc.Args["after"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.AdminUserConnection) graphql.Marshaler {
+			return ec.marshalNAdminUserConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUserConnection(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_adminUsers(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_AdminUserConnection(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_adminUsers_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminFiles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_adminFiles(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().AdminFiles(ctx, fc.Args["first"].(int), fc.Args["after"].(*string), fc.Args["ownerId"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.AdminFileConnection) graphql.Marshaler {
+			return ec.marshalNAdminFileConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFileConnection(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_adminFiles(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_AdminFileConnection(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_adminFiles_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminStorageStats(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_adminStorageStats(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().AdminStorageStats(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.AdminStorageStats) graphql.Marshaler {
+			return ec.marshalNAdminStorageStats2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminStorageStats(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_adminStorageStats(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_AdminStorageStats(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_adminAudit(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_adminAudit(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().AdminAudit(ctx, fc.Args["first"].(int), fc.Args["after"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.AdminAuditConnection) graphql.Marshaler {
+			return ec.marshalNAdminAuditConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditConnection(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_adminAudit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_AdminAuditConnection(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_adminAudit_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_fileShares(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_fileShares(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().FileShares(ctx, fc.Args["fileId"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.FileSharing) graphql.Marshaler {
+			return ec.marshalNFileSharing2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileSharing(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_fileShares(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FileSharing(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_fileShares_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_sharedFile(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_sharedFile(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().SharedFile(ctx, fc.Args["token"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.SharedFile) graphql.Marshaler {
+			return ec.marshalOSharedFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharedFile(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Query_sharedFile(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_SharedFile(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_sharedFile_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_serviceInfo(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -478,6 +4014,190 @@ func (ec *executionContext) fieldContext_Query_serviceInfo(_ context.Context, fi
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_ServiceInfo(ctx, field)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_me(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().Me(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.AuthenticatedUser) graphql.Marshaler {
+			return ec.marshalNAuthenticatedUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAuthenticatedUser(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_me(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_AuthenticatedUser(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_quota(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_quota(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().Quota(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Quota) graphql.Marshaler {
+			return ec.marshalNQuota2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐQuota(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_quota(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Quota(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_storageStats(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_storageStats(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().StorageStats(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.StorageStats) graphql.Marshaler {
+			return ec.marshalNStorageStats2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐStorageStats(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_storageStats(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_StorageStats(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_files(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_files(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Files(ctx, fc.Args["first"].(int), fc.Args["after"].(*string), fc.Args["filter"].(*model.FileFilter))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.FileConnection) graphql.Marshaler {
+			return ec.marshalNFileConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileConnection(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_files(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FileConnection(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_files_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_file(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_file(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().File(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.VaultFile) graphql.Marshaler {
+			return ec.marshalOVaultFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Query_file(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_VaultFile(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_file_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -558,6 +4278,75 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Quota_usedBytes(ctx context.Context, field graphql.CollectedField, obj *model.Quota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Quota_usedBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UsedBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Quota_usedBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Quota", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Quota_quotaBytes(ctx context.Context, field graphql.CollectedField, obj *model.Quota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Quota_quotaBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.QuotaBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Quota_quotaBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Quota", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Quota_remainingBytes(ctx context.Context, field graphql.CollectedField, obj *model.Quota) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Quota_remainingBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RemainingBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Quota_remainingBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Quota", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
 func (ec *executionContext) _ServiceInfo_name(ctx context.Context, field graphql.CollectedField, obj *model.ServiceInfo) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -602,6 +4391,351 @@ func (ec *executionContext) _SessionBootstrap_csrfToken(ctx context.Context, fie
 }
 func (ec *executionContext) fieldContext_SessionBootstrap_csrfToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("SessionBootstrap", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _SharedFile_name(ctx context.Context, field graphql.CollectedField, obj *model.SharedFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SharedFile_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SharedFile_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("SharedFile", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _SharedFile_sizeBytes(ctx context.Context, field graphql.CollectedField, obj *model.SharedFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SharedFile_sizeBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SizeBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SharedFile_sizeBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("SharedFile", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _SharedFile_detectedMIME(ctx context.Context, field graphql.CollectedField, obj *model.SharedFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SharedFile_detectedMIME(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DetectedMime, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SharedFile_detectedMIME(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("SharedFile", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _SharedFile_previewAllowed(ctx context.Context, field graphql.CollectedField, obj *model.SharedFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SharedFile_previewAllowed(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PreviewAllowed, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SharedFile_previewAllowed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("SharedFile", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _SharedFile_expiresAt(ctx context.Context, field graphql.CollectedField, obj *model.SharedFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_SharedFile_expiresAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ExpiresAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_SharedFile_expiresAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("SharedFile", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
+func (ec *executionContext) _StorageStats_fileCount(ctx context.Context, field graphql.CollectedField, obj *model.StorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_StorageStats_fileCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FileCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_StorageStats_fileCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("StorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _StorageStats_logicalBytes(ctx context.Context, field graphql.CollectedField, obj *model.StorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_StorageStats_logicalBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LogicalBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_StorageStats_logicalBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("StorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _StorageStats_uniqueContentBytes(ctx context.Context, field graphql.CollectedField, obj *model.StorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_StorageStats_uniqueContentBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UniqueContentBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_StorageStats_uniqueContentBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("StorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _StorageStats_savedBytes(ctx context.Context, field graphql.CollectedField, obj *model.StorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_StorageStats_savedBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SavedBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_StorageStats_savedBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("StorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _StorageStats_savingsPercent(ctx context.Context, field graphql.CollectedField, obj *model.StorageStats) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_StorageStats_savingsPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SavingsPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_StorageStats_savingsPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("StorageStats", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _VaultFile_id(ctx context.Context, field graphql.CollectedField, obj *model.VaultFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VaultFile_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_VaultFile_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("VaultFile", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _VaultFile_name(ctx context.Context, field graphql.CollectedField, obj *model.VaultFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VaultFile_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_VaultFile_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("VaultFile", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _VaultFile_sizeBytes(ctx context.Context, field graphql.CollectedField, obj *model.VaultFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VaultFile_sizeBytes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SizeBytes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_VaultFile_sizeBytes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("VaultFile", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _VaultFile_detectedMIME(ctx context.Context, field graphql.CollectedField, obj *model.VaultFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VaultFile_detectedMIME(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DetectedMime, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_VaultFile_detectedMIME(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("VaultFile", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _VaultFile_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.VaultFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VaultFile_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_VaultFile_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("VaultFile", field, false, false, errors.New("field of type Time does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -1663,6 +5797,163 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCreateShareInput(ctx context.Context, obj any) (model.CreateShareInput, error) {
+	var it model.CreateShareInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["permission"]; !present {
+		asMap["permission"] = "DOWNLOAD"
+	}
+
+	fieldsInOrder := [...]string{"fileId", "permission", "expiresInSeconds", "recipientId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "fileId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fileId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FileID = data
+		case "permission":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("permission"))
+			data, err := ec.unmarshalNSharePermission2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Permission = data
+		case "expiresInSeconds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expiresInSeconds"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExpiresInSeconds = data
+		case "recipientId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recipientId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RecipientID = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputFileFilter(ctx context.Context, obj any) (model.FileFilter, error) {
+	var it model.FileFilter
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"nameContains", "mimeType", "minSizeBytes", "maxSizeBytes", "createdFrom", "createdBefore"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "nameContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NameContains = data
+		case "mimeType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mimeType"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MimeType = data
+		case "minSizeBytes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("minSizeBytes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MinSizeBytes = data
+		case "maxSizeBytes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxSizeBytes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxSizeBytes = data
+		case "createdFrom":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdFrom"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedFrom = data
+		case "createdBefore":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdBefore"))
+			data, err := ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CreatedBefore = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputLoginInput(ctx context.Context, obj any) (model.LoginInput, error) {
+	var it model.LoginInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"loginName", "password"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "loginName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("loginName"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LoginName = data
+		case "password":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Password = data
+		}
+	}
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -1670,6 +5961,776 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var adminAuditConnectionImplementors = []string{"AdminAuditConnection"}
+
+func (ec *executionContext) _AdminAuditConnection(ctx context.Context, sel ast.SelectionSet, obj *model.AdminAuditConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, adminAuditConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AdminAuditConnection")
+		case "nodes":
+			out.Values[i] = ec._AdminAuditConnection_nodes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pageInfo":
+			out.Values[i] = ec._AdminAuditConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var adminAuditEntryImplementors = []string{"AdminAuditEntry"}
+
+func (ec *executionContext) _AdminAuditEntry(ctx context.Context, sel ast.SelectionSet, obj *model.AdminAuditEntry) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, adminAuditEntryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AdminAuditEntry")
+		case "id":
+			out.Values[i] = ec._AdminAuditEntry_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "actorId":
+			out.Values[i] = ec._AdminAuditEntry_actorId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "targetUserId":
+			out.Values[i] = ec._AdminAuditEntry_targetUserId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "action":
+			out.Values[i] = ec._AdminAuditEntry_action(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "occurredAt":
+			out.Values[i] = ec._AdminAuditEntry_occurredAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "previousQuota":
+			out.Values[i] = ec._AdminAuditEntry_previousQuota(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "newQuota":
+			out.Values[i] = ec._AdminAuditEntry_newQuota(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "previousDisabledAt":
+			out.Values[i] = ec._AdminAuditEntry_previousDisabledAt(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "newDisabledAt":
+			out.Values[i] = ec._AdminAuditEntry_newDisabledAt(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "revokedSessions":
+			out.Values[i] = ec._AdminAuditEntry_revokedSessions(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "revokedShares":
+			out.Values[i] = ec._AdminAuditEntry_revokedShares(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var adminFileImplementors = []string{"AdminFile"}
+
+func (ec *executionContext) _AdminFile(ctx context.Context, sel ast.SelectionSet, obj *model.AdminFile) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, adminFileImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AdminFile")
+		case "file":
+			out.Values[i] = ec._AdminFile_file(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ownerId":
+			out.Values[i] = ec._AdminFile_ownerId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "loginName":
+			out.Values[i] = ec._AdminFile_loginName(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "downloadStarts":
+			out.Values[i] = ec._AdminFile_downloadStarts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var adminFileConnectionImplementors = []string{"AdminFileConnection"}
+
+func (ec *executionContext) _AdminFileConnection(ctx context.Context, sel ast.SelectionSet, obj *model.AdminFileConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, adminFileConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AdminFileConnection")
+		case "nodes":
+			out.Values[i] = ec._AdminFileConnection_nodes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pageInfo":
+			out.Values[i] = ec._AdminFileConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var adminStorageStatsImplementors = []string{"AdminStorageStats"}
+
+func (ec *executionContext) _AdminStorageStats(ctx context.Context, sel ast.SelectionSet, obj *model.AdminStorageStats) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, adminStorageStatsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AdminStorageStats")
+		case "userCount":
+			out.Values[i] = ec._AdminStorageStats_userCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fileCount":
+			out.Values[i] = ec._AdminStorageStats_fileCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logicalBytes":
+			out.Values[i] = ec._AdminStorageStats_logicalBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "referencedBytes":
+			out.Values[i] = ec._AdminStorageStats_referencedBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pendingDeletionBytes":
+			out.Values[i] = ec._AdminStorageStats_pendingDeletionBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "savedBytes":
+			out.Values[i] = ec._AdminStorageStats_savedBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "savingsPercent":
+			out.Values[i] = ec._AdminStorageStats_savingsPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "downloadStarts":
+			out.Values[i] = ec._AdminStorageStats_downloadStarts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var adminUserImplementors = []string{"AdminUser"}
+
+func (ec *executionContext) _AdminUser(ctx context.Context, sel ast.SelectionSet, obj *model.AdminUser) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, adminUserImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AdminUser")
+		case "id":
+			out.Values[i] = ec._AdminUser_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "loginName":
+			out.Values[i] = ec._AdminUser_loginName(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "role":
+			out.Values[i] = ec._AdminUser_role(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "usedBytes":
+			out.Values[i] = ec._AdminUser_usedBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quotaBytes":
+			out.Values[i] = ec._AdminUser_quotaBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "disabledAt":
+			out.Values[i] = ec._AdminUser_disabledAt(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._AdminUser_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var adminUserConnectionImplementors = []string{"AdminUserConnection"}
+
+func (ec *executionContext) _AdminUserConnection(ctx context.Context, sel ast.SelectionSet, obj *model.AdminUserConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, adminUserConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AdminUserConnection")
+		case "nodes":
+			out.Values[i] = ec._AdminUserConnection_nodes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pageInfo":
+			out.Values[i] = ec._AdminUserConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var authenticatedUserImplementors = []string{"AuthenticatedUser"}
+
+func (ec *executionContext) _AuthenticatedUser(ctx context.Context, sel ast.SelectionSet, obj *model.AuthenticatedUser) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, authenticatedUserImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AuthenticatedUser")
+		case "id":
+			out.Values[i] = ec._AuthenticatedUser_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "role":
+			out.Values[i] = ec._AuthenticatedUser_role(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var createdShareImplementors = []string{"CreatedShare"}
+
+func (ec *executionContext) _CreatedShare(ctx context.Context, sel ast.SelectionSet, obj *model.CreatedShare) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, createdShareImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CreatedShare")
+		case "share":
+			out.Values[i] = ec._CreatedShare_share(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "url":
+			out.Values[i] = ec._CreatedShare_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var fileAccessImplementors = []string{"FileAccess"}
+
+func (ec *executionContext) _FileAccess(ctx context.Context, sel ast.SelectionSet, obj *model.FileAccess) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fileAccessImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FileAccess")
+		case "url":
+			out.Values[i] = ec._FileAccess_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "expiresAt":
+			out.Values[i] = ec._FileAccess_expiresAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var fileConnectionImplementors = []string{"FileConnection"}
+
+func (ec *executionContext) _FileConnection(ctx context.Context, sel ast.SelectionSet, obj *model.FileConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fileConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FileConnection")
+		case "nodes":
+			out.Values[i] = ec._FileConnection_nodes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pageInfo":
+			out.Values[i] = ec._FileConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var filePageInfoImplementors = []string{"FilePageInfo"}
+
+func (ec *executionContext) _FilePageInfo(ctx context.Context, sel ast.SelectionSet, obj *model.FilePageInfo) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, filePageInfoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FilePageInfo")
+		case "endCursor":
+			out.Values[i] = ec._FilePageInfo_endCursor(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "hasNextPage":
+			out.Values[i] = ec._FilePageInfo_hasNextPage(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var fileShareImplementors = []string{"FileShare"}
+
+func (ec *executionContext) _FileShare(ctx context.Context, sel ast.SelectionSet, obj *model.FileShare) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fileShareImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FileShare")
+		case "id":
+			out.Values[i] = ec._FileShare_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "recipientId":
+			out.Values[i] = ec._FileShare_recipientId(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "permission":
+			out.Values[i] = ec._FileShare_permission(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._FileShare_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "expiresAt":
+			out.Values[i] = ec._FileShare_expiresAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var fileSharingImplementors = []string{"FileSharing"}
+
+func (ec *executionContext) _FileSharing(ctx context.Context, sel ast.SelectionSet, obj *model.FileSharing) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fileSharingImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FileSharing")
+		case "shares":
+			out.Values[i] = ec._FileSharing_shares(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "downloadStarts":
+			out.Values[i] = ec._FileSharing_downloadStarts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var loginPayloadImplementors = []string{"LoginPayload"}
+
+func (ec *executionContext) _LoginPayload(ctx context.Context, sel ast.SelectionSet, obj *model.LoginPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, loginPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("LoginPayload")
+		case "csrfToken":
+			out.Values[i] = ec._LoginPayload_csrfToken(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "user":
+			out.Values[i] = ec._LoginPayload_user(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
 
 var mutationImplementors = []string{"Mutation"}
 
@@ -1691,9 +6752,86 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "adminSetQuota":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_adminSetQuota(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "adminSetUserDisabled":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_adminSetUserDisabled(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createShare":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createShare(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "revokeShare":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_revokeShare(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createSharedAccess":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createSharedAccess(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "beginSession":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_beginSession(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "login":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_login(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logout":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_logout(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createFileAccess":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createFileAccess(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteFile":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteFile(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "uploadFile":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_uploadFile(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "uploadFiles":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_uploadFiles(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -1739,6 +6877,138 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "adminUsers":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminUsers(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminFiles":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminFiles(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminStorageStats":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminStorageStats(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "adminAudit":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_adminAudit(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "fileShares":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_fileShares(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "sharedFile":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_sharedFile(ctx, field)
+				if res == graphql.RequiredNull {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "serviceInfo":
 			field := field
 
@@ -1750,6 +7020,116 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}()
 				res = ec._Query_serviceInfo(ctx, field)
 				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "me":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_me(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "quota":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_quota(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "storageStats":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_storageStats(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "files":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_files(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "file":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_file(ctx, field)
+				if res == graphql.RequiredNull {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
 				return res
@@ -1774,6 +7154,54 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			})
 			if out.Values[i] == graphql.RequiredNull {
 				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var quotaImplementors = []string{"Quota"}
+
+func (ec *executionContext) _Quota(ctx context.Context, sel ast.SelectionSet, obj *model.Quota) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, quotaImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Quota")
+		case "usedBytes":
+			out.Values[i] = ec._Quota_usedBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quotaBytes":
+			out.Values[i] = ec._Quota_quotaBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "remainingBytes":
+			out.Values[i] = ec._Quota_remainingBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -1848,6 +7276,180 @@ func (ec *executionContext) _SessionBootstrap(ctx context.Context, sel ast.Selec
 			out.Values[i] = graphql.MarshalString("SessionBootstrap")
 		case "csrfToken":
 			out.Values[i] = ec._SessionBootstrap_csrfToken(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var sharedFileImplementors = []string{"SharedFile"}
+
+func (ec *executionContext) _SharedFile(ctx context.Context, sel ast.SelectionSet, obj *model.SharedFile) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, sharedFileImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("SharedFile")
+		case "name":
+			out.Values[i] = ec._SharedFile_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sizeBytes":
+			out.Values[i] = ec._SharedFile_sizeBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "detectedMIME":
+			out.Values[i] = ec._SharedFile_detectedMIME(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "previewAllowed":
+			out.Values[i] = ec._SharedFile_previewAllowed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "expiresAt":
+			out.Values[i] = ec._SharedFile_expiresAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var storageStatsImplementors = []string{"StorageStats"}
+
+func (ec *executionContext) _StorageStats(ctx context.Context, sel ast.SelectionSet, obj *model.StorageStats) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, storageStatsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("StorageStats")
+		case "fileCount":
+			out.Values[i] = ec._StorageStats_fileCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "logicalBytes":
+			out.Values[i] = ec._StorageStats_logicalBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "uniqueContentBytes":
+			out.Values[i] = ec._StorageStats_uniqueContentBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "savedBytes":
+			out.Values[i] = ec._StorageStats_savedBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "savingsPercent":
+			out.Values[i] = ec._StorageStats_savingsPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var vaultFileImplementors = []string{"VaultFile"}
+
+func (ec *executionContext) _VaultFile(ctx context.Context, sel ast.SelectionSet, obj *model.VaultFile) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, vaultFileImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("VaultFile")
+		case "id":
+			out.Values[i] = ec._VaultFile_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._VaultFile_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sizeBytes":
+			out.Values[i] = ec._VaultFile_sizeBytes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "detectedMIME":
+			out.Values[i] = ec._VaultFile_detectedMIME(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._VaultFile_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -2264,6 +7866,134 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNAdminAuditConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditConnection(ctx context.Context, sel ast.SelectionSet, v *model.AdminAuditConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AdminAuditConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAdminAuditEntry2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AdminAuditEntry) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNAdminAuditEntry2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditEntry(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAdminAuditEntry2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditEntry(ctx context.Context, sel ast.SelectionSet, v *model.AdminAuditEntry) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AdminAuditEntry(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAdminFile2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AdminFile) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNAdminFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFile(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAdminFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFile(ctx context.Context, sel ast.SelectionSet, v *model.AdminFile) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AdminFile(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAdminFileConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFileConnection(ctx context.Context, sel ast.SelectionSet, v *model.AdminFileConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AdminFileConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAdminStorageStats2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminStorageStats(ctx context.Context, sel ast.SelectionSet, v *model.AdminStorageStats) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AdminStorageStats(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAdminUser2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AdminUser) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNAdminUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUser(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNAdminUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUser(ctx context.Context, sel ast.SelectionSet, v *model.AdminUser) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AdminUser(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAdminUserConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUserConnection(ctx context.Context, sel ast.SelectionSet, v *model.AdminUserConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AdminUserConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAuthenticatedUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAuthenticatedUser(ctx context.Context, sel ast.SelectionSet, v *model.AuthenticatedUser) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._AuthenticatedUser(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -2278,6 +8008,154 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNCreateShareInput2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐCreateShareInput(ctx context.Context, v any) (model.CreateShareInput, error) {
+	res, err := ec.unmarshalInputCreateShareInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCreatedShare2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐCreatedShare(ctx context.Context, sel ast.SelectionSet, v *model.CreatedShare) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CreatedShare(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFileAccess2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccess(ctx context.Context, sel ast.SelectionSet, v *model.FileAccess) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FileAccess(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNFileAccessMode2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccessMode(ctx context.Context, v any) (model.FileAccessMode, error) {
+	var res model.FileAccessMode
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFileAccessMode2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccessMode(ctx context.Context, sel ast.SelectionSet, v model.FileAccessMode) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNFileConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileConnection(ctx context.Context, sel ast.SelectionSet, v *model.FileConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FileConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFilePageInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx context.Context, sel ast.SelectionSet, v *model.FilePageInfo) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FilePageInfo(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFileShare2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShareᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FileShare) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNFileShare2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShare(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNFileShare2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShare(ctx context.Context, sel ast.SelectionSet, v *model.FileShare) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FileShare(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFileSharing2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileSharing(ctx context.Context, sel ast.SelectionSet, v *model.FileSharing) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FileSharing(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (string, error) {
+	res, err := graphql.UnmarshalID(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNLoginInput2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐLoginInput(ctx context.Context, v any) (model.LoginInput, error) {
+	res, err := ec.unmarshalInputLoginInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNLoginPayload2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐLoginPayload(ctx context.Context, sel ast.SelectionSet, v *model.LoginPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._LoginPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNQuota2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐQuota(ctx context.Context, sel ast.SelectionSet, v *model.Quota) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Quota(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNServiceInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐServiceInfo(ctx context.Context, sel ast.SelectionSet, v *model.ServiceInfo) graphql.Marshaler {
@@ -2300,6 +8178,26 @@ func (ec *executionContext) marshalNSessionBootstrap2ᚖfileᚑvaultᚗlocalᚋa
 	return ec._SessionBootstrap(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNSharePermission2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx context.Context, v any) (model.SharePermission, error) {
+	var res model.SharePermission
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNSharePermission2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx context.Context, sel ast.SelectionSet, v model.SharePermission) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNStorageStats2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐStorageStats(ctx context.Context, sel ast.SelectionSet, v *model.StorageStats) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._StorageStats(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -2314,6 +8212,125 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v any) (time.Time, error) {
+	res, err := graphql.UnmarshalTime(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalTime(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v any) (graphql.Upload, error) {
+	res, err := graphql.UnmarshalUpload(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v graphql.Upload) graphql.Marshaler {
+	_ = sel
+	res := graphql.MarshalUpload(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx context.Context, v any) ([]*graphql.Upload, error) {
+	vSlice := graphql.CoerceList(v)
+	var err error
+	res := make([]*graphql.Upload, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql.Upload) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v any) (*graphql.Upload, error) {
+	res, err := graphql.UnmarshalUpload(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v *graphql.Upload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	_ = sel
+	res := graphql.MarshalUpload(*v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNUserRole2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐUserRole(ctx context.Context, v any) (model.UserRole, error) {
+	var res model.UserRole
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUserRole2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐUserRole(ctx context.Context, sel ast.SelectionSet, v model.UserRole) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNVaultFile2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.VaultFile) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNVaultFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNVaultFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx context.Context, sel ast.SelectionSet, v *model.VaultFile) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._VaultFile(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -2486,6 +8503,39 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
+func (ec *executionContext) unmarshalOFileFilter2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileFilter(ctx context.Context, v any) (*model.FileFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputFileFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v any) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalID(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalID(*v)
+	return res
+}
+
+func (ec *executionContext) marshalOSharedFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharedFile(ctx context.Context, sel ast.SelectionSet, v *model.SharedFile) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._SharedFile(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -2502,6 +8552,31 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	_ = ctx
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOTime2ᚖtimeᚐTime(ctx context.Context, v any) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalTime(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalTime(*v)
+	return res
+}
+
+func (ec *executionContext) marshalOVaultFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx context.Context, sel ast.SelectionSet, v *model.VaultFile) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._VaultFile(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

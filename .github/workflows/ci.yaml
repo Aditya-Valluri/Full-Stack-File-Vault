@@ -1,0 +1,61 @@
+name: Validate File Vault
+on:
+ push:
+  branches: [main]
+ pull_request:
+ workflow_dispatch:
+permissions:
+ contents: read
+concurrency:
+ group: validation-${{ github.ref }}
+ cancel-in-progress: true
+jobs:
+ validation:
+  runs-on: ubuntu-24.04
+  timeout-minutes: 25
+  steps:
+   - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+     with: { persist-credentials: false }
+   - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+     with: { go-version: "1.27.1", cache-dependency-path: apps/api/go.sum }
+   - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+     with: { node-version: "24.21.0", cache: npm, cache-dependency-path: apps/web/package-lock.json }
+   - name: Go formatting, unit tests, vet, and integration tests
+     working-directory: apps/api
+     run: |
+      test -z "$(gofmt -l .)"
+      go test -race ./...
+      go vet ./...
+      go test -tags integration ./cmd/provision-user -count=1 -timeout=6m
+      go tool gqlgen generate
+   - name: Build and validate browser application
+     working-directory: apps/web
+     run: |
+      npm ci
+      npm run build
+      npm test
+      npm audit --audit-level=high
+      npx playwright install --with-deps chromium
+      npm run test:e2e
+   - name: Validate operational scripts and alerts
+     run: |
+      node --check scripts/backup-application.mjs
+      node --check scripts/verify-backup.mjs
+      node --check scripts/verify-application.mjs
+      docker run --rm --entrypoint promtool -v "$PWD/monitoring:/etc/prometheus:ro" prom/prometheus:v3.14.0 check rules /etc/prometheus/alerts.yaml
+      go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 .github/workflows/ci.yaml
+   - name: Generated code is current
+     run: git diff --exit-code -- apps/api/internal/graph apps/web/src/generated
+   - name: Build runtime images
+     run: |
+      docker build -f apps/api/Dockerfile -t file-vault-api:ci .
+      docker build -f apps/web/Dockerfile -t file-vault-web:ci .
+      docker run --rm --read-only --tmpfs /tmp --entrypoint nginx file-vault-web:ci -t
+   - name: Render Kubernetes manifests
+     run: kubectl kustomize kubernetes/base > /tmp/file-vault.yaml
+   - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+     if: failure()
+     with:
+      name: browser-failure-report
+      path: apps/web/playwright-report/
+      retention-days: 3

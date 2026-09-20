@@ -1,0 +1,53 @@
+groups:
+ - name: file-vault
+   rules:
+    - alert: FileVaultAPIUnavailable
+      expr: up{job="file-vault-api"} == 0
+      for: 2m
+      labels: { severity: critical }
+      annotations: { summary: "File Vault API metrics endpoint is unavailable" }
+    - alert: FileVaultCollectorUnavailable
+      expr: up{job="file-vault-collector"} == 0
+      for: 2m
+      labels: { severity: warning }
+      annotations: { summary: "File Vault cleanup worker is unavailable" }
+    - alert: FileVaultCleanupStalled
+      expr: time() - vault_cleanup_last_success_seconds{job="file-vault-collector"} > 180
+      for: 2m
+      labels: { severity: warning }
+      annotations: { summary: "No successful cleanup cycle for more than three minutes" }
+    - alert: FileVaultGraphQLInternalErrors
+      expr: increase(vault_graphql_errors_total{job="file-vault-api",code="INTERNAL_ERROR"}[5m]) > 0
+      for: 1m
+      labels: { severity: warning }
+      annotations: { summary: "GraphQL returned an internal execution error" }
+    - alert: FileVaultHTTPErrorRate
+      expr: sum(rate(vault_http_requests_total{job="file-vault-api",status_class="5xx"}[5m])) / clamp_min(sum(rate(vault_http_requests_total{job="file-vault-api"}[5m])), 0.001) > 0.05
+      for: 5m
+      labels: { severity: critical }
+      annotations: { summary: "File Vault HTTP server error rate exceeds five percent" }
+    - alert: FileVaultDatabaseMetricsUnavailable
+      expr: vault_database_metrics_available{job="file-vault-api"} == 0
+      for: 3m
+      labels: { severity: warning }
+      annotations: { summary: "Aggregate database monitoring queries are failing" }
+    - alert: FileVaultGarbageBacklog
+      expr: vault_gc_pending_bytes{job="file-vault-api"} > 1000000000
+      for: 30m
+      labels: { severity: warning }
+      annotations: { summary: "More than 1 GB is waiting for garbage collection" }
+    - alert: FileVaultRetentionGrowth
+      expr: vault_cleanup_tombstones{job="file-vault-api"} > 1000000 or vault_upload_receipt_storage_bytes{job="file-vault-api"} > 100000000
+      for: 15m
+      labels: { severity: warning }
+      annotations: { summary: "Recovery metadata needs a capacity review; do not expire it blindly" }
+    - alert: FileVaultVolumeLowSpace
+      expr: kubelet_volume_stats_available_bytes{namespace="file-vault",persistentvolumeclaim="file-vault-files"} / kubelet_volume_stats_capacity_bytes{namespace="file-vault",persistentvolumeclaim="file-vault-files"} < 0.15
+      for: 5m
+      labels: { severity: critical }
+      annotations: { summary: "File Vault persistent volume has less than fifteen percent free space" }
+    - alert: FileVaultBackupMissing
+      expr: time() - vault_backup_last_success_seconds > 90000 or absent(vault_backup_last_success_seconds)
+      for: 15m
+      labels: { severity: critical }
+      annotations: { summary: "No successful verified backup has been reported within 25 hours" }

@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+ name: file-vault
+spec:
+ podSelector:
+  matchLabels: { app: file-vault }
+ policyTypes: [Ingress, Egress]
+ ingress:
+  - from:
+     - namespaceSelector:
+        matchLabels: { kubernetes.io/metadata.name: traefik }
+    ports: [{ protocol: TCP, port: 8081 }]
+  - from:
+     - namespaceSelector:
+        matchLabels: { kubernetes.io/metadata.name: monitoring }
+    ports: [{ protocol: TCP, port: 8080 }, { protocol: TCP, port: 8082 }]
+ egress:
+  - to:
+     - namespaceSelector:
+        matchLabels: { kubernetes.io/metadata.name: kube-system }
+    ports: [{ protocol: UDP, port: 53 }, { protocol: TCP, port: 53 }]
+  # Narrow this CIDR to the managed PostgreSQL network in the deployment overlay.
+  - to: [{ ipBlock: { cidr: 0.0.0.0/0 } }]
+    ports: [{ protocol: TCP, port: 5432 }]
