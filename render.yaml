@@ -1,0 +1,40 @@
+# Review Render's cost summary before creating these paid resources.
+services:
+ - type: web
+   name: file-vault-demo
+   runtime: docker
+   plan: 0.5c-512mb
+   region: virginia
+   dockerfilePath: deploy/render/Dockerfile
+   dockerContext: .
+   dockerCommand: /app/render-demo
+   preDeployCommand: /app/render-demo setup
+   autoDeployTrigger: "off"
+   healthCheckPath: /readyz
+   maxShutdownDelaySeconds: 30
+   disk:
+    name: vault-files
+    mountPath: /data
+    sizeGB: 1
+   envVars:
+    - key: DEMO_OPERATOR_URL
+      fromDatabase:
+       name: file-vault-demo-db
+       property: connectionString
+    - key: DEMO_RUNTIME_SEED
+      generateValue: true
+    - key: DEMO_GC_SEED
+      generateValue: true
+    - key: DEMO_REVIEWER_PASSWORD
+      generateValue: true
+    - key: DEMO_ADMIN_PASSWORD
+      generateValue: true
+databases:
+ - name: file-vault-demo-db
+   plan: 0.1c-256mb
+   region: virginia
+   databaseName: vault_demo
+   user: vault_operator
+   postgresMajorVersion: "17"
+   diskSizeGB: 1
+   ipAllowList: []

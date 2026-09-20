@@ -29,7 +29,7 @@ the user's requests. PASS means tested locally, not production certification.
 | Monitoring | PARTIAL | Ten rules validate, both local targets scrape; production receiver and delivery test pending |
 | Encrypted backups and recovery | PARTIAL | Real-file paired backup, tamper rejection, isolated DB restore, quota and referenced-blob SHA-256 checks pass; off-host upload and restored-browser drill pending |
 | Full load, power-loss, volume-driver qualification | PARTIAL | Race/concurrency tests exist; sustained throughput/latency and infrastructure failure drills pending |
-| Public cloud URL | MISSING | Optional cloud deliverable; hostname/infrastructure not supplied |
+| Public cloud URL | MISSING | Render Blueprint and local edge-TLS/browser/restart rehearsal pass; paid resource creation and public URL verification pending |
 | Folders, real-time updates, admin graphs, Helm | MISSING | Optional assignment features; not implied by current implementation |
 | Activity audit | PARTIAL | Administrative audit implemented; full upload/download/delete activity audit is separate |
 | Documentation and AI methodology | PASS | README, architecture/decision notes, GraphQL SDL, AI work record |

@@ -1,0 +1,138 @@
+// Local rehearsal of Render's TLS edge + single-disk service. Creates only
+// uniquely named disposable Docker resources; never targets the existing app.
+import { spawn } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { createServer } from 'node:https';
+import { request as httpRequest } from 'node:http';
+import { chromium } from '../apps/web/node_modules/playwright/index.mjs';
+
+const root = resolve(import.meta.dirname, '..');
+const name = 'file-vault-render-check-' + randomBytes(6).toString('hex');
+const network = name + '-net', volume = name + '-files', database = name + '-db';
+const origin = 'https://localhost:18443';
+const dbPassword = randomBytes(32).toString('hex');
+const secrets = {
+ POSTGRES_PASSWORD: randomBytes(32).toString('hex'),
+ DEMO_OPERATOR_URL: 'postgresql://vault_operator:' + dbPassword + '@' + database + '/vault_demo?sslmode=disable',
+ DEMO_RUNTIME_SEED: randomBytes(32).toString('base64'),
+ DEMO_GC_SEED: randomBytes(32).toString('base64'),
+ DEMO_REVIEWER_PASSWORD: randomBytes(24).toString('hex'),
+ DEMO_ADMIN_PASSWORD: randomBytes(24).toString('hex'),
+ PUBLIC_ORIGIN: origin,
+};
+async function docker(args, input = '') {
+ const child = spawn('docker', args, { cwd: root, windowsHide: true, env: { ...process.env, ...secrets }, stdio: ['pipe','pipe','pipe'] });
+ let output = '', diagnostic = ''; child.stdout.on('data', chunk => { output += chunk; });
+ child.stderr.on('data', chunk => { if (diagnostic.length < 2000000) diagnostic += chunk; });
+ function failure() {
+  if (diagnostic.length >= 2000000) return new Error('Docker diagnostic exceeded the safe output limit.');
+  let safe = diagnostic;
+  for (const secret of [dbPassword, ...Object.values(secrets)]) safe = safe.split(secret).join('[redacted]');
+  return new Error('Docker rehearsal step failed: ' + args[0] + ': ' + safe.slice(0, 1500));
+ }
+ const exit = new Promise((done, fail) => {
+  child.on('error', fail); child.on('close', code => code === 0 ? done() : fail(failure()));
+ });
+ child.stdin.on('error', () => undefined); child.stdin.end(input);
+ await exit; return output.trim();
+}
+const envArgs = Object.keys(secrets).filter(key => key !== 'POSTGRES_PASSWORD').flatMap(key => ['-e', key]);
+const sql = text => docker(['exec','-i',database,'psql','-At','-v','ON_ERROR_STOP=1','-U','postgres','-d','vault_demo'], text);
+const setup = () => docker(['run','--rm','--network',network,...envArgs,'file-vault-render:local','/app/render-demo','setup']);
+let netCreated = false, volumeCreated = false, dbCreated = false, appCreated = false, browser, edge;
+async function ready(port) {
+ for (let attempt=0;attempt<40;attempt++) {
+  try { const r=await fetch('http://127.0.0.1:' + port + '/readyz', { signal: AbortSignal.timeout(3000) }); if(r.ok)return; } catch {}
+  await new Promise(done=>setTimeout(done,1000));
+ }
+ throw new Error('Demo readiness failed.');
+}
+async function login(page, username, password) {
+ await page.goto(origin);
+ await page.getByLabel('Username', {exact:true}).fill(username);
+ await page.getByLabel('Password', {exact:true}).fill(password);
+ await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ await page.getByRole('heading',{name:'My files',exact:true}).waitFor();
+ if(await page.locator('.account-name').textContent()!==username)throw new Error('Wrong demo identity.');
+}
+try {
+ const [cert,key]=await Promise.all([readFile(resolve(root,'.secrets/application/tls.crt')),readFile(resolve(root,'.secrets/application/tls.key'))]);
+ await docker(['network','create',network]);netCreated=true;
+ await docker(['volume','create',volume]);volumeCreated=true;
+ await docker(['run','-d','--name',database,'--network',network,'-e','POSTGRES_PASSWORD','-e','POSTGRES_DB=vault_demo','postgres:17-bookworm']);dbCreated=true;
+ for(let i=0;i<30;i++){
+  try{await docker(['exec',database,'pg_isready','-h','127.0.0.1','-U','postgres','-d','vault_demo']);break;}
+  catch{if(i===29)throw new Error('Database startup failed.');await new Promise(done=>setTimeout(done,1000));}
+ }
+ await sql("CREATE ROLE vault_operator LOGIN CREATEROLE NOSUPERUSER PASSWORD '"+dbPassword+"'; ALTER DATABASE vault_demo OWNER TO vault_operator;");
+ console.log('[render rehearsal] Applying migrations as a non-superuser database owner');
+ await setup();
+ await docker(['run','-d','--name',name,'--network',network,'--read-only','--tmpfs','/tmp:rw,noexec,nosuid,size=16m','--cap-drop','ALL','--security-opt','no-new-privileges:true','--mount','type=volume,src='+volume+',dst=/data','-p','127.0.0.1::10000',...envArgs,'file-vault-render:local']);appCreated=true;
+ let port=(await docker(['port',name,'10000/tcp'])).split(':').at(-1);
+ await ready(port);
+ edge=createServer({cert,key},(incoming,outgoing)=>{
+  const upstream=httpRequest({hostname:'127.0.0.1',port,path:incoming.url,method:incoming.method,headers:incoming.headers},response=>{
+   outgoing.writeHead(response.statusCode,response.headers);response.pipe(outgoing);
+  });
+  upstream.on('error',()=>{outgoing.writeHead(502);outgoing.end();});
+  incoming.on('aborted',()=>upstream.destroy());incoming.pipe(upstream);
+ });
+ await new Promise((done,fail)=>{edge.once('error',fail);edge.listen(18443,'127.0.0.1',done);});
+ browser=await chromium.launch();
+ const context=await browser.newContext({ignoreHTTPSErrors:true});
+ const page=await context.newPage();
+ await login(page,'reviewer',secrets.DEMO_REVIEWER_PASSWORD);
+ const cookies=await context.cookies();
+ if(!cookies.some(c=>c.name==='__Host-vault_session'&&c.secure&&c.httpOnly))throw new Error('Demo cookie is not secure.');
+ const bytes=Buffer.from('Render rehearsal content '+randomBytes(8).toString('hex'));
+ await page.getByRole('button',{name:'Upload files',exact:true}).click();
+ await page.getByLabel('Select files to upload').setInputFiles([
+  {name:'review-notes.txt',mimeType:'text/plain',buffer:bytes},
+  {name:'review-copy.txt',mimeType:'text/plain',buffer:bytes},
+ ]);
+ await page.getByRole('button',{name:'Upload selected files'}).click();
+ await page.getByText('Uploaded 2 files.',{exact:true}).waitFor();
+ await page.getByText('50.00% less unique content',{exact:false}).waitFor();
+ await page.getByRole('button',{name:'Share review-notes.txt',exact:true}).click();
+ await page.getByRole('button',{name:'Create sharing link',exact:true}).click();
+ const link=await page.getByLabel('Your new link',{exact:true}).inputValue();
+ const guestContext=await browser.newContext({ignoreHTTPSErrors:true}),guest=await guestContext.newPage();
+ await guest.goto(link);
+ await guest.getByRole('heading',{name:'review-notes.txt',exact:true}).waitFor();
+ let event=guest.waitForEvent('download');
+ await guest.getByRole('button',{name:'Download file',exact:true}).click();
+ if(!(await readFile(await (await event).path())).equals(bytes))throw new Error('Shared bytes differ.');
+ await guestContext.close();
+ console.log('[render rehearsal] Verifying repeat setup and persistent files after restart');
+ await setup();
+ await docker(['restart','-t','30',name]);
+ port=(await docker(['port',name,'10000/tcp'])).split(':').at(-1);
+ await ready(port);
+ await page.goto(origin);
+ await page.getByRole('button',{name:'Download review-notes.txt',exact:true}).waitFor();
+ event=page.waitForEvent('download');
+ await page.getByRole('button',{name:'Download review-notes.txt',exact:true}).click();
+ if(!(await readFile(await (await event).path())).equals(bytes))throw new Error('Restart lost stored bytes.');
+ const adminContext=await browser.newContext({ignoreHTTPSErrors:true}),admin=await adminContext.newPage();
+ await login(admin,'reviewer-admin',secrets.DEMO_ADMIN_PASSWORD);
+ await admin.getByRole('button',{name:'Administration',exact:true}).click();
+ await admin.getByRole('heading',{name:'Administration',exact:true}).waitFor();
+ await admin.getByRole('tab',{name:'All files',exact:true}).click();
+ await admin.getByText('review-notes.txt',{exact:true}).waitFor();
+ const aggregate=await sql("SELECT (SELECT count(*) FROM vault.users)||','||(SELECT count(*) FROM vault.files)||','||(SELECT count(*) FROM vault.blobs);");
+ if(aggregate!=='2,2,1')throw new Error('Demo setup duplicated accounts or content.');
+ if((await fetch('http://127.0.0.1:'+port+'/metrics')).status!==404)throw new Error('Private metrics exposed.');
+ await mkdir(resolve(root,'tmp'),{recursive:true});
+ await page.screenshot({path:resolve(root,'tmp/render-demo-rehearsal.png'),fullPage:true});
+ await writeFile(resolve(root,'tmp/render-demo-verification.json'),JSON.stringify({testedAt:new Date().toISOString(),nonSuperuserMigrations:true,repeatSetup:true,secureCookie:true,persistentRestart:true,sharedDownload:true,adminFiles:true,users:2,files:2,blobs:1},null,2));
+ console.log('PASS: Render demo setup, separate roles, TLS-edge login, uploads, deduplication, sharing, admin and restart persistence.');
+} finally {
+ if(browser)await browser.close();
+ if(edge)await new Promise(done=>edge.close(done));
+ if(appCreated)await docker(['rm','-f',name]).catch(()=>console.error('Retained rehearsal app: '+name));
+ if(dbCreated)await docker(['rm','-f','-v',database]).catch(()=>console.error('Retained rehearsal database: '+database));
+ if(volumeCreated)await docker(['volume','rm',volume]).catch(()=>console.error('Retained rehearsal volume: '+volume));
+ if(netCreated)await docker(['network','rm',network]).catch(()=>console.error('Retained rehearsal network: '+network));
+}

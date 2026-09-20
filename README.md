@@ -36,6 +36,12 @@ and recovery objectives still require deployment-specific configuration and acce
 See [frontend](docs/architecture/frontend.md), [recovery](docs/architecture/recovery.md),
 [deployment](docs/architecture/deployment.md), and [operations](docs/architecture/operations.md).
 
+## Hiring demo on Render
+
+The Render deployment setup is prepared and locally tested; a public demo is not
+yet live. Follow the [Render demo guide](docs/render-demo.md) to review costs,
+deploy the Blueprint, retrieve private reviewer credentials, and verify the URL.
+
 ## Run locally
 
 Install Go 1.27+ and Docker Desktop with its Linux engine running. Configure the

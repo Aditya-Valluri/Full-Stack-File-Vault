@@ -42,6 +42,7 @@ jobs:
       node --check scripts/backup-application.mjs
       node --check scripts/verify-backup.mjs
       node --check scripts/verify-application.mjs
+      node --check scripts/verify-render-demo.mjs
       docker run --rm --entrypoint promtool -v "$PWD/monitoring:/etc/prometheus:ro" prom/prometheus:v3.14.0 check rules /etc/prometheus/alerts.yaml
       go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 .github/workflows/ci.yaml
    - name: Generated code is current
@@ -50,6 +51,7 @@ jobs:
      run: |
       docker build -f apps/api/Dockerfile -t file-vault-api:ci .
       docker build -f apps/web/Dockerfile -t file-vault-web:ci .
+      docker build -f deploy/render/Dockerfile -t file-vault-render:ci .
       docker run --rm --read-only --tmpfs /tmp --entrypoint nginx file-vault-web:ci -t
    - name: Render Kubernetes manifests
      run: kubectl kustomize kubernetes/base > /tmp/file-vault.yaml

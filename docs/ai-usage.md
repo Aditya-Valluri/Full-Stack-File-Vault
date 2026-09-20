@@ -400,3 +400,16 @@ responses, then displayed it with its initial and a labeled account-ID copy acti
 No migration or credential change was required. Backend unit/integration checks
 and vet passed; all four browser scenarios passed, including identity after reload
 and mobile accessibility/layout checks. The local container images were rebuilt.
+## Render hiring demo preparation
+
+Added a paid-resource Blueprint, non-root combined demo image, loopback API/worker
+supervision, restricted child database credentials, and repeatable reviewer setup.
+The official Render JSON schema validation, image build, command tests/vet and
+isolated HTTPS browser rehearsal passed. The rehearsal covered non-superuser
+migrations, login, uploads, deduplication, sharing, admin, repeat setup and restart
+persistence. Initial test harness database-readiness and dynamic-port assumptions
+were corrected before the passing run. CI now checks the script and builds the
+image. No Render resources have been created; cloud disk permissions, hosted CI,
+public HTTPS and managed-database deployment remain to be verified. Cost approval
+and account access are required for deployment. Operator credentials remain in
+the demo supervisor environment; this is not process-level security isolation.
