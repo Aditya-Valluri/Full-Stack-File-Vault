@@ -96,7 +96,7 @@ func TestProvisionCommandIntegration(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Empty-schema round trips verify worker-role privileges can be rolled back.
-	for _, migration := range []string{"000010_file_access.up.sql", "000010_file_access.down.sql", "000010_file_access.up.sql", "000011_cleanup_worker.up.sql", "000011_cleanup_worker.down.sql", "000011_cleanup_worker.up.sql", "000012_sharing.up.sql", "000012_sharing.down.sql", "000012_sharing.up.sql", "000013_administration.up.sql", "000013_administration.down.sql", "000013_administration.up.sql", "000014_upload_receipts.up.sql", "000014_upload_receipts.down.sql", "000014_upload_receipts.up.sql"} {
+	for _, migration := range []string{"000010_file_access.up.sql", "000010_file_access.down.sql", "000010_file_access.up.sql", "000011_cleanup_worker.up.sql", "000011_cleanup_worker.down.sql", "000011_cleanup_worker.up.sql", "000012_sharing.up.sql", "000012_sharing.down.sql", "000012_sharing.up.sql", "000013_administration.up.sql", "000013_administration.down.sql", "000013_administration.up.sql", "000014_upload_receipts.up.sql", "000014_upload_receipts.down.sql", "000014_upload_receipts.up.sql", "000015_private_tags.up.sql", "000015_private_tags.down.sql", "000015_private_tags.up.sql"} {
 		if _, err := conn.Exec(ctx, migrationSQL(t, migration)); err != nil {
 			t.Fatalf("migration %s: %v", migration, err)
 		}
@@ -199,6 +199,9 @@ func TestProvisionCommandIntegration(t *testing.T) {
 	})
 	t.Run("GraphQL uploads", func(t *testing.T) {
 		testUploadAPI(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory)
+	})
+	t.Run("private tags", func(t *testing.T) {
+		testPrivateTags(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory)
 	})
 	t.Run("file queries", func(t *testing.T) { testFiles(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory) })
 	t.Run("file lifecycle", func(t *testing.T) {

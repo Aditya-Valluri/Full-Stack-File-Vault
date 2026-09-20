@@ -15,7 +15,7 @@ GraphQL is the single application API, with a React/TypeScript browser frontend.
   usage reconciliation.
 - PostgreSQL-backed per-user admission: default two calls per rolling second across replicas.
 - GraphQL quota query; upload responses reveal no content hashes or deduplication hints.
-- Owner-only file metadata, cursor pagination, and combined filename/MIME/size/date search.
+- Owner-only file metadata, private tags, cursor pagination, and combined filename/MIME/size/date/tag/uploader search.
 
 - Session-bound short-lived download URLs, streaming/ranges, and restricted image previews.
 - Transactional logical deletion, quota release, and grant revocation.

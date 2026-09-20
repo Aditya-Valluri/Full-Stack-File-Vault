@@ -124,5 +124,5 @@ func singleMutationRoot(doc *ast.QueryDocument, op *ast.OperationDefinition) boo
 		return false
 	}
 	field := singleUploadRoot(doc, op.SelectionSet)
-	return field != nil && (field.Name == "uploadFile" || field.Name == "uploadFiles" || field.Name == "createFileAccess" || field.Name == "deleteFile" || field.Name == "createShare" || field.Name == "revokeShare" || field.Name == "createSharedAccess" || field.Name == "adminSetQuota" || field.Name == "adminSetUserDisabled")
+	return field != nil && (field.Name == "uploadFile" || field.Name == "uploadFiles" || field.Name == "createFileAccess" || field.Name == "deleteFile" || field.Name == "setFileTags" || field.Name == "createShare" || field.Name == "revokeShare" || field.Name == "createSharedAccess" || field.Name == "adminSetQuota" || field.Name == "adminSetUserDisabled")
 }

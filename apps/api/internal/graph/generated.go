@@ -149,6 +149,7 @@ type ComplexityRoot struct {
 		Login                func(childComplexity int, input model.LoginInput) int
 		Logout               func(childComplexity int) int
 		RevokeShare          func(childComplexity int, id string) int
+		SetFileTags          func(childComplexity int, fileID string, tags []string) int
 		UploadFile           func(childComplexity int, file graphql.Upload, idempotencyKey *string) int
 		UploadFiles          func(childComplexity int, files []*graphql.Upload, idempotencyKey *string) int
 	}
@@ -204,6 +205,7 @@ type ComplexityRoot struct {
 		ID           func(childComplexity int) int
 		Name         func(childComplexity int) int
 		SizeBytes    func(childComplexity int) int
+		Tags         func(childComplexity int) int
 	}
 }
 
@@ -212,6 +214,7 @@ type ComplexityRoot struct {
 // region    ************************** generated!.gotpl **************************
 
 type MutationResolver interface {
+	SetFileTags(ctx context.Context, fileID string, tags []string) ([]string, error)
 	AdminSetQuota(ctx context.Context, userID string, quotaBytes string) (*model.AdminUser, error)
 	AdminSetUserDisabled(ctx context.Context, userID string, disabled bool) (*model.AdminUser, error)
 	CreateShare(ctx context.Context, input model.CreateShareInput) (*model.CreatedShare, error)
@@ -703,6 +706,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.RevokeShare(childComplexity, args["id"].(string)), true
+	case "Mutation.setFileTags":
+		if e.ComplexityRoot.Mutation.SetFileTags == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setFileTags_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.SetFileTags(childComplexity, args["fileId"].(string), args["tags"].([]string)), true
 	case "Mutation.uploadFile":
 		if e.ComplexityRoot.Mutation.UploadFile == nil {
 			break
@@ -960,6 +974,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.VaultFile.SizeBytes(childComplexity), true
+	case "VaultFile.tags":
+		if e.ComplexityRoot.VaultFile.Tags == nil {
+			break
+		}
+
+		return e.ComplexityRoot.VaultFile.Tags(childComplexity), true
 
 	}
 	return 0, false
@@ -1328,6 +1348,8 @@ func (ec *executionContext) childFields_StorageStats(ctx context.Context, field 
 
 func (ec *executionContext) childFields_VaultFile(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
+	case "tags":
+		return ec.fieldContext_VaultFile_tags(ctx, field)
 	case "id":
 		return ec.fieldContext_VaultFile_id(ctx, field)
 	case "name":
@@ -1599,6 +1621,28 @@ func (ec *executionContext) field_Mutation_revokeShare_args(ctx context.Context,
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setFileTags_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "fileId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["fileId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "tags",
+		func(ctx context.Context, v any) ([]string, error) {
+			return ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["tags"] = arg1
 	return args, nil
 }
 
@@ -3239,6 +3283,50 @@ func (ec *executionContext) fieldContext_LoginPayload_user(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_setFileTags(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_setFileTags(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().SetFileTags(ctx, fc.Args["fileId"].(string), fc.Args["tags"].([]string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalNString2ᚕstringᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_setFileTags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_setFileTags_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_adminSetQuota(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -4623,6 +4711,29 @@ func (ec *executionContext) fieldContext_StorageStats_savingsPercent(_ context.C
 	return graphql.NewScalarFieldContext("StorageStats", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _VaultFile_tags(ctx context.Context, field graphql.CollectedField, obj *model.VaultFile) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VaultFile_tags(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Tags, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalNString2ᚕstringᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_VaultFile_tags(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("VaultFile", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
 func (ec *executionContext) _VaultFile_id(ctx context.Context, field graphql.CollectedField, obj *model.VaultFile) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -5863,13 +5974,27 @@ func (ec *executionContext) unmarshalInputFileFilter(ctx context.Context, obj an
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"nameContains", "mimeType", "minSizeBytes", "maxSizeBytes", "createdFrom", "createdBefore"}
+	fieldsInOrder := [...]string{"tagsAll", "uploaderNameContains", "nameContains", "mimeType", "minSizeBytes", "maxSizeBytes", "createdFrom", "createdBefore"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "tagsAll":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagsAll"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TagsAll = data
+		case "uploaderNameContains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("uploaderNameContains"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UploaderNameContains = data
 		case "nameContains":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameContains"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -6752,6 +6877,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "setFileTags":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_setFileTags(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "adminSetQuota":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_adminSetQuota(ctx, field)
@@ -7428,6 +7560,11 @@ func (ec *executionContext) _VaultFile(ctx context.Context, sel ast.SelectionSet
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("VaultFile")
+		case "tags":
+			out.Values[i] = ec._VaultFile_tags(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "id":
 			out.Values[i] = ec._VaultFile_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -8214,6 +8351,35 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	vSlice := graphql.CoerceList(v)
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v any) (time.Time, error) {
 	res, err := graphql.UnmarshalTime(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -8534,6 +8700,41 @@ func (ec *executionContext) marshalOSharedFile2ᚖfileᚑvaultᚗlocalᚋapiᚋi
 		return graphql.Null
 	}
 	return ec._SharedFile(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	vSlice := graphql.CoerceList(v)
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

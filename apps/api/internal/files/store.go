@@ -30,6 +30,7 @@ func NewStore(pool *pgxpool.Pool) (*Store, error) {
 
 type File struct {
 	ID, Name, DetectedMIME string
+	Tags                   []string
 	SizeBytes              int64
 	CreatedAt              time.Time
 }
@@ -40,6 +41,8 @@ type Page struct {
 }
 type Filter struct {
 	NameContains               *string
+	UploaderNameContains       *string
+	TagsAll                    []string
 	MIMEType                   *string
 	MinSizeBytes, MaxSizeBytes *string
 	CreatedFrom, CreatedBefore *time.Time
@@ -92,6 +95,12 @@ func (s *Store) List(ctx context.Context, options ListOptions) (Page, error) {
 	if filter.name != "" {
 		add("f.original_name ILIKE $%d ESCAPE '!'", "%"+escapeLike(filter.name)+"%")
 	}
+	if filter.uploader != "" {
+		add("EXISTS(SELECT 1 FROM vault.credentials c WHERE c.user_id=f.owner_id AND c.login_name ILIKE $%d ESCAPE '!')", "%"+escapeLike(filter.uploader)+"%")
+	}
+	for _, tag := range filter.tags {
+		add("EXISTS(SELECT 1 FROM vault.file_tags t WHERE t.file_id=f.id AND t.tag=$%d)", tag)
+	}
 	if filter.mime != "" {
 		add("split_part(COALESCE(b.detected_mime,'application/octet-stream'),';',1)=$%d", filter.mime)
 	}
@@ -116,7 +125,7 @@ func (s *Store) List(ctx context.Context, options ListOptions) (Page, error) {
 	page := Page{Nodes: make([]File, 0, options.First)}
 	for rows.Next() {
 		var file File
-		if err = rows.Scan(&file.ID, &file.Name, &file.SizeBytes, &file.DetectedMIME, &file.CreatedAt); err != nil {
+		if err = rows.Scan(&file.ID, &file.Name, &file.SizeBytes, &file.DetectedMIME, &file.CreatedAt, &file.Tags); err != nil {
 			rows.Close()
 			return Page{}, ErrUnavailable
 		}
@@ -161,7 +170,7 @@ func (s *Store) Get(ctx context.Context, id string) (File, error) {
 	}
 	defer rollback(tx)
 	var file File
-	err = tx.QueryRow(ctx, selectMetadata+" WHERE f.owner_id=$1 AND f.id=$2", identity.UserID, id).Scan(&file.ID, &file.Name, &file.SizeBytes, &file.DetectedMIME, &file.CreatedAt)
+	err = tx.QueryRow(ctx, selectMetadata+" WHERE f.owner_id=$1 AND f.id=$2", identity.UserID, id).Scan(&file.ID, &file.Name, &file.SizeBytes, &file.DetectedMIME, &file.CreatedAt, &file.Tags)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return File{}, ErrNotFound
 	}
@@ -174,7 +183,7 @@ func (s *Store) Get(ctx context.Context, id string) (File, error) {
 	return file, nil
 }
 
-const selectMetadata = "SELECT f.id::text,f.original_name,b.size_bytes,COALESCE(b.detected_mime,'application/octet-stream'),f.created_at FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id"
+const selectMetadata = "SELECT f.id::text,f.original_name,b.size_bytes,COALESCE(b.detected_mime,'application/octet-stream'),f.created_at,ARRAY(SELECT t.tag FROM vault.file_tags t WHERE t.file_id=f.id ORDER BY t.tag) FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id"
 
 // Reuse the existing user/session lock protocol for fresh authorization. This
 // serializes reads with publication for one user; keep statements and pages bounded.

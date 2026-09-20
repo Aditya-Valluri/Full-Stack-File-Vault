@@ -97,6 +97,10 @@ type FileConnection struct {
 }
 
 type FileFilter struct {
+	// All normalized tags must match. At most 20; private to the caller.
+	TagsAll []string `json:"tagsAll,omitempty"`
+	// Case-insensitive literal substring of uploader login; owner scope still applies.
+	UploaderNameContains *string `json:"uploaderNameContains,omitempty"`
 	// Case-insensitive literal substring; percent and underscore are not wildcards.
 	NameContains *string `json:"nameContains,omitempty"`
 	// Exact detected base MIME, e.g. text/plain. No parameters or wildcards.
@@ -182,8 +186,10 @@ type StorageStats struct {
 
 // Owned logical metadata. No blob hash, physical key or deduplication hint.
 type VaultFile struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	// Private owner tags. Administrator-wide metadata returns an empty list.
+	Tags []string `json:"tags"`
+	ID   string   `json:"id"`
+	Name string   `json:"name"`
 	// Decimal byte count, not a GraphQL 32-bit Int.
 	SizeBytes    string    `json:"sizeBytes"`
 	DetectedMime string    `json:"detectedMIME"`

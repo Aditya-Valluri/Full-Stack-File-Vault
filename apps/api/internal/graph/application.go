@@ -72,8 +72,10 @@ func (r *Resolver) publish(ctx context.Context, inputs []*graphql.Upload, retryK
 		staged[i] = file
 	}
 	var keys []string
- if retryKey != nil { keys=append(keys,*retryKey) }
- files, err := r.Publisher.Publish(ctx, staged, keys...)
+	if retryKey != nil {
+		keys = append(keys, *retryKey)
+	}
+	files, err := r.Publisher.Publish(ctx, staged, keys...)
 	if err != nil {
 		return nil, err
 	}
@@ -85,5 +87,5 @@ func (r *Resolver) publish(ctx context.Context, inputs []*graphql.Upload, retryK
 }
 
 func fileModel(file files.File) *model.VaultFile {
-	return &model.VaultFile{ID: file.ID, Name: file.Name, SizeBytes: strconv.FormatInt(file.SizeBytes, 10), DetectedMime: file.DetectedMIME, CreatedAt: file.CreatedAt}
+	return &model.VaultFile{ID: file.ID, Name: file.Name, SizeBytes: strconv.FormatInt(file.SizeBytes, 10), DetectedMime: file.DetectedMIME, CreatedAt: file.CreatedAt, Tags: file.Tags}
 }

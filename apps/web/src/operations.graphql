@@ -6,12 +6,13 @@ query Vault($first: Int!, $after: String, $filter: FileFilter) {
  quota { usedBytes quotaBytes remainingBytes }
  storageStats { fileCount logicalBytes uniqueContentBytes savedBytes savingsPercent }
  files(first: $first, after: $after, filter: $filter) {
-  nodes { id name sizeBytes detectedMIME createdAt }
+  nodes { id name sizeBytes detectedMIME createdAt tags }
   pageInfo { endCursor hasNextPage }
  }
 }
 mutation UploadOne($file: Upload!, $idempotencyKey: ID!) { uploadFile(file: $file, idempotencyKey: $idempotencyKey) { id name sizeBytes detectedMIME createdAt } }
 mutation UploadMany($files: [Upload!]!, $idempotencyKey: ID!) { uploadFiles(files: $files, idempotencyKey: $idempotencyKey) { id name sizeBytes detectedMIME createdAt } }
+mutation SetFileTags($id: ID!, $tags: [String!]!) { setFileTags(fileId: $id, tags: $tags) }
 mutation DeleteFile($id: ID!) { deleteFile(id: $id) }
 mutation FileAccess($id: ID!, $mode: FileAccessMode!) { createFileAccess(fileId: $id, mode: $mode) { url expiresAt } }
 query FileShares($id: ID!) { fileShares(fileId: $id) { downloadStarts shares { id recipientId permission createdAt expiresAt } } }

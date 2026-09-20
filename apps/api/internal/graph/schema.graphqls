@@ -29,6 +29,8 @@ type ServiceInfo {
 }
 
 type Mutation {
+ """Replace private tags on an owned file. Up to 20 ASCII tags, 1..32 characters; lowercase, digits, spaces, hyphens and underscores. Empty list clears."""
+ setFileTags(fileId: ID!, tags: [String!]!): [String!]!
   """Administrator-only; refuses quota below current logical usage."""
   adminSetQuota(userId: ID!, quotaBytes: String!): AdminUser!
   """Administrator-only; disabling revokes user sessions and owned sharing links."""
@@ -85,6 +87,8 @@ scalar Time
 
 """Owned logical metadata. No blob hash, physical key or deduplication hint."""
 type VaultFile {
+ """Private owner tags. Administrator-wide metadata returns an empty list."""
+ tags: [String!]!
  id: ID!
  name: String!
  """Decimal byte count, not a GraphQL 32-bit Int."""
@@ -99,6 +103,10 @@ type Quota {
  remainingBytes: String!
 }
 input FileFilter {
+ """All normalized tags must match. At most 20; private to the caller."""
+ tagsAll: [String!]
+ """Case-insensitive literal substring of uploader login; owner scope still applies."""
+ uploaderNameContains: String
  """Case-insensitive literal substring; percent and underscore are not wildcards."""
  nameContains: String
  """Exact detected base MIME, e.g. text/plain. No parameters or wildcards."""

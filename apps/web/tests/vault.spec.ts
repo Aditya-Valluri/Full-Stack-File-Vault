@@ -23,6 +23,20 @@ test('files, dedup quota, sharing, revocation, and audited administration', asyn
  await expect(page.getByText('Uploaded 2 files.', { exact: true })).toBeVisible();
  await expect(page.getByRole('button', { name: 'Share project-notes.txt', exact: true })).toBeVisible();
  await expect(page.getByText('50.00% less unique content', { exact: false })).toBeVisible();
+ await page.getByRole('button', { name: 'Edit tags for project-notes.txt', exact: true }).click();
+ await page.getByLabel('Tags separated by commas').fill(' Work, owner-private-tag, work ');
+ await page.getByRole('button', { name: 'Save tags', exact: true }).click();
+ await expect(page.getByText('Private tags saved.', { exact: true })).toBeVisible();
+ await expect(page.getByLabel('Private tags for project-notes.txt')).toHaveText('owner-private-tag, work');
+ await expect(page.getByLabel('Private tags for notes-copy.txt')).toHaveCount(0);
+ await page.getByRole('button', { name: 'Filters', exact: true }).click();
+ await page.getByLabel('Tags (match all)', { exact: true }).fill('work, owner-private-tag');
+ await page.getByLabel('Uploader username', { exact: true }).fill('e2e.owner');
+ await page.getByRole('button', { name: 'Apply filters', exact: true }).click();
+ await expect(page.getByRole('button', { name: 'Share notes-copy.txt', exact: true })).not.toBeVisible();
+ await expect(page.getByRole('button', { name: 'Share project-notes.txt', exact: true })).toBeVisible();
+ await page.getByRole('button', { name: 'Clear', exact: true }).click();
+ await expect(page.getByRole('button', { name: 'Share notes-copy.txt', exact: true })).toBeVisible();
  const download = page.waitForEvent('download');
  await page.getByRole('button', { name: 'Download project-notes.txt', exact: true }).click();
  const downloaded = await download;
@@ -43,6 +57,7 @@ test('files, dedup quota, sharing, revocation, and audited administration', asyn
   await guest.goto(link);
   await expect(guest.getByRole('heading', { name: 'project-notes.txt', exact: true })).toBeVisible();
   expect(guest.url()).not.toContain('#');
+  await expect(guest.getByText('owner-private-tag', { exact: false })).toHaveCount(0);
   const sharedDownload = guest.waitForEvent('download');
   await guest.getByRole('button', { name: 'Download file', exact: true }).click();
   expect(await readFile((await (await sharedDownload).path())!)).toEqual(bytes);

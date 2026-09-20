@@ -16,6 +16,14 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+// SetFileTags is the resolver for the setFileTags field.
+func (r *mutationResolver) SetFileTags(ctx context.Context, fileID string, tags []string) ([]string, error) {
+	if r.FilesStore == nil {
+		return nil, files.ErrUnavailable
+	}
+	return r.FilesStore.SetTags(ctx, fileID, tags)
+}
+
 // AdminSetQuota is the resolver for the adminSetQuota field.
 func (r *mutationResolver) AdminSetQuota(ctx context.Context, userID string, quotaBytes string) (*model.AdminUser, error) {
 	service, err := r.requireAdminService(ctx)
@@ -299,7 +307,7 @@ func (r *queryResolver) Files(ctx context.Context, first int, after *string, fil
 	}
 	options := files.ListOptions{First: first, After: after}
 	if filter != nil {
-		options.Filter = files.Filter{NameContains: filter.NameContains, MIMEType: filter.MimeType, MinSizeBytes: filter.MinSizeBytes, MaxSizeBytes: filter.MaxSizeBytes, CreatedFrom: filter.CreatedFrom, CreatedBefore: filter.CreatedBefore}
+		options.Filter = files.Filter{TagsAll: filter.TagsAll, UploaderNameContains: filter.UploaderNameContains, NameContains: filter.NameContains, MIMEType: filter.MimeType, MinSizeBytes: filter.MinSizeBytes, MaxSizeBytes: filter.MaxSizeBytes, CreatedFrom: filter.CreatedFrom, CreatedBefore: filter.CreatedBefore}
 	}
 	page, err := r.FilesStore.List(ctx, options)
 	if err != nil {

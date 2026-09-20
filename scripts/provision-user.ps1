@@ -19,13 +19,20 @@ try {
         $start.UseShellExecute = $false
         $start.CreateNoWindow = $true
         $start.RedirectStandardInput = $true
-        $start.StandardInputEncoding = New-Object System.Text.UTF8Encoding($false)
         $process = New-Object System.Diagnostics.Process
         $process.StartInfo = $start
         try {
             $null = $process.Start()
             # Write, not WriteLine: whitespace and newlines are password bytes.
-            $process.StandardInput.Write([Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer))
+            $utf8 = New-Object System.Text.UTF8Encoding($false)
+            $passwordBytes = $utf8.GetBytes([Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer))
+            try {
+                # BaseStream works on Windows PowerShell 5.1; no BOM or newline.
+                $process.StandardInput.BaseStream.Write($passwordBytes, 0, $passwordBytes.Length)
+                $process.StandardInput.BaseStream.Flush()
+            } finally {
+                [Array]::Clear($passwordBytes, 0, $passwordBytes.Length)
+            }
             $process.StandardInput.Close()
             $process.WaitForExit()
             if ($process.ExitCode -ne 0) { throw 'Account provisioning failed.' }

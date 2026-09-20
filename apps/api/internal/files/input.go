@@ -15,11 +15,30 @@ import (
 
 type validatedFilter struct {
 	name, mime string
+	uploader   string
+	tags       []string
 	min, max   *int64
 }
 
 func validateFilter(f Filter) (validatedFilter, error) {
 	var result validatedFilter
+	tags, err := NormalizeTags(f.TagsAll)
+	if err != nil {
+		return result, err
+	}
+	result.tags = tags
+	if f.UploaderNameContains != nil {
+		value := *f.UploaderNameContains
+		if len(value) > 64 || !utf8.ValidString(value) {
+			return result, ErrInvalidInput
+		}
+		for _, r := range value {
+			if unicode.IsControl(r) {
+				return result, ErrInvalidInput
+			}
+		}
+		result.uploader = value
+	}
 	if f.NameContains != nil {
 		value := *f.NameContains
 		if !utf8.ValidString(value) || utf8.RuneCountInString(value) > 255 {
@@ -40,7 +59,7 @@ func validateFilter(f Filter) (validatedFilter, error) {
 		}
 		result.mime = media
 	}
-	var err error
+	err = nil
 	if result.min, err = parseSize(f.MinSizeBytes); err != nil {
 		return result, err
 	}

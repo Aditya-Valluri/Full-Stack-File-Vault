@@ -67,7 +67,7 @@ try {
  await sql('CREATE ROLE vault_runtime NOLOGIN; CREATE ROLE vault_gc NOLOGIN;');
  await inputCommand(['exec', '-i', name, 'pg_restore', '--exit-on-error', '-U', 'vault_operator', '-d', 'vault'], resolve(work, 'database.dump'), true);
  const result = JSON.parse(await sql("SELECT json_build_object('schema_version',(SELECT version FROM public.schema_migrations),'files',(SELECT count(*) FROM vault.files),'receipts',(SELECT count(*) FROM vault.upload_receipts),'quota_mismatches',(SELECT count(*) FROM vault.users u WHERE u.used_bytes <> (SELECT coalesce(sum(b.size_bytes),0) FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id WHERE f.owner_id=u.id)));"));
- if (result.schema_version !== 14 || result.quota_mismatches !== 0) throw new Error('Restored schema or quota invariant failed.');
+ if (![14, 15].includes(result.schema_version) || result.quota_mismatches !== 0) throw new Error('Restored schema or quota invariant failed.');
  const blobs = JSON.parse(await sql("SELECT coalesce(json_agg(json_build_object('key',b.storage_key,'digest',encode(b.sha256,'hex'),'size',b.size_bytes)),'[]'::json) FROM vault.blobs b WHERE EXISTS (SELECT 1 FROM vault.files f WHERE f.blob_id=b.id);"));
  for (const blob of blobs) {
   if (!/^blob-[a-f0-9]{64}$/.test(blob.key)) throw new Error('Unsafe restored storage key.');
@@ -80,7 +80,7 @@ try {
  }
  result.verifiedBlobs = blobs.length;
  await writeFile(resolve(archive, '..', 'restore-result.json'), JSON.stringify({ ...result, testedAt: new Date().toISOString(), tamperRejected: true, scope: 'database restore, referenced blob SHA-256 and archive authentication; browser recovery not yet verified' }, null, 2));
- console.log('PASS: authenticated decryption, tamper rejection, PostgreSQL restore, schema 14, quota consistency. File count: ' + result.files);
+ console.log('PASS: authenticated decryption, tamper rejection, PostgreSQL restore, schema verified, quota consistency. File count: ' + result.files);
 } finally {
  try { if (started) await docker(['rm', '-f', '-v', name]); }
  finally {

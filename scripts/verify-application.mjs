@@ -42,6 +42,12 @@ try {
  filesClean = false;
  await page.getByRole('button', { name: 'Upload selected files' }).click();
  await page.getByText('Uploaded 1 file.', { exact: true }).waitFor();
+ await page.getByRole('button', { name: 'Edit tags for container-check.txt', exact: true }).click();
+ await page.getByLabel('Tags separated by commas').fill('local-smoke, private');
+ await page.getByRole('button', { name: 'Save tags', exact: true }).click();
+ await page.getByText('Private tags saved.', { exact: true }).waitFor();
+ await page.getByLabel('Private tags for container-check.txt').waitFor();
+ if (await page.getByLabel('Private tags for container-check.txt').textContent() !== 'local-smoke, private') throw new Error('Private tag persistence failed.');
  const downloadEvent = page.waitForEvent('download');
  await page.getByRole('button', { name: 'Download container-check.txt', exact: true }).click();
  const download = await downloadEvent;
@@ -61,7 +67,7 @@ try {
  filesClean = true;
  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
  await page.getByRole('heading', { name: 'Sign in to your vault' }).waitFor();
- console.log('PASS: production-mode TLS, CSP, secure cookie, upload, download, delete, and sign-out.');
+ console.log('PASS: production-mode TLS, CSP, secure cookie, upload, private tags, download, delete, and sign-out.');
 } finally {
  if (browser) await browser.close();
  if (provisioned && filesClean) {

@@ -14,7 +14,7 @@ the user's requests. PASS means tested locally, not production certification.
 | Public and recipient-restricted sharing, expiry/revocation | PASS | Sharing integration; browser guest download and revocation |
 | Download counts | PASS | Counts admitted download starts, once per issued grant; not completed transfers |
 | Combined filename/MIME/size/date search | PASS | Bounded filters and pagination |
-| Tags and uploader-name search | MISSING | Not represented in the current FileFilter or UI |
+| Tags and uploader-name search | PASS | Private per-file tags and combined uploader login substring filtering, within owner scope; integration and browser coverage |
 | Two calls/sec shared across replicas | PASS | Twelve simultaneous admissions across two pools yield two accepted and ten limited; other-user isolation and fail-closed checks |
 | Configurable 10,000,000-byte logical quota | PASS | Atomic quota and duplicate logical charging tests |
 | Per-user unique/logical/saved storage and percentage | PASS | Browser duplicate uploads display 50% savings |
@@ -53,7 +53,7 @@ Neither replaces manual screen-reader review or sustained production-like load t
 
 ## Remaining release acceptance
 
-Close required search gaps before claiming full assignment feature coverage.
+Private tag and uploader filters now cover the identified search gaps within owner-scoped listings.
 Run the browser against a fully restored deployment, including sharing and replay
 receipts. Configure private encrypted off-host storage and verify retrieval under
 the restore identity. Measure RPO/RTO and sustained load on the selected storage
@@ -71,3 +71,6 @@ and persistent storage; execute a staging rollout and observe the hosted CI run.
 
 - Frontend dependency audit: zero vulnerabilities.
 - Go vulnerability scan (Linux, Go 1.27.1): zero reachable or imported-package vulnerabilities. The required x/crypto module carries advisory GO-2026-5932 for unused openpgp; this application does not import that package.
+
+
+Private-tags validation: Go unit tests and vet passed; full PostgreSQL integration passed in 25.332 seconds; all four browser scenarios passed in 1.6 minutes, including private tag editing, combined filters, deduplicated-copy isolation and shared-page privacy. Migration 15 is additive; rollback refuses to discard stored tags.

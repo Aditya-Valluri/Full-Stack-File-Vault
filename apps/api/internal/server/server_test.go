@@ -1,9 +1,9 @@
 package server
 
 import (
-	"file-vault.local/api/internal/graph"
 	"context"
 	"errors"
+	"file-vault.local/api/internal/graph"
 	"io"
 	"log/slog"
 	"net"

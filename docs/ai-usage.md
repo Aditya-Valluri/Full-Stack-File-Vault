@@ -381,3 +381,14 @@ The user selected private encrypted object storage for production; no provider/b
 credentials or actual off-host destination are configured. Current production boundaries
 are documented in architecture/operations.md. Earlier remaining-work notes above describe
 historical checkpoints, not the current feature inventory. Final review is still ongoing.
+## Private tags and uploader filtering
+
+User selected owner-private tags. Implemented migration 15, bounded normalized
+per-file tags, atomic owner-authorized replacement, AND tag filters and literal
+uploader-login filtering within owner scope. Shared metadata has no tags;
+administrator-wide file projections do not populate them. Added UI editing and
+search controls. Validation caught a missing mutation allowlist entry and a test
+fixture hash constraint; both were fixed before rollout. Unit/vet, PostgreSQL
+integration and all four browser scenarios passed. Applied migration 15 and
+updated the local HTTPS containers. The separate Windows PowerShell provisioning
+compatibility fix preserves exact UTF-8 password bytes without a BOM or newline.

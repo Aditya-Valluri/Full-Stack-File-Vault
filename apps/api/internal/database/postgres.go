@@ -46,7 +46,8 @@ func Ready(ctx context.Context, pool *pgxpool.Pool) error {
 	_, err := pool.Exec(ctx, `SELECT u.id, b.id, f.id FROM vault.users u, vault.blobs b, vault.files f LIMIT 0;
  SELECT owner_id FROM vault.upload_receipts LIMIT 0;
  SELECT id FROM vault.file_shares LIMIT 0;
- SELECT id FROM vault.admin_audit LIMIT 0`)
+ SELECT id FROM vault.admin_audit LIMIT 0;
+ SELECT file_id FROM vault.file_tags LIMIT 0`)
 	if err != nil {
 		return errors.New("foundation schema unavailable")
 	}

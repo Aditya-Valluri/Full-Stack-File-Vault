@@ -164,6 +164,23 @@ func testFiles(t *testing.T, ctx context.Context, admin *pgx.Conn, dsn, director
 			}
 			return response.StatusCode, string(body)
 		}
+		tagMutation := "mutation($id:ID!,$tags:[String!]!){setFileTags(fileId:$id,tags:$tags)}"
+		_, tagBody := request(tagMutation, map[string]any{"id": published[0].ID, "tags": []string{"Private"}}, token, state.CSRFToken)
+		if strings.Contains(tagBody, "\"errors\"") || !strings.Contains(tagBody, "private") {
+			t.Fatal("tag mutation failed", tagBody)
+		}
+		_, tagBody = request(tagMutation, map[string]any{"id": foreign[0].ID, "tags": []string{"stolen"}}, token, state.CSRFToken)
+		if !strings.Contains(tagBody, "NOT_FOUND") {
+			t.Fatal("foreign tag edit allowed", tagBody)
+		}
+		tagStatus, _ := request(tagMutation, map[string]any{"id": published[0].ID, "tags": []string{}}, token, "")
+		if tagStatus != 403 {
+			t.Fatal("tag CSRF bypass", tagStatus)
+		}
+		_, tagBody = request(tagMutation, map[string]any{"id": published[0].ID, "tags": []string{}}, "", "")
+		if !strings.Contains(tagBody, "UNAUTHENTICATED") {
+			t.Fatal("anonymous tag mutation allowed", tagBody)
+		}
 		query := "query($first:Int!,$filter:FileFilter){files(first:$first,filter:$filter){nodes{id name sizeBytes detectedMIME createdAt} pageInfo{endCursor hasNextPage}}}"
 		status, body := request(query, map[string]any{"first": 50, "filter": map[string]any{"nameContains": "%_!"}}, token, state.CSRFToken)
 		if status != 200 || strings.Contains(body, "\"errors\"") || !strings.Contains(body, published[0].ID) {
