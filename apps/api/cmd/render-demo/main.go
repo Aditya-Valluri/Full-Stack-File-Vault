@@ -18,7 +18,7 @@ import (
 	"syscall"
 	"time"
 
-	"file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/auth"
 )
 
 type credentials struct{ operator, runtime, gc, runtimePassword, gcPassword string }

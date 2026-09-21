@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
- name: file-vault-config
+ name: full-stack-file-vault-config
 data:
  APP_ENV: production
  PUBLIC_ORIGIN: https://vault.example.com

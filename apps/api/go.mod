@@ -1,4 +1,4 @@
-module file-vault.local/api
+module full-stack-file-vault.local/api
 
 go 1.27.0
 

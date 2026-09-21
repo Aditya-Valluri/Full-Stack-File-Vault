@@ -242,7 +242,7 @@ No PostgreSQL rerun, production upload enablement, commit or push performed.
 
 ## Five-step upload foundation and application integration
 
-**Objective / prompt:** User requested the next five steps after the File Vault rename.
+**Objective / prompt:** User requested the next five steps after the Full Stack File Vault rename.
 Inspected the existing schema, authentication, multipart transport, unfinished
 publication service, tests, and engineering charter. Selected five bounded steps:
 publication migration, durable local adapter, transactional publication, distributed
@@ -438,3 +438,9 @@ mobile overflow checks also passed. No live Render resource or public URL is cla
 The root Blueprint requests only Free services under new names, with startup setup
 instead of a paid pre-deploy phase. Docs describe expiration after 30 days, account
 usage overages, preservation of existing deployments, and explicit reviewer access.
+
+## Project naming consistency
+
+Standardized the display name as Full Stack File Vault and technical identifiers as full-stack-file-vault across the Go module/imports, frontend, Compose images and projects, Kubernetes, monitoring, Render configuration, and documentation. Removed legacy company branding from current source comments and documentation. Existing Git history is retained.
+
+Validation: Go tests and vet, frontend build and unit tests, free Render configuration guard, and production-mode browser smoke checks passed. Both local Compose projects were recreated using byte-verified copies of their stopped data volumes. Original snapshots are retained in consistently named Docker volumes ending in _rename_backup. The repository checkout directory remains independent of the project name.

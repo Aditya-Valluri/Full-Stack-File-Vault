@@ -3,9 +3,9 @@ package config
 
 import (
 	"errors"
-	"file-vault.local/api/internal/auth"
-	"file-vault.local/api/internal/graph"
-	"file-vault.local/api/internal/secret"
+	"full-stack-file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/graph"
+	"full-stack-file-vault.local/api/internal/secret"
 	"net"
 	"os"
 	"strconv"

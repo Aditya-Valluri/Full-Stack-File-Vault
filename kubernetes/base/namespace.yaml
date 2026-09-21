@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
- name: file-vault
+ name: full-stack-file-vault
  labels:
   pod-security.kubernetes.io/enforce: restricted
   pod-security.kubernetes.io/audit: restricted

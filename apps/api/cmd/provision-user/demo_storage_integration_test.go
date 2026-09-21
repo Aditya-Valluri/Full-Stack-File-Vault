@@ -12,8 +12,8 @@ import (
 	"sync"
 	"testing"
 
-	"file-vault.local/api/internal/demostore"
-	"file-vault.local/api/internal/upload"
+	"full-stack-file-vault.local/api/internal/demostore"
+	"full-stack-file-vault.local/api/internal/upload"
 	"github.com/jackc/pgx/v5"
 )
 

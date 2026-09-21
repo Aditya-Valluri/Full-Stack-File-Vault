@@ -10,17 +10,17 @@ import (
 	"syscall"
 	"time"
 
-	"file-vault.local/api/internal/admin"
-	"file-vault.local/api/internal/auth"
-	"file-vault.local/api/internal/blobstorage"
-	"file-vault.local/api/internal/config"
-	"file-vault.local/api/internal/database"
-	"file-vault.local/api/internal/files"
-	"file-vault.local/api/internal/graph"
-	"file-vault.local/api/internal/server"
-	"file-vault.local/api/internal/sharing"
-	"file-vault.local/api/internal/telemetry"
-	"file-vault.local/api/internal/upload"
+	"full-stack-file-vault.local/api/internal/admin"
+	"full-stack-file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/blobstorage"
+	"full-stack-file-vault.local/api/internal/config"
+	"full-stack-file-vault.local/api/internal/database"
+	"full-stack-file-vault.local/api/internal/files"
+	"full-stack-file-vault.local/api/internal/graph"
+	"full-stack-file-vault.local/api/internal/server"
+	"full-stack-file-vault.local/api/internal/sharing"
+	"full-stack-file-vault.local/api/internal/telemetry"
+	"full-stack-file-vault.local/api/internal/upload"
 )
 
 func main() {

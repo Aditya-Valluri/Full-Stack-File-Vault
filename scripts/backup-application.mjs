@@ -8,7 +8,7 @@ import { resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const root = resolve(import.meta.dirname, '..');
-const compose = ['compose', '-p', 'file-vault-application', '-f', 'compose.application.yaml'];
+const compose = ['compose', '-p', 'full-stack-file-vault-application', '-f', 'compose.application.yaml'];
 const helperImage = 'golang:1.27.1-bookworm';
 export async function docker(args, outputFile) {
  const child = spawn('docker', args, { cwd: root, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -44,7 +44,7 @@ export async function backupApplication() {
   if (!api) throw new Error('Start the isolated application rehearsal first.');
   const inspection = JSON.parse(await docker(['inspect', api]))[0];
   const volume = inspection.Mounts.find(mount => mount.Destination === '/data');
-  if (volume?.Name !== 'file-vault-application_application_files') throw new Error('Unexpected file volume; backup refused.');
+  if (volume?.Name !== 'full-stack-file-vault-application_application_files') throw new Error('Unexpected file volume; backup refused.');
   paused = true;
   await docker([...compose, 'stop', 'web', 'api', 'collector']);
   for (const service of ['web', 'api', 'collector']) {

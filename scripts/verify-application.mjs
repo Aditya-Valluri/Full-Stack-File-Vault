@@ -6,7 +6,7 @@ import { randomBytes } from 'node:crypto';
 import { readFile, mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 const root = resolve(import.meta.dirname, '..');
-const compose = ['compose', '-p', 'file-vault-application', '-f', 'compose.application.yaml'];
+const compose = ['compose', '-p', 'full-stack-file-vault-application', '-f', 'compose.application.yaml'];
 const loginName = 'smoke.' + randomBytes(8).toString('hex');
 const password = randomBytes(24).toString('hex');
 function docker(args, input = '') {

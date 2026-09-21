@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"file-vault.local/api/internal/telemetry"
+	"full-stack-file-vault.local/api/internal/telemetry"
 	"github.com/go-chi/chi/v5"
 )
 

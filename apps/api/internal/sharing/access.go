@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"file-vault.local/api/internal/files"
+	"full-stack-file-vault.local/api/internal/files"
 	"github.com/jackc/pgx/v5"
 )
 

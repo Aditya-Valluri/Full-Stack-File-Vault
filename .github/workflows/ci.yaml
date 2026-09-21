@@ -1,4 +1,4 @@
-name: Validate File Vault
+name: Validate Full Stack File Vault
 on:
  push:
   branches: [main]
@@ -50,12 +50,12 @@ jobs:
      run: git diff --exit-code -- apps/api/internal/graph apps/web/src/generated
    - name: Build runtime images
      run: |
-      docker build -f apps/api/Dockerfile -t file-vault-api:ci .
-      docker build -f apps/web/Dockerfile -t file-vault-web:ci .
-      docker build -f deploy/render/Dockerfile -t file-vault-render:ci .
-      docker run --rm --read-only --tmpfs /tmp --entrypoint nginx file-vault-web:ci -t
+      docker build -f apps/api/Dockerfile -t full-stack-file-vault-api:ci .
+      docker build -f apps/web/Dockerfile -t full-stack-file-vault-web:ci .
+      docker build -f deploy/render/Dockerfile -t full-stack-file-vault-render:ci .
+      docker run --rm --read-only --tmpfs /tmp --entrypoint nginx full-stack-file-vault-web:ci -t
    - name: Render Kubernetes manifests
-     run: kubectl kustomize kubernetes/base > /tmp/file-vault.yaml
+     run: kubectl kustomize kubernetes/base > /tmp/full-stack-file-vault.yaml
    - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
      if: failure()
      with:

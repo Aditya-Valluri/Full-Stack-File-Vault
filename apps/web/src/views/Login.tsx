@@ -22,14 +22,14 @@ export function LoginView({ onLogin, onBack, error: initialError = '' }:
  }
  return <main className="login-page">
   <section className="login-story">
-   <a className="brand" href="/"><span className="brand-mark"><FolderLock size={24} /></span><span>File Vault</span></a>
+   <a className="brand" href="/"><span className="brand-mark"><FolderLock size={24} /></span><span>Full Stack File Vault</span></a>
    <div><span className="eyebrow">A LITTLE MORE PEACE OF MIND</span><h1>Your files.<br />Your space.<br /><em>Your control.</em></h1><p>Keep your work organized, find what matters, and share only what you choose.</p></div>
    <div className="login-trust"><ShieldCheck size={20} /><span>Private by default. Shared on your terms.</span></div>
   </section>
   <section className="login-panel">
    <div className="login-form-wrap">
     {onBack && <Button variant="ghost" onClick={onBack}><ArrowLeft size={16} />Back to shared file</Button>}
-    <span className="eyebrow">WELCOME BACK</span><h2>Sign in to your vault</h2><p className="muted">Use your File Vault account to continue.</p>
+    <span className="eyebrow">WELCOME BACK</span><h2>Sign in to your vault</h2><p className="muted">Use your Full Stack File Vault account to continue.</p>
     <form onSubmit={event => void submit(event)} className="form-stack">
      <label>Username<input autoComplete="username" required maxLength={64} value={loginName} onChange={event => setLoginName(event.target.value)} placeholder="Your username" /></label>
      <label>Password<div className="password-field"><input type={visible ? 'text' : 'password'} autoComplete="current-password" required maxLength={1024} value={password} onChange={event => setPassword(event.target.value)} placeholder="Your password" /><button type="button" aria-label={visible ? 'Hide password' : 'Show password'} onClick={() => setVisible(!visible)}>{visible ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></label>

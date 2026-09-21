@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"file-vault.local/api/internal/admin"
-	"file-vault.local/api/internal/auth"
-	"file-vault.local/api/internal/files"
-	"file-vault.local/api/internal/graph/model"
-	"file-vault.local/api/internal/sharing"
-	"file-vault.local/api/internal/upload"
+	"full-stack-file-vault.local/api/internal/admin"
+	"full-stack-file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/files"
+	"full-stack-file-vault.local/api/internal/graph/model"
+	"full-stack-file-vault.local/api/internal/sharing"
+	"full-stack-file-vault.local/api/internal/upload"
 	"github.com/99designs/gqlgen/graphql"
 )
 

@@ -1,5 +1,5 @@
 # Isolated production-mode rehearsal; does not reuse the development database.
-name: file-vault-application
+name: full-stack-file-vault-application
 services:
  postgres:
   image: postgres:17-bookworm
@@ -18,7 +18,7 @@ services:
   restart: unless-stopped
  migrate:
   build: { context: ., dockerfile: apps/api/Dockerfile }
-  image: file-vault-api:local
+  image: full-stack-file-vault-api:local
   entrypoint: ["/app/migrate"]
   environment:
    MIGRATE_DATABASE_URL_FILE: /run/secrets/operator_url
@@ -32,7 +32,7 @@ services:
   cap_drop: [ALL]
   security_opt: [no-new-privileges:true]
  api:
-  image: file-vault-api:local
+  image: full-stack-file-vault-api:local
   environment:
    APP_ENV: production
    PUBLIC_ORIGIN: ${VAULT_PUBLIC_ORIGIN:-https://localhost:8443}
@@ -61,7 +61,7 @@ services:
   restart: unless-stopped
  web:
   build: { context: ., dockerfile: apps/web/Dockerfile }
-  image: file-vault-web:local
+  image: full-stack-file-vault-web:local
   network_mode: service:api
   depends_on:
    api: { condition: service_healthy }
@@ -79,7 +79,7 @@ services:
   mem_limit: 128m
   restart: unless-stopped
  collector:
-  image: file-vault-api:local
+  image: full-stack-file-vault-api:local
   entrypoint: ["/app/collect"]
   environment:
    APP_ENV: production
@@ -97,7 +97,7 @@ services:
   mem_limit: 128m
   restart: unless-stopped
  provision:
-  image: file-vault-api:local
+  image: full-stack-file-vault-api:local
   profiles: [tools]
   entrypoint: ["/app/provision-user"]
   environment:

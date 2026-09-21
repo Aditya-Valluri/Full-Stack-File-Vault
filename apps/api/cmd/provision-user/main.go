@@ -4,8 +4,8 @@ package main
 import (
 	"context"
 	"errors"
-	"file-vault.local/api/internal/auth"
-	"file-vault.local/api/internal/secret"
+	"full-stack-file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/secret"
 	"flag"
 	"fmt"
 	"github.com/jackc/pgx/v5"

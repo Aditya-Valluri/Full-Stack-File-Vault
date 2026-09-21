@@ -9,10 +9,10 @@ import (
 	"context"
 	"strconv"
 
-	"file-vault.local/api/internal/auth"
-	"file-vault.local/api/internal/files"
-	"file-vault.local/api/internal/graph/model"
-	"file-vault.local/api/internal/upload"
+	"full-stack-file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/files"
+	"full-stack-file-vault.local/api/internal/graph/model"
+	"full-stack-file-vault.local/api/internal/upload"
 	"github.com/99designs/gqlgen/graphql"
 )
 
@@ -255,7 +255,7 @@ func (r *queryResolver) SharedFile(ctx context.Context, token string) (*model.Sh
 
 // ServiceInfo is the resolver for the serviceInfo field.
 func (r *queryResolver) ServiceInfo(ctx context.Context) (*model.ServiceInfo, error) {
-	return &model.ServiceInfo{Name: "File Vault"}, nil
+	return &model.ServiceInfo{Name: "Full Stack File Vault"}, nil
 }
 
 // Me is the resolver for the me field.

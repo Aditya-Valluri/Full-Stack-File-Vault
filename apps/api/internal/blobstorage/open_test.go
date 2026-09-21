@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"file-vault.local/api/internal/upload"
+	"full-stack-file-vault.local/api/internal/upload"
 )
 
 func TestProductionDefaultRemainsLocal(t *testing.T) {

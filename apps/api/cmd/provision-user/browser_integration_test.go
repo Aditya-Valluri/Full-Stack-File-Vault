@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"file-vault.local/api/internal/auth"
-	"file-vault.local/api/internal/graph"
-	"file-vault.local/api/internal/server"
+	"full-stack-file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/graph"
+	"full-stack-file-vault.local/api/internal/server"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

@@ -2,15 +2,15 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
- name: file-vault
- namespace: file-vault
+ name: full-stack-file-vault
+ namespace: full-stack-file-vault
 spec:
  selector:
-  matchLabels: { app: file-vault, component: application }
+  matchLabels: { app: full-stack-file-vault, component: application }
  podMetricsEndpoints:
   - port: api
     interval: 15s
-    relabelings: [{ targetLabel: job, replacement: file-vault-api }]
+    relabelings: [{ targetLabel: job, replacement: full-stack-file-vault-api }]
   - port: gc-metrics
     interval: 15s
-    relabelings: [{ targetLabel: job, replacement: file-vault-collector }]
+    relabelings: [{ targetLabel: job, replacement: full-stack-file-vault-collector }]

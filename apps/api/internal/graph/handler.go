@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"time"
 
-	"file-vault.local/api/internal/graph/model"
+	"full-stack-file-vault.local/api/internal/graph/model"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"

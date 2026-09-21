@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
-	"file-vault.local/api/internal/telemetry"
+	"full-stack-file-vault.local/api/internal/telemetry"
 	"time"
 
 	"github.com/jackc/pgx/v5"

@@ -15,13 +15,13 @@ import (
 	"testing"
 	"time"
 
-	administration "file-vault.local/api/internal/admin"
-	"file-vault.local/api/internal/auth"
-	"file-vault.local/api/internal/files"
-	"file-vault.local/api/internal/graph"
-	"file-vault.local/api/internal/server"
-	"file-vault.local/api/internal/sharing"
-	"file-vault.local/api/internal/upload"
+	administration "full-stack-file-vault.local/api/internal/admin"
+	"full-stack-file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/files"
+	"full-stack-file-vault.local/api/internal/graph"
+	"full-stack-file-vault.local/api/internal/server"
+	"full-stack-file-vault.local/api/internal/sharing"
+	"full-stack-file-vault.local/api/internal/upload"
 	"github.com/jackc/pgx/v5"
 )
 

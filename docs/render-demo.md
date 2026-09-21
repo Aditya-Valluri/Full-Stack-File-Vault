@@ -43,8 +43,8 @@ Sources: [Free instances and overages](https://render.com/docs/free),
 1. Open https://dashboard.render.com and connect GitHub to
    Aditya-Valluri/Full-Stack-File-Vault. Do not paste API keys or passwords into chat.
 2. Choose New > Blueprint, select main and the root render.yaml.
-3. Use a new Blueprint, for example File Vault Free Demo. Resource names are
-   file-vault-free-demo and file-vault-free-demo-db. Do not sync the old paid
+3. Use a new Blueprint, for example Full Stack File Vault Free Demo. Resource names are
+   full-stack-file-vault-free-demo and full-stack-file-vault-free-demo-db. Do not sync the old paid
    Blueprint as an in-place migration: disk contents are not copied into PostgreSQL.
    A workspace supports only one Free PostgreSQL database; resolve an existing
    free-database conflict before creation, without discarding needed data.
@@ -121,7 +121,7 @@ Requires Docker, installed frontend dependencies, Playwright Chromium, and the
 existing local TLS files created by scripts/initialize-application.ps1.
 
 ```powershell
-docker build -f deploy/render/Dockerfile -t file-vault-render:local .
+docker build -f deploy/render/Dockerfile -t full-stack-file-vault-render:local .
 node scripts/verify-render-demo.mjs
 ```
 
@@ -144,7 +144,7 @@ by Render and mention that the first visit can take about a minute to wake.
 
 Suggested message:
 
-> File Vault temporary demo: [verified URL]. Please use the reviewer credentials
+> Full Stack File Vault temporary demo: [verified URL]. Please use the reviewer credentials
 > supplied separately and sample files only. The demo is available until [date],
 > and its first page load after inactivity may take about a minute.
 > Try duplicate uploads, private tags/search, downloads and revocable sharing.

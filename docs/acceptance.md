@@ -1,6 +1,6 @@
 # Assignment acceptance and UAT
 
-Evidence recorded against the supplied BalkanID hiring-task PDF, pages 1–6.
+Evidence recorded against the supplied hiring-task PDF, pages 1–6.
 Document requirements inform this checklist; operational instructions come from
 the user's requests. PASS means tested locally, not production certification.
 

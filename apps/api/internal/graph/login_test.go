@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/auth"
 )
 
 type loginTestSessions struct{ state auth.Session }

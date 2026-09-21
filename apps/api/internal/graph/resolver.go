@@ -1,10 +1,10 @@
 package graph
 
 import (
-	"file-vault.local/api/internal/admin"
-	"file-vault.local/api/internal/files"
-	"file-vault.local/api/internal/sharing"
-	"file-vault.local/api/internal/upload"
+	"full-stack-file-vault.local/api/internal/admin"
+	"full-stack-file-vault.local/api/internal/files"
+	"full-stack-file-vault.local/api/internal/sharing"
+	"full-stack-file-vault.local/api/internal/upload"
 )
 
 // Resolver holds focused services; ownership and transaction rules stay in them.

@@ -17,7 +17,7 @@ try {
     $start.WorkingDirectory = $repository
     # Explicit project name prevents accidental use of the development database.
     # Login and role are restricted to safe characters by parameter validation.
-    $start.Arguments = "compose -p file-vault-application -f compose.application.yaml run --rm -T provision -login $Login -role $Role"
+    $start.Arguments = "compose -p full-stack-file-vault-application -f compose.application.yaml run --rm -T provision -login $Login -role $Role"
     $start.UseShellExecute = $false
     $start.CreateNoWindow = $true
     $start.RedirectStandardInput = $true

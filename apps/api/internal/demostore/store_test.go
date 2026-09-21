@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"file-vault.local/api/internal/upload"
+	"full-stack-file-vault.local/api/internal/upload"
 )
 
 func TestPreparedMemoryIsBoundedAndReleased(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 	"sort"
 	"time"
 
-	"file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/auth"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

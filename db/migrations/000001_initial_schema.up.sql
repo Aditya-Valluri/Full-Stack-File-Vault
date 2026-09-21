@@ -18,7 +18,7 @@ REVOKE ALL ON SCHEMA vault FROM PUBLIC;
 CREATE TABLE vault.users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
-    -- BalkanID specifies a default 10 MB quota.
+    -- The assignment specifies a default 10 MB quota.
     -- 10 MB is a DEFAULT, not a maximum.
     quota_bytes BIGINT NOT NULL DEFAULT 10000000,
 

@@ -1,6 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: file-vault
+namespace: full-stack-file-vault
 resources:
  - namespace.yaml
  - config.yaml
@@ -9,9 +9,9 @@ resources:
  - ingress.yaml
  - network-policy.yaml
 images:
- - name: file-vault-api
-   newName: file-vault-api
+ - name: full-stack-file-vault-api
+   newName: full-stack-file-vault-api
    newTag: local
- - name: file-vault-web
-   newName: file-vault-web
+ - name: full-stack-file-vault-web
+   newName: full-stack-file-vault-web
    newTag: local

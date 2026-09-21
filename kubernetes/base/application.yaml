@@ -1,15 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
- name: file-vault
+ name: full-stack-file-vault
 spec:
  replicas: 1
  strategy: { type: Recreate }
  selector:
-  matchLabels: { app: file-vault, component: application }
+  matchLabels: { app: full-stack-file-vault, component: application }
  template:
   metadata:
-   labels: { app: file-vault, component: application }
+   labels: { app: full-stack-file-vault, component: application }
   spec:
    automountServiceAccountToken: false
    terminationGracePeriodSeconds: 30
@@ -23,15 +23,15 @@ spec:
     seccompProfile: { type: RuntimeDefault }
    initContainers:
     - name: initialize-storage
-      image: file-vault-api:local
+      image: full-stack-file-vault-api:local
       command: ["/app/init-storage"]
       securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
       resources: { requests: { cpu: 10m, memory: 16Mi }, limits: { cpu: 100m, memory: 32Mi } }
       volumeMounts: [{ name: files, mountPath: /data }]
    containers:
     - name: api
-      image: file-vault-api:local
-      envFrom: [{ configMapRef: { name: file-vault-config } }]
+      image: full-stack-file-vault-api:local
+      envFrom: [{ configMapRef: { name: full-stack-file-vault-config } }]
       env: [{ name: DATABASE_URL_FILE, value: /run/secrets/database-url }]
       ports: [{ name: api, containerPort: 8080 }]
       securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
@@ -44,7 +44,7 @@ spec:
        - { name: runtime-secret, mountPath: /run/secrets, readOnly: true }
        - { name: api-temp, mountPath: /tmp }
     - name: web
-      image: file-vault-web:local
+      image: full-stack-file-vault-web:local
       ports: [{ name: web, containerPort: 8081 }]
       securityContext: { runAsUser: 101, runAsGroup: 101, allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
       resources: { requests: { cpu: 25m, memory: 32Mi }, limits: { cpu: 500m, memory: 128Mi } }
@@ -52,9 +52,9 @@ spec:
       livenessProbe: { httpGet: { path: /healthz, port: web }, periodSeconds: 15 }
       volumeMounts: [{ name: web-temp, mountPath: /tmp }]
     - name: collector
-      image: file-vault-api:local
+      image: full-stack-file-vault-api:local
       command: ["/app/collect"]
-      envFrom: [{ configMapRef: { name: file-vault-config } }]
+      envFrom: [{ configMapRef: { name: full-stack-file-vault-config } }]
       env: [{ name: GC_DATABASE_URL_FILE, value: /run/secrets/database-url }, { name: GC_METRICS_ADDR, value: "0.0.0.0:8082" }]
       ports: [{ name: gc-metrics, containerPort: 8082 }]
       securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
@@ -63,16 +63,16 @@ spec:
        - { name: files, mountPath: /data }
        - { name: gc-secret, mountPath: /run/secrets, readOnly: true }
    volumes:
-    - { name: files, persistentVolumeClaim: { claimName: file-vault-files } }
-    - { name: runtime-secret, secret: { secretName: file-vault-runtime, defaultMode: 288, items: [{ key: database-url, path: database-url }] } }
-    - { name: gc-secret, secret: { secretName: file-vault-gc, defaultMode: 288, items: [{ key: database-url, path: database-url }] } }
+    - { name: files, persistentVolumeClaim: { claimName: full-stack-file-vault-files } }
+    - { name: runtime-secret, secret: { secretName: full-stack-file-vault-runtime, defaultMode: 288, items: [{ key: database-url, path: database-url }] } }
+    - { name: gc-secret, secret: { secretName: full-stack-file-vault-gc, defaultMode: 288, items: [{ key: database-url, path: database-url }] } }
     - { name: api-temp, emptyDir: { sizeLimit: 16Mi } }
     - { name: web-temp, emptyDir: { sizeLimit: 32Mi } }
 ---
 apiVersion: v1
 kind: Service
 metadata:
- name: file-vault-web
+ name: full-stack-file-vault-web
 spec:
- selector: { app: file-vault, component: application }
+ selector: { app: full-stack-file-vault, component: application }
  ports: [{ name: http, port: 80, targetPort: web }]

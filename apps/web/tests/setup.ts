@@ -32,8 +32,8 @@ async function ready(url: string, child?: ChildProcess) {
 }
 
 export default async function setup() {
- const workspace = await mkdtemp(resolve(tmpdir(), 'file-vault-e2e-'));
- const container = 'file-vault-browser-' + randomBytes(6).toString('hex');
+ const workspace = await mkdtemp(resolve(tmpdir(), 'full-stack-file-vault-e2e-'));
+ const container = 'full-stack-file-vault-browser-' + randomBytes(6).toString('hex');
  const password = randomBytes(24).toString('hex');
  const runtimePassword = randomBytes(24).toString('hex');
  const accountPassword = randomBytes(24).toString('hex');
@@ -50,7 +50,7 @@ export default async function setup() {
   if (containerCreated) await run('docker', ['rm', '-f', '-v', container]);
   // Windows cleanup stays inside the exact randomly allocated temporary directory.
   const absolute = resolve(workspace);
-  const allowed = resolve(tmpdir()) + sep + 'file-vault-e2e-';
+  const allowed = resolve(tmpdir()) + sep + 'full-stack-file-vault-e2e-';
   if (!absolute.toLowerCase().startsWith(allowed.toLowerCase())) throw new Error('Unsafe test cleanup path.');
   await rm(absolute, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
  }

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"file-vault.local/api/internal/graph"
+	"full-stack-file-vault.local/api/internal/graph"
 )
 
 func uploadConfig() (graph.MultipartConfig, string, int, error) {

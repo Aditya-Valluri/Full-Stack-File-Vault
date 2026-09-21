@@ -6,7 +6,7 @@ explicit PUBLIC_ORIGIN and defaults APP_ENV to production.
 
 ## What
 
-The API module is `file-vault.local/api` under `apps/api`. It uses chi and pgxpool
+The API module is `full-stack-file-vault.local/api` under `apps/api`. It uses chi and pgxpool
 with JSON logs, startup validation, bounded readiness checks and graceful shutdown.
 The local module path can be renamed when the repository's canonical remote exists.
 GraphQL is settled as the sole application API; its implementation is Step 3.

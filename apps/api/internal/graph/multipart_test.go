@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/auth"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/vektah/gqlparser/v2"

@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"file-vault.local/api/internal/upload"
+	"full-stack-file-vault.local/api/internal/upload"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"

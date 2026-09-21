@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/auth"
 )
 
 // NewContentHandler is byte transport only. Grants are created through GraphQL.

@@ -5,7 +5,7 @@ package main
 import (
 	"context"
 	"errors"
-	"file-vault.local/api/internal/secret"
+	"full-stack-file-vault.local/api/internal/secret"
 	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"

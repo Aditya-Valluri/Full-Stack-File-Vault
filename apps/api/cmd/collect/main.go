@@ -4,7 +4,7 @@ package main
 import (
 	"context"
 	"errors"
-	"file-vault.local/api/internal/telemetry"
+	"full-stack-file-vault.local/api/internal/telemetry"
 	"flag"
 	"log/slog"
 	"net"
@@ -14,10 +14,10 @@ import (
 	"syscall"
 	"time"
 
-	"file-vault.local/api/internal/blobstorage"
-	"file-vault.local/api/internal/cleanup"
-	"file-vault.local/api/internal/secret"
-	"file-vault.local/api/internal/upload"
+	"full-stack-file-vault.local/api/internal/blobstorage"
+	"full-stack-file-vault.local/api/internal/cleanup"
+	"full-stack-file-vault.local/api/internal/secret"
+	"full-stack-file-vault.local/api/internal/upload"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

@@ -13,7 +13,7 @@ const archive = resolve(process.argv[2] || '');
 const allowed = resolve(root, 'tmp/backups') + sep;
 if (!archive.startsWith(allowed) || !archive.endsWith(sep + 'backup.enc')) throw new Error('Select a generated local backup.enc beneath tmp/backups.');
 const suffix = randomBytes(8).toString('hex');
-const name = 'file-vault-restore-' + suffix;
+const name = 'full-stack-file-vault-restore-' + suffix;
 const work = resolve(root, 'tmp', name);
 await mkdir(work, { mode: 0o700 });
 async function decrypt(source, target) {
@@ -84,7 +84,7 @@ try {
 } finally {
  try { if (started) await docker(['rm', '-f', '-v', name]); }
  finally {
-  if (!work.startsWith(resolve(root, 'tmp') + sep) || !name.startsWith('file-vault-restore-')) throw new Error('Unsafe cleanup path.');
+  if (!work.startsWith(resolve(root, 'tmp') + sep) || !name.startsWith('full-stack-file-vault-restore-')) throw new Error('Unsafe cleanup path.');
   await rm(work, { recursive: true, force: true });
  }
 }

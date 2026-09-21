@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"file-vault.local/api/internal/files"
+	"full-stack-file-vault.local/api/internal/files"
 )
 
 func (s *Store) Users(ctx context.Context, first int, after *string) (UserPage, error) {

@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"errors"
-	"file-vault.local/api/internal/graph"
+	"full-stack-file-vault.local/api/internal/graph"
 	"io"
 	"log/slog"
 	"net"

@@ -13,7 +13,7 @@ receiver, and backup destination before production deployment.
 Run the isolated Compose application with its monitoring profile:
 
 ```powershell
-docker compose -p file-vault-application -f compose.application.yaml --profile monitoring up -d
+docker compose -p full-stack-file-vault-application -f compose.application.yaml --profile monitoring up -d
 ```
 
 Prometheus is available only on localhost:9090. API/collector metrics are internal
@@ -46,7 +46,7 @@ node scripts/verify-backup.mjs tmp/backups/<generated-directory>/backup.enc
 node scripts/verify-application.mjs --backup
 ```
 
-These commands target only the isolated `file-vault-application` Compose project.
+These commands target only the isolated `full-stack-file-vault-application` Compose project.
 The backup script verifies its file volume, stops web/API/collector writers,
 captures PostgreSQL in custom dump format plus the entire file volume, and
 restarts services. It bundles both with a manifest and encrypts using AES-256-GCM,

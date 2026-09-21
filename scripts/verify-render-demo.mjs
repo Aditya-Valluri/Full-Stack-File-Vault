@@ -9,7 +9,7 @@ import { request as httpRequest } from 'node:http';
 import { chromium } from '../apps/web/node_modules/playwright/index.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-const name = 'file-vault-render-check-' + randomBytes(6).toString('hex');
+const name = 'full-stack-file-vault-render-check-' + randomBytes(6).toString('hex');
 const network = name + '-net', database = name + '-db';
 const origin = 'https://localhost:18443';
 const dbPassword = randomBytes(32).toString('hex');
@@ -40,10 +40,10 @@ async function docker(args, input = '') {
 }
 const envArgs = Object.keys(secrets).filter(key => key !== 'POSTGRES_PASSWORD').flatMap(key => ['-e', key]);
 const sql = text => docker(['exec','-i',database,'psql','-At','-v','ON_ERROR_STOP=1','-U','postgres','-d','vault_demo'], text);
-const setup = () => docker(['run','--rm','--network',network,...envArgs,'file-vault-render:local','/app/render-demo','setup']);
+const setup = () => docker(['run','--rm','--network',network,...envArgs,'full-stack-file-vault-render:local','/app/render-demo','setup']);
 let netCreated = false, dbCreated = false, appCreated = false, browser, edge;
 async function startApp() {
- await docker(['run','-d','--name',name,'--network',network,'--memory','512m','--memory-swap','512m','--read-only','--tmpfs','/tmp:rw,noexec,nosuid,size=16m','--tmpfs','/data:rw,noexec,nosuid,size=64m,uid=65532,gid=65532,mode=0700','--cap-drop','ALL','--security-opt','no-new-privileges:true','-p','127.0.0.1::10000',...envArgs,'file-vault-render:local']);
+ await docker(['run','-d','--name',name,'--network',network,'--memory','512m','--memory-swap','512m','--read-only','--tmpfs','/tmp:rw,noexec,nosuid,size=16m','--tmpfs','/data:rw,noexec,nosuid,size=64m,uid=65532,gid=65532,mode=0700','--cap-drop','ALL','--security-opt','no-new-privileges:true','-p','127.0.0.1::10000',...envArgs,'full-stack-file-vault-render:local']);
  appCreated=true;
  return (await docker(['port',name,'10000/tcp'])).split(':').at(-1);
 }

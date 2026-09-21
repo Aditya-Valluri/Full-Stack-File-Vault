@@ -47,7 +47,7 @@ func TestGraphQLBoundary(t *testing.T) {
 			if (len(result.Errors) > 0) != tc.wantError {
 				t.Fatalf("unexpected response: %s", w.Body.String())
 			}
-			if !tc.wantError && result.Data.ServiceInfo.Name != "File Vault" {
+			if !tc.wantError && result.Data.ServiceInfo.Name != "Full Stack File Vault" {
 				t.Fatal("unexpected service name")
 			}
 		})

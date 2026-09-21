@@ -61,7 +61,7 @@ Any paid resources from earlier attempts remain until explicitly removed.
 
 Install Go 1.27+ and Docker Desktop with its Linux engine running. Configure the
 root `.env` with a PostgreSQL password using `.env.example` as a reference.
-From `D:\File Vault` in PowerShell:
+From your repository directory in PowerShell:
 
 ```powershell
 ./scripts/start-api.ps1
@@ -105,9 +105,7 @@ development database. Linux durable-storage validation is separate from Windows 
 - [Browser authentication](docs/decisions/0004-browser-authentication.md)
 - [Quota and recoverable publication](docs/decisions/0005-quota-and-publication.md)
 
-The project is named **File Vault**. New installations use the Compose project
-identifier `file-vault`; the Go module is `file-vault.local/api`.
+The project is named **Full Stack File Vault**. New installations use the Compose project
+identifier `full-stack-file-vault`; the Go module is `full-stack-file-vault.local/api`.
 
-Existing checkouts retain their previous Compose project identifier in the ignored
-`.env` as `COMPOSE_PROJECT_NAME` to reuse their database container and volume.
-Changing the folder name does not require migrating database data.
+The application Compose project is `full-stack-file-vault-application`. Set any local `.env` override of `COMPOSE_PROJECT_NAME` to the matching project name. Existing Docker projects must have their data volumes migrated before recreation; changing a project name alone does not transfer data. The checkout folder can have any name.

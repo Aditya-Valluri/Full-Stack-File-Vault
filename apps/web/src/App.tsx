@@ -64,20 +64,20 @@ export function App() {
   finally { setBusy(false); }
  }
  function signedIn(user: Identity) { setAuthenticated(true); setIdentity(user); setShowLogin(false); setError(''); }
- if (identity === undefined) return <div className="loading-screen" role="status"><ShieldCheck size={34} /><p>Opening File Vault…</p></div>;
+ if (identity === undefined) return <div className="loading-screen" role="status"><ShieldCheck size={34} /><p>Opening Full Stack File Vault…</p></div>;
  if ((!identity && !isSharedRoute) || showLogin) return <LoginView onLogin={signedIn} error={error} onBack={isSharedRoute ? () => setShowLogin(false) : undefined} />;
 
  return <div className="app-shell">
   <a className="skip-link" href="#main-content">Skip to content</a>
   <aside className="sidebar">
-   <a className="brand" href="/"><span className="brand-mark"><FolderLock size={23} /></span><span>File Vault<small>YOUR PRIVATE WORKSPACE</small></span></a>
+   <a className="brand" href="/"><span className="brand-mark"><FolderLock size={23} /></span><span>Full Stack File Vault<small>YOUR PRIVATE WORKSPACE</small></span></a>
    <div className="nav-caption">WORKSPACE</div>
    <nav aria-label="Main navigation">
     <button className={tab === 'vault' && !isSharedRoute ? 'nav-item active' : 'nav-item'} onClick={() => { if (isSharedRoute) window.location.assign('/'); else setTab('vault'); }}><Archive size={18} />My files</button>
     {identity?.role === UserRole.Admin && <button className={tab === 'admin' ? 'nav-item active' : 'nav-item'} onClick={() => { if (isSharedRoute) window.location.assign('/'); else setTab('admin'); }}><ShieldCheck size={18} />Administration</button>}
    </nav>
    <div className="sidebar-note"><ShieldCheck size={20} /><strong>Private by default</strong><p>You choose what to share. Revoke access whenever you need.</p></div>
-   <div className="sidebar-footer"><span className="status-dot" />File Vault workspace</div>
+   <div className="sidebar-footer"><span className="status-dot" />Full Stack File Vault workspace</div>
   </aside>
   <div className="workspace">
    <header className="topbar">
@@ -96,7 +96,7 @@ export function App() {
     <Suspense fallback={<p role="status">Loading workspace...</p>}>{isSharedRoute ? <SharedView key={`${identity?.id ?? 'anonymous'}:${sharedLink.revision}`} initialToken={sharedLink.token} signedIn={Boolean(identity)} onSignIn={() => setShowLogin(true)} />
      : tab === 'admin' && identity?.role === UserRole.Admin ? <AdminView key={identity.id} /> : <VaultView key={identity?.id} />}</Suspense>
    </main>
-   <footer className="workspace-footer">File Vault<span>Private files. Deliberate sharing.</span></footer>
+   <footer className="workspace-footer">Full Stack File Vault<span>Private files. Deliberate sharing.</span></footer>
   </div>
  </div>;
 }

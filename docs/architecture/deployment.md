@@ -11,7 +11,7 @@ From the repository root in PowerShell:
 
 ```powershell
 ./scripts/initialize-application.ps1
-docker compose -p file-vault-application -f compose.application.yaml up -d --build --wait
+docker compose -p full-stack-file-vault-application -f compose.application.yaml up -d --build --wait
 node scripts/verify-application.mjs
 ```
 
@@ -39,7 +39,7 @@ secrets use bind-mount permission semantics.
 To stop the rehearsal while retaining its data:
 
 ```powershell
-docker compose -p file-vault-application -f compose.application.yaml down
+docker compose -p full-stack-file-vault-application -f compose.application.yaml down
 ```
 
 Do not add --volumes unless you intend to destroy this rehearsal's data.
@@ -54,8 +54,8 @@ Before a real release, create an environment overlay that supplies:
 3. A supported Traefik installation in namespace traefik (or adapt routing and
    NetworkPolicy to the platform's supported controller). Access logs must not
    record opaque content URLs. A dedicated-controller values example is provided.
-4. A trusted TLS certificate in file-vault-tls.
-5. Separate file-vault-runtime, file-vault-gc, and file-vault-operator Secrets,
+4. A trusted TLS certificate in full-stack-file-vault-tls.
+5. Separate full-stack-file-vault-runtime, full-stack-file-vault-gc, and full-stack-file-vault-operator Secrets,
    each containing database-url. Use a secret manager or --from-file from a
    private file, never a committed Secret manifest or a command-line literal.
 6. A PostgreSQL service with backups and TLS certificate verification for remote

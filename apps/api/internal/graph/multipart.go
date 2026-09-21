@@ -14,8 +14,8 @@ import (
 	"strconv"
 	"time"
 
-	"file-vault.local/api/internal/auth"
-	"file-vault.local/api/internal/upload"
+	"full-stack-file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/upload"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/vektah/gqlparser/v2/ast"
 	"github.com/vektah/gqlparser/v2/parser"
