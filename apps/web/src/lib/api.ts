@@ -3,7 +3,7 @@ import { CombinedGraphQLErrors } from '@apollo/client/errors';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { print } from 'graphql';
 import { Observable } from 'rxjs';
-import { BootstrapDocument } from '../generated/graphql';
+import { BootstrapDocument, IdentityDocument, type IdentityQuery } from '../generated/graphql';
 import { requests } from './scheduler';
 
 let csrfToken = '';
@@ -75,6 +75,25 @@ export function bootstrap(): Promise<void> {
   .finally(() => { bootstrapPending = undefined; });
  return bootstrapPending;
 }
+let identityPending: Promise<IdentityQuery> | undefined;
+/** A reload resets local request pacing, but not the server's rolling user window.
+ * Retry only session restoration on admission rejection; never replay uploads or
+ * other mutations. Share the restoration across React StrictMode effect mounts. */
+export function restoreIdentity(): Promise<IdentityQuery> {
+ identityPending ??= (async () => {
+  for (let attempt = 0; ; attempt++) {
+   try {
+    await bootstrap();
+    return await query(IdentityDocument, {});
+   } catch (error) {
+    if (errorCode(error) !== 'RATE_LIMITED' || attempt >= 2) throw error;
+    await new Promise(resolve => setTimeout(resolve, 1000));
+   }
+  }
+ })().finally(() => { identityPending = undefined; });
+ return identityPending;
+}
+
 export function errorCode(error: unknown): string | undefined {
  if (CombinedGraphQLErrors.is(error)) return error.errors[0]?.extensions?.code as string | undefined;
  return undefined;

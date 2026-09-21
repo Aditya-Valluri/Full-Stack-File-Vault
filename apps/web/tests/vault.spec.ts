@@ -167,3 +167,22 @@ test('lost upload response can be retried without duplicate files', async ({ pag
  await expect(page.getByText('1 files shown', { exact: true })).toBeVisible();
  await expect(page.locator('.stat-card').filter({ hasText: 'Storage used' }).locator('strong')).toContainText('3 B');
 });
+
+for (const operation of ['Bootstrap', 'Identity']) {
+ test(`reload preserves the signed-in account after ${operation} is rate limited`, async ({ page }) => {
+  await login(page, 'e2e.owner');
+  let rejected = false;
+  await page.route('**/graphql', async route => {
+   if (!rejected && route.request().postDataJSON()?.operationName === operation) {
+    rejected = true;
+    await route.fulfill({ status: 429, contentType: 'application/json', headers: { 'Retry-After': '1' },
+     body: JSON.stringify({ errors: [{ message: 'user request rate exceeded', extensions: { code: 'RATE_LIMITED' } }] }) });
+   } else await route.continue();
+  });
+  await page.reload();
+  await expect(page.locator('.account-name')).toHaveText('e2e.owner');
+  expect(rejected).toBe(true);
+  await expect(page.getByRole('heading', { name: 'My files', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign in to your vault', exact: true })).toHaveCount(0);
+ });
+}

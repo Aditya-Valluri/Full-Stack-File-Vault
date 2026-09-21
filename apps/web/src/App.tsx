@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Archive, ArrowUpRight, Copy, FolderLock, LogOut, ShieldCheck } from 'lucide-react';
-import { bootstrap, client, errorCode, explainError, mutate, query, setAuthenticated, setCSRF } from './lib/api';
-import { IdentityDocument, LogoutDocument, UserRole, type IdentityQuery } from './generated/graphql';
+import { bootstrap, client, errorCode, explainError, mutate, restoreIdentity, setAuthenticated, setCSRF } from './lib/api';
+import { LogoutDocument, UserRole, type IdentityQuery } from './generated/graphql';
 import { Button, Notice } from './components/ui';
 import { LoginView } from './views/Login';
 import { VaultView } from './views/Vault';
@@ -35,7 +35,7 @@ export function App() {
 
  useEffect(() => {
   let active = true;
-  void bootstrap().then(() => query(IdentityDocument, {})).then(
+  void restoreIdentity().then(
    data => { if (active) { setAuthenticated(true); setIdentity(data.me); } },
    failure => {
     if (!active) return;
