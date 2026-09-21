@@ -1,4 +1,4 @@
-# File Vault
+# Full Stack File Vault
 
 A secure file vault built incrementally with Go, PostgreSQL, and gqlgen.
 GraphQL is the single application API, with a React/TypeScript browser frontend.

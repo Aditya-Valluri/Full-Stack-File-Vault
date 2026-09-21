@@ -41,7 +41,7 @@ Sources: [Free instances and overages](https://render.com/docs/free),
 ## Deploy a fresh demo
 
 1. Open https://dashboard.render.com and connect GitHub to
-   Aditya-Valluri/BalkanID-File-Vault. Do not paste API keys or passwords into chat.
+   Aditya-Valluri/Full-Stack-File-Vault. Do not paste API keys or passwords into chat.
 2. Choose New > Blueprint, select main and the root render.yaml.
 3. Use a new Blueprint, for example File Vault Free Demo. Resource names are
    file-vault-free-demo and file-vault-free-demo-db. Do not sync the old paid
