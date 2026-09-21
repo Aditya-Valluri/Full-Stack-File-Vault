@@ -65,6 +65,9 @@ func domainErrorPresenter(logger *slog.Logger) graphql.ErrorPresenterFunc {
 		if errors.As(err, &rateError) {
 			return &gqlerror.Error{Message: "user request rate exceeded", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "RATE_LIMITED"}}
 		}
+		if errors.Is(err, upload.ErrDemoCapacity) {
+			return &gqlerror.Error{Message: "temporary demo storage capacity reached", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "DEMO_CAPACITY_REACHED"}}
+		}
 		if errors.Is(err, upload.ErrQuotaExceeded) {
 			return &gqlerror.Error{Message: "storage quota exceeded", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "QUOTA_EXCEEDED"}}
 		}

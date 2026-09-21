@@ -1,24 +1,20 @@
-# Review Render's cost summary before creating these paid resources.
+# Free, temporary hiring demo. No paid disk or pre-deploy job.
+# Use a new Blueprint: never convert an existing disk-backed database in place.
 services:
  - type: web
-   name: file-vault-demo
+   name: file-vault-free-demo
    runtime: docker
-   plan: 0.5c-512mb
+   plan: free
    region: virginia
    dockerfilePath: deploy/render/Dockerfile
    dockerContext: .
    dockerCommand: /app/render-demo
-   preDeployCommand: /app/render-demo setup
    autoDeployTrigger: "off"
    healthCheckPath: /readyz
-   disk:
-    name: vault-files
-    mountPath: /data
-    sizeGB: 1
    envVars:
     - key: DEMO_OPERATOR_URL
       fromDatabase:
-       name: file-vault-demo-db
+       name: file-vault-free-demo-db
        property: connectionString
     - key: DEMO_RUNTIME_SEED
       generateValue: true
@@ -29,11 +25,10 @@ services:
     - key: DEMO_ADMIN_PASSWORD
       generateValue: true
 databases:
- - name: file-vault-demo-db
-   plan: 0.1c-256mb
+ - name: file-vault-free-demo-db
+   plan: free
    region: virginia
    databaseName: vault_demo
    user: vault_operator
    postgresMajorVersion: "17"
-   diskSizeGB: 1
    ipAllowList: []

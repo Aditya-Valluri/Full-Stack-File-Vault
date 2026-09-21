@@ -1,5 +1,5 @@
-// Command render-demo packages the API and collector behind one public gateway.
-// This single-instance demo shares a disk, not database privileges, between workers.
+// Command render-demo packages a temporary free demo behind one public gateway.
+// File bytes live in PostgreSQL; local directories hold disposable staging only.
 package main
 
 import (
@@ -65,7 +65,11 @@ func main() {
 	if len(os.Args) == 2 && os.Args[1] == "setup" {
 		err = setup()
 	} else if len(os.Args) == 1 {
-		err = serve()
+		// Free Render services have no pre-deploy phase or shell. Setup must be
+		// repeatable on every wake/replacement before workers accept requests.
+		if err = setup(); err == nil {
+			err = serve()
+		}
 	} else {
 		err = errors.New("use render-demo or render-demo setup")
 	}
@@ -97,7 +101,7 @@ func serve() error {
 	}
 	for _, path := range []string{"/data/staging", "/data/blobs"} {
 		if err = os.MkdirAll(path, 0700); err != nil {
-			return errors.New("persistent disk must be writable by UID 65532")
+			return errors.New("temporary staging directory must be writable by UID 65532")
 		}
 		if err = os.Chmod(path, 0700); err != nil {
 			return errors.New("cannot secure storage directories")
@@ -110,13 +114,13 @@ func serve() error {
 		return errors.New("gateway port unavailable")
 	}
 	defer listener.Close()
-	common := []string{"APP_ENV=production", "BLOB_STORAGE_DIR=/data/blobs", "UPLOAD_STAGING_DIR=/data/staging"}
+	common := []string{"APP_ENV=production", "BLOB_STORAGE_BACKEND=postgres-demo", "BLOB_STORAGE_DIR=/data/blobs", "UPLOAD_STAGING_DIR=/data/staging", "GOMEMLIMIT=128MiB"}
 	children := []*exec.Cmd{
 		exec.Command("/app/server"),
 		exec.Command("/app/collect"),
 	}
 	// Do not inherit operator, demo-account or the other worker's credentials.
-	children[0].Env = append(append([]string{}, common...), "DATABASE_URL="+c.runtime, "PUBLIC_ORIGIN="+origin, "HTTP_ADDR=127.0.0.1:8080", "USER_CALLS_PER_SECOND=2")
+	children[0].Env = append(append([]string{}, common...), "DATABASE_URL="+c.runtime, "PUBLIC_ORIGIN="+origin, "HTTP_ADDR=127.0.0.1:8080", "USER_CALLS_PER_SECOND=2", "UPLOAD_MAX_FILE_BYTES=10000000", "UPLOAD_MAX_REQUEST_BYTES=11000000", "UPLOAD_MAX_CONCURRENT=2")
 	children[1].Env = append(append([]string{}, common...), "GC_DATABASE_URL="+c.gc, "GC_METRICS_ADDR=127.0.0.1:8082")
 	exited := make(chan error, 2)
 	started := 0

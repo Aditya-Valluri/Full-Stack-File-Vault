@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"file-vault.local/api/internal/blobstorage"
 	"file-vault.local/api/internal/cleanup"
 	"file-vault.local/api/internal/secret"
 	"file-vault.local/api/internal/upload"
@@ -84,7 +85,7 @@ func run(logger *slog.Logger) error {
 			return errors.New("cannot initialize cleanup storage")
 		}
 	}
-	storage, err := upload.NewLocalStore(directory, environment == "development")
+	storage, err := blobstorage.Open(ctx, dsn, directory, environment == "development")
 	if err != nil {
 		return err
 	}

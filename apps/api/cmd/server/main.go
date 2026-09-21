@@ -12,6 +12,7 @@ import (
 
 	"file-vault.local/api/internal/admin"
 	"file-vault.local/api/internal/auth"
+	"file-vault.local/api/internal/blobstorage"
 	"file-vault.local/api/internal/config"
 	"file-vault.local/api/internal/database"
 	"file-vault.local/api/internal/files"
@@ -71,7 +72,7 @@ func run(logger *slog.Logger) error {
 	if err = stagingRoot.Close(); err != nil {
 		return errors.New("upload staging directory unavailable")
 	}
-	blobs, err := upload.NewLocalStore(cfg.BlobDirectory, cfg.Browser.Development)
+	blobs, err := blobstorage.Open(ctx, cfg.DatabaseURL, cfg.BlobDirectory, cfg.Browser.Development)
 	if err != nil {
 		return err
 	}

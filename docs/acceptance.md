@@ -29,7 +29,7 @@ the user's requests. PASS means tested locally, not production certification.
 | Monitoring | PARTIAL | Ten rules validate, both local targets scrape; production receiver and delivery test pending |
 | Encrypted backups and recovery | PARTIAL | Real-file paired backup, tamper rejection, isolated DB restore, quota and referenced-blob SHA-256 checks pass; off-host upload and restored-browser drill pending |
 | Full load, power-loss, volume-driver qualification | PARTIAL | Race/concurrency tests exist; sustained throughput/latency and infrastructure failure drills pending |
-| Public cloud URL | MISSING | Render Blueprint and local edge-TLS/browser/restart rehearsal pass; paid resource creation and public URL verification pending |
+| Public cloud URL | MISSING | Free Render Blueprint and demo PostgreSQL BlobStore prepared; final local rehearsal and actual public URL verification tracked below |
 | Folders, real-time updates, admin graphs, Helm | MISSING | Optional assignment features; not implied by current implementation |
 | Activity audit | PARTIAL | Administrative audit implemented; full upload/download/delete activity audit is separate |
 | Documentation and AI methodology | PASS | README, architecture/decision notes, GraphQL SDL, AI work record |
@@ -74,3 +74,18 @@ and persistent storage; execute a staging rollout and observe the hosted CI run.
 
 
 Private-tags validation: Go unit tests and vet passed; full PostgreSQL integration passed in 25.332 seconds; all four browser scenarios passed in 1.6 minutes, including private tag editing, combined filters, deduplicated-copy isolation and shared-page privacy. Migration 15 is additive; rollback refuses to discard stored tags.
+
+## Free Render demo validation
+
+The demo-only PostgreSQL BlobStore is selected explicitly; local storage remains
+production's default and external object storage remains the documented target.
+Go unit tests and vet passed. The complete PostgreSQL integration suite passed in
+183.131 seconds; after moving preparation before publication locks, the focused
+migration/demo suite passed in 35.848 seconds. Prepared-memory limit/release and
+production-default selection tests passed. The final image built successfully.
+The browser rehearsal passed with 512 MB memory and swap disabled: bootstrap,
+login, deduplication, shared/owner downloads after full container replacement,
+admin listing, duplicate deletion, GC/capacity release, and 1024/390px notice/layout
+checks. The free-resource Blueprint guard and workflow lint passed.
+Actual Render deployment, managed database privileges, public URL and account
+billing settings remain unverified; no new cloud resources were created here.

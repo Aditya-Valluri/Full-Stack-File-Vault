@@ -88,6 +88,7 @@ export function explainError(error: unknown): string {
   RATE_LIMITED: 'Please wait a moment and try again. Revoke unused links if your sharing limit is full.',
   UPLOAD_RETRY_CONFLICT: 'This retry key belongs to a different upload. Re-select your files to start a new upload.',
   QUOTA_EXCEEDED: 'There is not enough space in your vault for these files.',
+  DEMO_CAPACITY_REACHED: 'This temporary demo has reached its shared storage limit. Contact the demo owner.',
   CONFLICT: 'That change conflicts with the current account state. Quota must cover existing files.',
   INVALID_INPUT: 'Check the values you entered and try again.',
   UNSUPPORTED_MEDIA_TYPE: 'This file cannot be previewed. You can download it instead.',

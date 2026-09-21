@@ -43,6 +43,7 @@ jobs:
       node --check scripts/verify-backup.mjs
       node --check scripts/verify-application.mjs
       node --check scripts/verify-render-demo.mjs
+      node scripts/validate-free-render.mjs
       docker run --rm --entrypoint promtool -v "$PWD/monitoring:/etc/prometheus:ro" prom/prometheus:v3.14.0 check rules /etc/prometheus/alerts.yaml
       go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 .github/workflows/ci.yaml
    - name: Generated code is current

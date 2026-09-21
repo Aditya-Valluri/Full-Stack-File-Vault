@@ -16,6 +16,7 @@ import (
 
 var (
 	ErrQuotaExceeded = errors.New("storage quota exceeded")
+	ErrDemoCapacity  = errors.New("temporary demo storage capacity reached")
 	ErrPublication   = errors.New("file publication unavailable")
 	ErrIntegrity     = errors.New("stored content integrity check failed")
 )
@@ -262,6 +263,9 @@ func (p *Publisher) publishBlob(ctx context.Context, tx pgx.Tx, c *candidate) er
 	intentState := "CLEANUP"
 	if promote {
 		if err = c.prepared.Promote(ctx, c.key); err != nil {
+			if errors.Is(err, ErrDemoCapacity) {
+				return ErrDemoCapacity
+			}
 			return ErrStorage
 		}
 		intentState = "PUBLISHED"

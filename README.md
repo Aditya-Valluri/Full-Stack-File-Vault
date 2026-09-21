@@ -38,9 +38,24 @@ See [frontend](docs/architecture/frontend.md), [recovery](docs/architecture/reco
 
 ## Hiring demo on Render
 
-The Render deployment setup is prepared and locally tested; a public demo is not
-yet live. Follow the [Render demo guide](docs/render-demo.md) to review costs,
-deploy the Blueprint, retrieve private reviewer credentials, and verify the URL.
+The root Blueprint now requests Free web and PostgreSQL services for a temporary
+hiring demo. Free Render cannot attach a persistent volume; the explicitly selected
+`BLOB_STORAGE_BACKEND=postgres-demo` adapter stores bounded file contents in
+PostgreSQL so app sleep/restarts do not break downloads. Each file is limited to
+10 MB, shared physical content to 100 MB/10,000 objects, and the free database
+expires 30 days after creation. The UI labels the environment as temporary.
+
+The default production adapter remains the existing Linux filesystem store;
+durable external object storage is the production target. This demo adapter does
+not replace production storage or provide permanent retention/high availability.
+See [ADR 0006](docs/decisions/0006-temporary-postgres-demo-storage.md) for the
+decision, size/concurrency guards, privilege boundaries and recovery protocol.
+
+Follow the [free demo guide](docs/render-demo.md) to deploy a fresh Blueprint,
+check billing/usage controls, retrieve private reviewer credentials and verify
+the assigned URL. No public deployment has been verified yet. Free resource plans
+alone do not prevent account-level overage charges if payment is enabled.
+Any paid resources from earlier attempts remain until explicitly removed.
 
 ## Run locally
 

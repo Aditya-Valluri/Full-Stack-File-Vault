@@ -413,3 +413,28 @@ image. No Render resources have been created; cloud disk permissions, hosted CI,
 public HTTPS and managed-database deployment remain to be verified. Cost approval
 and account access are required for deployment. Operator credentials remain in
 the demo supervisor environment; this is not process-level security isolation.
+
+## Free Render demo-only PostgreSQL BlobStore
+
+User required a $0 Render-only recruiter demo and explicitly constrained database
+file storage to a demo adapter when durable storage is impractical. Free Render
+cannot attach a volume; another object provider would exceed that hosting scope.
+Added demostore.BlobStore selected by BLOB_STORAGE_BACKEND=postgres-demo, retaining
+the production contracts and default local adapter. Production's future target
+remains durable external object storage, documented in ADR 0006 and README.
+
+Embedded demo-only SQL enforces immutable objects, separate runtime/collector
+privileges, a serialized 100 MB/10,000-object cap, and a database-size admission
+threshold. Files are limited to 10 MB. Review corrected preparation to copy/hash
+before metadata locks, with a 22 MB prepared-payload reservation. Uploads first
+stage to private temporary disk; this bytea adapter still needs bounded RAM copies.
+The initial integration test used an invalid retry-key fixture; corrected it to
+UUIDv4. Unit/vet, full integration (183.131s), subsequent focused adapter integration
+(35.848s), image build, free Blueprint guard and workflow lint passed. Final browser
+rehearsal used 512 MB/no swap and replaced the whole app container, verified original
+owner/shared downloads, duplicate deletion and physical GC; notice visibility and
+mobile overflow checks also passed. No live Render resource or public URL is claimed.
+
+The root Blueprint requests only Free services under new names, with startup setup
+instead of a paid pre-deploy phase. Docs describe expiration after 30 days, account
+usage overages, preservation of existing deployments, and explicit reviewer access.

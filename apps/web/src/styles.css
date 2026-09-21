@@ -231,3 +231,9 @@ tbody tr:hover { background: #fbfdfd; }
  .shared-actions { flex-direction: column; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+
+.demo-notice { padding: 10px 20px; background: #fff4d6; color: #523b10; text-align: center; font-size: 14px; line-height: 1.5; }
+/* Keep the demo notice clear of the fixed desktop sidebar at each layout width. */
+.demo-notice:has(+ .app-shell) { margin-left: 235px; }
+@media (max-width: 1100px) { .demo-notice:has(+ .app-shell) { margin-left: 205px; } }
+@media (max-width: 780px) { .demo-notice:has(+ .app-shell) { margin-left: 0; } }

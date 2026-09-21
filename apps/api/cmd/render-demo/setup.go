@@ -9,10 +9,11 @@ import (
 	"time"
 
 	"file-vault.local/api/internal/auth"
+	"file-vault.local/api/internal/demostore"
 	"github.com/jackc/pgx/v5"
 )
 
-// setup runs before deployment, when Render has no persistent disk mounted.
+// setup runs at each demo startup. It never resets accounts or existing data.
 func setup() error {
 	c, err := loadCredentials()
 	if err != nil {
@@ -40,6 +41,15 @@ func setup() error {
 	// Lock only demo bootstrap, never application transactions.
 	if _, err = tx.Exec(ctx, "SELECT pg_advisory_xact_lock(724154,1)"); err != nil {
 		return errors.New("demo bootstrap lock unavailable")
+	}
+	if _, err = tx.Exec(ctx, demostore.Schema); err != nil {
+		return errors.New("demo byte-storage schema setup failed")
+	}
+	// Refuse an in-place switch from disk storage: metadata without its bytes
+	// would silently break downloads. Deploy the free demo to a fresh database.
+	var missing bool
+	if err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM vault.blobs b LEFT JOIN vault_demo.objects o USING(storage_key) WHERE o.storage_key IS NULL)").Scan(&missing); err != nil || missing {
+		return errors.New("demo database contains disk-backed blobs; use a fresh database")
 	}
 	for _, account := range []struct{ login, role, key string }{
 		{"reviewer", "USER", "DEMO_REVIEWER_PASSWORD"},

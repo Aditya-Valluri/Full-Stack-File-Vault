@@ -217,5 +217,8 @@ func TestProvisionCommandIntegration(t *testing.T) {
 	t.Run("cleanup", func(t *testing.T) {
 		testCleanup(t, ctx, conn, dsn("vault_runtime", runtimePassword), dsn("vault_gc", runtimePassword), storageDirectory)
 	})
+	t.Run("demo PostgreSQL storage", func(t *testing.T) {
+		testDemoStorage(t, ctx, conn, dsn("vault_runtime", runtimePassword), dsn("vault_gc", runtimePassword))
+	})
 	t.Log(fmt.Sprintf("Verified accounts and sessions; test container %s will be removed", name))
 }

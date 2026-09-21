@@ -5,7 +5,7 @@ COPY apps/web/package.json apps/web/package-lock.json ./
 RUN npm ci
 COPY apps/web/ ./
 COPY apps/api/internal/graph/schema.graphqls /work/apps/api/internal/graph/schema.graphqls
-RUN npm run build
+RUN VITE_TEMPORARY_DEMO=true npm run build
 
 FROM golang:1.27.1-bookworm@sha256:69a7b9788769bec032d238959b61854e9ae87f57be9029ec04e9885fabf99195 AS build
 WORKDIR /src
@@ -28,5 +28,5 @@ COPY --from=web /work/apps/web/dist/ /app/public/
 COPY db/migrations/ /migrations/
 USER 65532:65532
 EXPOSE 10000
-# CMD allows Render's pre-deploy command to select setup without an entrypoint wrapper.
+# Startup runs repeatable setup because free services have no pre-deploy phase.
 CMD ["/app/render-demo"]
