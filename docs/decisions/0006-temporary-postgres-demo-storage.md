@@ -90,7 +90,7 @@ Free startup has no pre-deploy phase or shell, so render-demo performs setup
 before accepting traffic on every wake/replacement. It does not reset passwords,
 re-enable accounts, wipe data, or migrate disk-backed content implicitly.
 Existing disk-backed blob metadata makes setup fail with a fixed explanation;
-use the new free-demo resource names and a fresh database.
+use the configured Render resource names and a fresh database.
 
 The UI labels the build as temporary and asks reviewers to use sample files.
 A database expiring after 30 days makes the demo unavailable; it is not silently

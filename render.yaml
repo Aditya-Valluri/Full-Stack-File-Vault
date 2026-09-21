@@ -2,7 +2,7 @@
 # Use a new Blueprint: never convert an existing disk-backed database in place.
 services:
  - type: web
-   name: full-stack-file-vault-free-demo
+   name: full-stack-file-vault-web
    runtime: docker
    plan: free
    region: virginia
@@ -14,7 +14,7 @@ services:
    envVars:
     - key: DEMO_OPERATOR_URL
       fromDatabase:
-       name: full-stack-file-vault-free-demo-db
+       name: full-stack-file-vault-db
        property: connectionString
     - key: DEMO_RUNTIME_SEED
       generateValue: true
@@ -25,7 +25,7 @@ services:
     - key: DEMO_ADMIN_PASSWORD
       generateValue: true
 databases:
- - name: full-stack-file-vault-free-demo-db
+ - name: full-stack-file-vault-db
    plan: free
    region: virginia
    databaseName: vault_demo

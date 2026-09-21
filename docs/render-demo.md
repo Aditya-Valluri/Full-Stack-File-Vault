@@ -38,13 +38,32 @@ creation and check the selected plan. Account/provider policies can change.
 Sources: [Free instances and overages](https://render.com/docs/free),
 [pricing](https://render.com/pricing).
 
+## Renaming an existing deployment
+
+The Render resource names are `full-stack-file-vault-web` and
+`full-stack-file-vault-db`. For an existing deployment, set the Blueprint's
+Settings > Auto Sync to No before pushing resource-name changes. Rename the
+existing web service and Postgres instance in Render, preserving their resource
+IDs and data. Then manually sync the same Blueprint and review that it matches
+those existing resources rather than creating replacements.
+
+Blueprint resource names identify resources; changing YAML alone is not a
+safe in-place rename. Do not create a replacement database or regenerate secrets
+for a naming change. Keep `databaseName: vault_demo` and the existing database
+user unchanged: those are connection identifiers, not dashboard display names.
+The resource rename does not change the Free plans or the demo-only storage adapter.
+Use the actual service URL shown by Render; do not infer a new hostname from its name.
+
+See [Blueprint resource matching](https://render.com/docs/blueprint-spec) and
+[disabling automatic sync](https://render.com/docs/infrastructure-as-code#disabling-automatic-sync).
+
 ## Deploy a fresh demo
 
 1. Open https://dashboard.render.com and connect GitHub to
    Aditya-Valluri/Full-Stack-File-Vault. Do not paste API keys or passwords into chat.
 2. Choose New > Blueprint, select main and the root render.yaml.
-3. Use a new Blueprint, for example Full Stack File Vault Free Demo. Resource names are
-   full-stack-file-vault-free-demo and full-stack-file-vault-free-demo-db. Do not sync the old paid
+3. Use a new Blueprint, for example Full Stack File Vault. Resource names are
+   full-stack-file-vault-web and full-stack-file-vault-db. Do not sync the old paid
    Blueprint as an in-place migration: disk contents are not copied into PostgreSQL.
    A workspace supports only one Free PostgreSQL database; resolve an existing
    free-database conflict before creation, without discarding needed data.
