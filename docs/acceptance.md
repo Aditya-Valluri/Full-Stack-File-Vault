@@ -89,3 +89,7 @@ admin listing, duplicate deletion, GC/capacity release, and 1024/390px notice/la
 checks. The free-resource Blueprint guard and workflow lint passed.
 Actual Render deployment, managed database privileges, public URL and account
 billing settings remain unverified; no new cloud resources were created here.
+
+## Repository audit (2026-09-21)
+
+See [the audit report](audit-2026-09-21.md) for reproduced inconsistencies, fixes, test results, hosted CI status, and the remaining deployment/recovery gaps. Earlier PASS entries describe their recorded local checks; they are not a claim that the current pushed revision passed hosted CI.

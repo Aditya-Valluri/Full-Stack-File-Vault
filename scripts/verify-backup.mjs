@@ -58,14 +58,19 @@ try {
  // No network or published port: trust is restricted to Unix-socket exec in this disposable container.
  await docker(['run', '-d', '--name', name, '--network', 'none', '-e', 'POSTGRES_USER=vault_operator', '-e', 'POSTGRES_DB=vault', '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', 'postgres:17-bookworm']);
  started = true;
+ // The temporary initialization server accepts Unix sockets before restart.
+ // Wait for TCP readiness so pg_restore cannot race that restart.
  let ready = false;
  for (let attempt = 0; attempt < 30; attempt++) {
-  try { await docker(['exec', name, 'pg_isready', '-U', 'vault_operator', '-d', 'vault']); ready = true; break; }
+  try { await docker(['exec', name, 'pg_isready', '-h', '127.0.0.1', '-U', 'vault_operator', '-d', 'vault']); ready = true; break; }
   catch { await new Promise(done => setTimeout(done, 1000)); }
  }
  if (!ready) throw new Error('Disposable PostgreSQL did not become ready.');
+ console.log('[restore] Final PostgreSQL listener ready; creating restricted role prerequisites');
  await sql('CREATE ROLE vault_runtime NOLOGIN; CREATE ROLE vault_gc NOLOGIN;');
+ console.log('[restore] Restoring database archive');
  await inputCommand(['exec', '-i', name, 'pg_restore', '--exit-on-error', '-U', 'vault_operator', '-d', 'vault'], resolve(work, 'database.dump'), true);
+ console.log('[restore] Checking schema and quota invariants');
  const result = JSON.parse(await sql("SELECT json_build_object('schema_version',(SELECT version FROM public.schema_migrations),'files',(SELECT count(*) FROM vault.files),'receipts',(SELECT count(*) FROM vault.upload_receipts),'quota_mismatches',(SELECT count(*) FROM vault.users u WHERE u.used_bytes <> (SELECT coalesce(sum(b.size_bytes),0) FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id WHERE f.owner_id=u.id)));"));
  if (![14, 15].includes(result.schema_version) || result.quota_mismatches !== 0) throw new Error('Restored schema or quota invariant failed.');
  const blobs = JSON.parse(await sql("SELECT coalesce(json_agg(json_build_object('key',b.storage_key,'digest',encode(b.sha256,'hex'),'size',b.size_bytes)),'[]'::json) FROM vault.blobs b WHERE EXISTS (SELECT 1 FROM vault.files f WHERE f.blob_id=b.id);"));

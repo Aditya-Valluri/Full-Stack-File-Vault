@@ -7,6 +7,10 @@ import { formatBytes, formatDate, quotaPercent } from '../lib/format';
 import { Button, Dialog, EmptyState, Notice, rememberFocus } from '../components/ui';
 import { ShareManager } from '../components/ShareManager';
 
+// Match the temporary demo's 10 MB transport budget; normal deployments retain 20 MB.
+const uploadLimitMB = import.meta.env.VITE_TEMPORARY_DEMO === 'true' ? 10 : 20;
+const uploadLimitBytes = uploadLimitMB * 1_000_000;
+
 type VaultFile = VaultQuery['files']['nodes'][number];
 export function VaultView() {
  const [data, setData] = useState<VaultQuery>();
@@ -74,12 +78,12 @@ export function VaultView() {
   } catch (failure) { setError(explainError(failure)); } finally { setMoreBusy(false); }
  }
  const dropzone = useDropzone({
-  noClick: true, noKeyboard: true, maxFiles: 10, maxSize: 20_000_000, disabled: uploading || retryPending,
+  noClick: true, noKeyboard: true, maxFiles: 10, maxSize: uploadLimitBytes, disabled: uploading || retryPending,
   onDrop: (accepted, rejected) => {
    setError(''); setNotice('');
-   if (rejected.length) { setSelected([]); setError('Choose up to 10 files, each no larger than 20 MB.'); return; }
+   if (rejected.length) { setSelected([]); setError(`Choose up to 10 files, each no larger than ${uploadLimitMB} MB.`); return; }
    const bytes = accepted.reduce((sum, file) => sum + BigInt(file.size), 0n);
-   if (bytes > 20_000_000n) { setSelected([]); setError('The selected files exceed the 20 MB batch limit.'); return; }
+   if (bytes > BigInt(uploadLimitBytes)) { setSelected([]); setError(`The selected files exceed the ${uploadLimitMB} MB batch limit.`); return; }
    if (data && bytes > BigInt(data.quota.remainingBytes)) { setSelected([]); setError('These files exceed your remaining storage quota.'); return; }
    chooseFiles(accepted);
   },
@@ -162,7 +166,7 @@ export function VaultView() {
     </tr>)}</tbody></table></div>}
    <div className="table-footer"><span>{data?.files.nodes.length ?? 0} {filtered ? 'matching files shown' : 'files shown'}</span>{data?.files.pageInfo.hasNextPage && <Button variant="secondary" disabled={moreBusy || loading} onClick={() => void loadMore()}>{moreBusy ? 'Loading…' : 'Load more'}</Button>}</div>
   </section>
-  <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} title="Upload files" description="Choose up to 10 files. Each batch can contain up to 20 MB, within your remaining quota.">
+  <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} title="Upload files" description={`Choose up to 10 files. Each batch can contain up to ${uploadLimitMB} MB, within your remaining quota.`}>
    <div {...dropzone.getRootProps({ className: `dropzone ${dropzone.isDragActive ? 'drag-active' : ''}` })}>
     <input {...dropzone.getInputProps({ 'aria-label': 'Select files to upload' })} /><UploadCloud size={36} /><h3>Drop your files here</h3><p className="muted">or choose them from your device</p><Button variant="secondary" onClick={dropzone.open} disabled={uploading || retryPending}>Choose files</Button>
    </div>

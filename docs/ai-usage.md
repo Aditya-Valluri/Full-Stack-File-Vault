@@ -444,3 +444,7 @@ usage overages, preservation of existing deployments, and explicit reviewer acce
 Standardized the display name as Full Stack File Vault and technical identifiers as full-stack-file-vault across the Go module/imports, frontend, Compose images and projects, Kubernetes, monitoring, Render configuration, and documentation. Removed legacy company branding from current source comments and documentation. Existing Git history is retained.
 
 Validation: Go tests and vet, frontend build and unit tests, free Render configuration guard, and production-mode browser smoke checks passed. Both local Compose projects were recreated using byte-verified copies of their stopped data volumes. Original snapshots are retained in consistently named Docker volumes ending in _rename_backup. The repository checkout directory remains independent of the project name.
+
+## End-to-end audit (2026-09-21)
+
+Requested a comprehensive consistency and functional review. Ran database integration, Linux race checks, browser suites, backup restoration, demo restart rehearsal, dependency scans, and operational validators. Corrected import formatting, regenerated gqlgen identifiers, aligned temporary-demo upload limits, and changed restore readiness to wait for the final PostgreSQL TCP listener. Detailed evidence and remaining limits are in [the audit report](audit-2026-09-21.md).

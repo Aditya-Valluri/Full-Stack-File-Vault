@@ -1546,7 +1546,7 @@ func (ec *executionContext) field_Mutation_createFileAccess_args(ctx context.Con
 	args["fileId"] = arg0
 	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "mode",
 		func(ctx context.Context, v any) (model.FileAccessMode, error) {
-			return ec.unmarshalNFileAccessMode2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccessMode(ctx, v)
+			return ec.unmarshalNFileAccessMode2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccessMode(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1560,7 +1560,7 @@ func (ec *executionContext) field_Mutation_createShare_args(ctx context.Context,
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.CreateShareInput, error) {
-			return ec.unmarshalNCreateShareInput2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐCreateShareInput(ctx, v)
+			return ec.unmarshalNCreateShareInput2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐCreateShareInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1582,7 +1582,7 @@ func (ec *executionContext) field_Mutation_createSharedAccess_args(ctx context.C
 	args["token"] = arg0
 	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "mode",
 		func(ctx context.Context, v any) (model.FileAccessMode, error) {
-			return ec.unmarshalNFileAccessMode2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccessMode(ctx, v)
+			return ec.unmarshalNFileAccessMode2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccessMode(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1610,7 +1610,7 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.LoginInput, error) {
-			return ec.unmarshalNLoginInput2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐLoginInput(ctx, v)
+			return ec.unmarshalNLoginInput2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐLoginInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1836,7 +1836,7 @@ func (ec *executionContext) field_Query_files_args(ctx context.Context, rawArgs 
 	args["after"] = arg1
 	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "filter",
 		func(ctx context.Context, v any) (*model.FileFilter, error) {
-			return ec.unmarshalOFileFilter2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileFilter(ctx, v)
+			return ec.unmarshalOFileFilter2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileFilter(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1932,7 +1932,7 @@ func (ec *executionContext) _AdminAuditConnection_nodes(ctx context.Context, fie
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.AdminAuditEntry) graphql.Marshaler {
-			return ec.marshalNAdminAuditEntry2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditEntryᚄ(ctx, selections, v)
+			return ec.marshalNAdminAuditEntry2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditEntryᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -1964,7 +1964,7 @@ func (ec *executionContext) _AdminAuditConnection_pageInfo(ctx context.Context, 
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.FilePageInfo) graphql.Marshaler {
-			return ec.marshalNFilePageInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx, selections, v)
+			return ec.marshalNFilePageInfo2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2249,7 +2249,7 @@ func (ec *executionContext) _AdminFile_file(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.VaultFile) graphql.Marshaler {
-			return ec.marshalNVaultFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx, selections, v)
+			return ec.marshalNVaultFile2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2350,7 +2350,7 @@ func (ec *executionContext) _AdminFileConnection_nodes(ctx context.Context, fiel
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.AdminFile) graphql.Marshaler {
-			return ec.marshalNAdminFile2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFileᚄ(ctx, selections, v)
+			return ec.marshalNAdminFile2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFileᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2382,7 +2382,7 @@ func (ec *executionContext) _AdminFileConnection_pageInfo(ctx context.Context, f
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.FilePageInfo) graphql.Marshaler {
-			return ec.marshalNFilePageInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx, selections, v)
+			return ec.marshalNFilePageInfo2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2644,7 +2644,7 @@ func (ec *executionContext) _AdminUser_role(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v model.UserRole) graphql.Marshaler {
-			return ec.marshalNUserRole2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐUserRole(ctx, selections, v)
+			return ec.marshalNUserRole2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐUserRole(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2759,7 +2759,7 @@ func (ec *executionContext) _AdminUserConnection_nodes(ctx context.Context, fiel
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.AdminUser) graphql.Marshaler {
-			return ec.marshalNAdminUser2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUserᚄ(ctx, selections, v)
+			return ec.marshalNAdminUser2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUserᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2791,7 +2791,7 @@ func (ec *executionContext) _AdminUserConnection_pageInfo(ctx context.Context, f
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.FilePageInfo) graphql.Marshaler {
-			return ec.marshalNFilePageInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx, selections, v)
+			return ec.marshalNFilePageInfo2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2869,7 +2869,7 @@ func (ec *executionContext) _AuthenticatedUser_role(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v model.UserRole) graphql.Marshaler {
-			return ec.marshalNUserRole2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐUserRole(ctx, selections, v)
+			return ec.marshalNUserRole2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐUserRole(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2892,7 +2892,7 @@ func (ec *executionContext) _CreatedShare_share(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.FileShare) graphql.Marshaler {
-			return ec.marshalNFileShare2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShare(ctx, selections, v)
+			return ec.marshalNFileShare2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShare(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2993,7 +2993,7 @@ func (ec *executionContext) _FileConnection_nodes(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.VaultFile) graphql.Marshaler {
-			return ec.marshalNVaultFile2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFileᚄ(ctx, selections, v)
+			return ec.marshalNVaultFile2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFileᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3025,7 +3025,7 @@ func (ec *executionContext) _FileConnection_pageInfo(ctx context.Context, field 
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.FilePageInfo) graphql.Marshaler {
-			return ec.marshalNFilePageInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx, selections, v)
+			return ec.marshalNFilePageInfo2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3149,7 +3149,7 @@ func (ec *executionContext) _FileShare_permission(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v model.SharePermission) graphql.Marshaler {
-			return ec.marshalNSharePermission2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx, selections, v)
+			return ec.marshalNSharePermission2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3218,7 +3218,7 @@ func (ec *executionContext) _FileSharing_shares(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.FileShare) graphql.Marshaler {
-			return ec.marshalNFileShare2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShareᚄ(ctx, selections, v)
+			return ec.marshalNFileShare2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShareᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3296,7 +3296,7 @@ func (ec *executionContext) _LoginPayload_user(ctx context.Context, field graphq
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.AuthenticatedUser) graphql.Marshaler {
-			return ec.marshalNAuthenticatedUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAuthenticatedUser(ctx, selections, v)
+			return ec.marshalNAuthenticatedUser2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAuthenticatedUser(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3373,7 +3373,7 @@ func (ec *executionContext) _Mutation_adminSetQuota(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.AdminUser) graphql.Marshaler {
-			return ec.marshalNAdminUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUser(ctx, selections, v)
+			return ec.marshalNAdminUser2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUser(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3417,7 +3417,7 @@ func (ec *executionContext) _Mutation_adminSetUserDisabled(ctx context.Context, 
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.AdminUser) graphql.Marshaler {
-			return ec.marshalNAdminUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUser(ctx, selections, v)
+			return ec.marshalNAdminUser2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUser(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3461,7 +3461,7 @@ func (ec *executionContext) _Mutation_createShare(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.CreatedShare) graphql.Marshaler {
-			return ec.marshalNCreatedShare2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐCreatedShare(ctx, selections, v)
+			return ec.marshalNCreatedShare2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐCreatedShare(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3549,7 +3549,7 @@ func (ec *executionContext) _Mutation_createSharedAccess(ctx context.Context, fi
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.FileAccess) graphql.Marshaler {
-			return ec.marshalNFileAccess2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccess(ctx, selections, v)
+			return ec.marshalNFileAccess2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccess(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3592,7 +3592,7 @@ func (ec *executionContext) _Mutation_beginSession(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.SessionBootstrap) graphql.Marshaler {
-			return ec.marshalNSessionBootstrap2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSessionBootstrap(ctx, selections, v)
+			return ec.marshalNSessionBootstrap2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSessionBootstrap(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3625,7 +3625,7 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.LoginPayload) graphql.Marshaler {
-			return ec.marshalNLoginPayload2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐLoginPayload(ctx, selections, v)
+			return ec.marshalNLoginPayload2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐLoginPayload(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3692,7 +3692,7 @@ func (ec *executionContext) _Mutation_createFileAccess(ctx context.Context, fiel
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.FileAccess) graphql.Marshaler {
-			return ec.marshalNFileAccess2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccess(ctx, selections, v)
+			return ec.marshalNFileAccess2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccess(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3780,7 +3780,7 @@ func (ec *executionContext) _Mutation_uploadFile(ctx context.Context, field grap
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.VaultFile) graphql.Marshaler {
-			return ec.marshalNVaultFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx, selections, v)
+			return ec.marshalNVaultFile2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3824,7 +3824,7 @@ func (ec *executionContext) _Mutation_uploadFiles(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*model.VaultFile) graphql.Marshaler {
-			return ec.marshalNVaultFile2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFileᚄ(ctx, selections, v)
+			return ec.marshalNVaultFile2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFileᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3868,7 +3868,7 @@ func (ec *executionContext) _Query_adminUsers(ctx context.Context, field graphql
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.AdminUserConnection) graphql.Marshaler {
-			return ec.marshalNAdminUserConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUserConnection(ctx, selections, v)
+			return ec.marshalNAdminUserConnection2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUserConnection(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3912,7 +3912,7 @@ func (ec *executionContext) _Query_adminFiles(ctx context.Context, field graphql
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.AdminFileConnection) graphql.Marshaler {
-			return ec.marshalNAdminFileConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFileConnection(ctx, selections, v)
+			return ec.marshalNAdminFileConnection2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFileConnection(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3955,7 +3955,7 @@ func (ec *executionContext) _Query_adminStorageStats(ctx context.Context, field 
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.AdminStorageStats) graphql.Marshaler {
-			return ec.marshalNAdminStorageStats2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminStorageStats(ctx, selections, v)
+			return ec.marshalNAdminStorageStats2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminStorageStats(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3988,7 +3988,7 @@ func (ec *executionContext) _Query_adminAudit(ctx context.Context, field graphql
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.AdminAuditConnection) graphql.Marshaler {
-			return ec.marshalNAdminAuditConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditConnection(ctx, selections, v)
+			return ec.marshalNAdminAuditConnection2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditConnection(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4032,7 +4032,7 @@ func (ec *executionContext) _Query_fileShares(ctx context.Context, field graphql
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.FileSharing) graphql.Marshaler {
-			return ec.marshalNFileSharing2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileSharing(ctx, selections, v)
+			return ec.marshalNFileSharing2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileSharing(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4076,7 +4076,7 @@ func (ec *executionContext) _Query_sharedFile(ctx context.Context, field graphql
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.SharedFile) graphql.Marshaler {
-			return ec.marshalOSharedFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharedFile(ctx, selections, v)
+			return ec.marshalOSharedFile2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharedFile(ctx, selections, v)
 		},
 		true,
 		false,
@@ -4119,7 +4119,7 @@ func (ec *executionContext) _Query_serviceInfo(ctx context.Context, field graphq
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.ServiceInfo) graphql.Marshaler {
-			return ec.marshalNServiceInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐServiceInfo(ctx, selections, v)
+			return ec.marshalNServiceInfo2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐServiceInfo(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4151,7 +4151,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.AuthenticatedUser) graphql.Marshaler {
-			return ec.marshalNAuthenticatedUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAuthenticatedUser(ctx, selections, v)
+			return ec.marshalNAuthenticatedUser2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAuthenticatedUser(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4183,7 +4183,7 @@ func (ec *executionContext) _Query_quota(ctx context.Context, field graphql.Coll
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Quota) graphql.Marshaler {
-			return ec.marshalNQuota2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐQuota(ctx, selections, v)
+			return ec.marshalNQuota2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐQuota(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4215,7 +4215,7 @@ func (ec *executionContext) _Query_storageStats(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.StorageStats) graphql.Marshaler {
-			return ec.marshalNStorageStats2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐStorageStats(ctx, selections, v)
+			return ec.marshalNStorageStats2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐStorageStats(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4248,7 +4248,7 @@ func (ec *executionContext) _Query_files(ctx context.Context, field graphql.Coll
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.FileConnection) graphql.Marshaler {
-			return ec.marshalNFileConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileConnection(ctx, selections, v)
+			return ec.marshalNFileConnection2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileConnection(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4292,7 +4292,7 @@ func (ec *executionContext) _Query_file(ctx context.Context, field graphql.Colle
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.VaultFile) graphql.Marshaler {
-			return ec.marshalOVaultFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx, selections, v)
+			return ec.marshalOVaultFile2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx, selections, v)
 		},
 		true,
 		false,
@@ -5971,7 +5971,7 @@ func (ec *executionContext) unmarshalInputCreateShareInput(ctx context.Context, 
 			it.FileID = data
 		case "permission":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("permission"))
-			data, err := ec.unmarshalNSharePermission2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx, v)
+			data, err := ec.unmarshalNSharePermission2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8040,7 +8040,7 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAdminAuditConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditConnection(ctx context.Context, sel ast.SelectionSet, v *model.AdminAuditConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNAdminAuditConnection2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditConnection(ctx context.Context, sel ast.SelectionSet, v *model.AdminAuditConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8050,11 +8050,11 @@ func (ec *executionContext) marshalNAdminAuditConnection2ᚖfileᚑvaultᚗlocal
 	return ec._AdminAuditConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNAdminAuditEntry2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AdminAuditEntry) graphql.Marshaler {
+func (ec *executionContext) marshalNAdminAuditEntry2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditEntryᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AdminAuditEntry) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNAdminAuditEntry2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditEntry(ctx, sel, v[i])
+		return ec.marshalNAdminAuditEntry2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditEntry(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -8066,7 +8066,7 @@ func (ec *executionContext) marshalNAdminAuditEntry2ᚕᚖfileᚑvaultᚗlocal�
 	return ret
 }
 
-func (ec *executionContext) marshalNAdminAuditEntry2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditEntry(ctx context.Context, sel ast.SelectionSet, v *model.AdminAuditEntry) graphql.Marshaler {
+func (ec *executionContext) marshalNAdminAuditEntry2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminAuditEntry(ctx context.Context, sel ast.SelectionSet, v *model.AdminAuditEntry) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8076,11 +8076,11 @@ func (ec *executionContext) marshalNAdminAuditEntry2ᚖfileᚑvaultᚗlocalᚋap
 	return ec._AdminAuditEntry(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNAdminFile2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AdminFile) graphql.Marshaler {
+func (ec *executionContext) marshalNAdminFile2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AdminFile) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNAdminFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFile(ctx, sel, v[i])
+		return ec.marshalNAdminFile2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFile(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -8092,7 +8092,7 @@ func (ec *executionContext) marshalNAdminFile2ᚕᚖfileᚑvaultᚗlocalᚋapi�
 	return ret
 }
 
-func (ec *executionContext) marshalNAdminFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFile(ctx context.Context, sel ast.SelectionSet, v *model.AdminFile) graphql.Marshaler {
+func (ec *executionContext) marshalNAdminFile2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFile(ctx context.Context, sel ast.SelectionSet, v *model.AdminFile) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8102,7 +8102,7 @@ func (ec *executionContext) marshalNAdminFile2ᚖfileᚑvaultᚗlocalᚋapiᚋin
 	return ec._AdminFile(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNAdminFileConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFileConnection(ctx context.Context, sel ast.SelectionSet, v *model.AdminFileConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNAdminFileConnection2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminFileConnection(ctx context.Context, sel ast.SelectionSet, v *model.AdminFileConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8112,7 +8112,7 @@ func (ec *executionContext) marshalNAdminFileConnection2ᚖfileᚑvaultᚗlocal�
 	return ec._AdminFileConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNAdminStorageStats2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminStorageStats(ctx context.Context, sel ast.SelectionSet, v *model.AdminStorageStats) graphql.Marshaler {
+func (ec *executionContext) marshalNAdminStorageStats2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminStorageStats(ctx context.Context, sel ast.SelectionSet, v *model.AdminStorageStats) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8122,11 +8122,11 @@ func (ec *executionContext) marshalNAdminStorageStats2ᚖfileᚑvaultᚗlocalᚋ
 	return ec._AdminStorageStats(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNAdminUser2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AdminUser) graphql.Marshaler {
+func (ec *executionContext) marshalNAdminUser2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.AdminUser) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNAdminUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUser(ctx, sel, v[i])
+		return ec.marshalNAdminUser2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUser(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -8138,7 +8138,7 @@ func (ec *executionContext) marshalNAdminUser2ᚕᚖfileᚑvaultᚗlocalᚋapi�
 	return ret
 }
 
-func (ec *executionContext) marshalNAdminUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUser(ctx context.Context, sel ast.SelectionSet, v *model.AdminUser) graphql.Marshaler {
+func (ec *executionContext) marshalNAdminUser2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUser(ctx context.Context, sel ast.SelectionSet, v *model.AdminUser) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8148,7 +8148,7 @@ func (ec *executionContext) marshalNAdminUser2ᚖfileᚑvaultᚗlocalᚋapiᚋin
 	return ec._AdminUser(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNAdminUserConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUserConnection(ctx context.Context, sel ast.SelectionSet, v *model.AdminUserConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNAdminUserConnection2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAdminUserConnection(ctx context.Context, sel ast.SelectionSet, v *model.AdminUserConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8158,7 +8158,7 @@ func (ec *executionContext) marshalNAdminUserConnection2ᚖfileᚑvaultᚗlocal�
 	return ec._AdminUserConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNAuthenticatedUser2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAuthenticatedUser(ctx context.Context, sel ast.SelectionSet, v *model.AuthenticatedUser) graphql.Marshaler {
+func (ec *executionContext) marshalNAuthenticatedUser2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐAuthenticatedUser(ctx context.Context, sel ast.SelectionSet, v *model.AuthenticatedUser) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8184,12 +8184,12 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNCreateShareInput2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐCreateShareInput(ctx context.Context, v any) (model.CreateShareInput, error) {
+func (ec *executionContext) unmarshalNCreateShareInput2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐCreateShareInput(ctx context.Context, v any) (model.CreateShareInput, error) {
 	res, err := ec.unmarshalInputCreateShareInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCreatedShare2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐCreatedShare(ctx context.Context, sel ast.SelectionSet, v *model.CreatedShare) graphql.Marshaler {
+func (ec *executionContext) marshalNCreatedShare2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐCreatedShare(ctx context.Context, sel ast.SelectionSet, v *model.CreatedShare) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8199,7 +8199,7 @@ func (ec *executionContext) marshalNCreatedShare2ᚖfileᚑvaultᚗlocalᚋapi�
 	return ec._CreatedShare(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNFileAccess2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccess(ctx context.Context, sel ast.SelectionSet, v *model.FileAccess) graphql.Marshaler {
+func (ec *executionContext) marshalNFileAccess2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccess(ctx context.Context, sel ast.SelectionSet, v *model.FileAccess) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8209,17 +8209,17 @@ func (ec *executionContext) marshalNFileAccess2ᚖfileᚑvaultᚗlocalᚋapiᚋi
 	return ec._FileAccess(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNFileAccessMode2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccessMode(ctx context.Context, v any) (model.FileAccessMode, error) {
+func (ec *executionContext) unmarshalNFileAccessMode2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccessMode(ctx context.Context, v any) (model.FileAccessMode, error) {
 	var res model.FileAccessMode
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNFileAccessMode2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccessMode(ctx context.Context, sel ast.SelectionSet, v model.FileAccessMode) graphql.Marshaler {
+func (ec *executionContext) marshalNFileAccessMode2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileAccessMode(ctx context.Context, sel ast.SelectionSet, v model.FileAccessMode) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNFileConnection2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileConnection(ctx context.Context, sel ast.SelectionSet, v *model.FileConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNFileConnection2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileConnection(ctx context.Context, sel ast.SelectionSet, v *model.FileConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8229,7 +8229,7 @@ func (ec *executionContext) marshalNFileConnection2ᚖfileᚑvaultᚗlocalᚋapi
 	return ec._FileConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNFilePageInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx context.Context, sel ast.SelectionSet, v *model.FilePageInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNFilePageInfo2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFilePageInfo(ctx context.Context, sel ast.SelectionSet, v *model.FilePageInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8239,11 +8239,11 @@ func (ec *executionContext) marshalNFilePageInfo2ᚖfileᚑvaultᚗlocalᚋapi�
 	return ec._FilePageInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNFileShare2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShareᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FileShare) graphql.Marshaler {
+func (ec *executionContext) marshalNFileShare2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShareᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FileShare) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNFileShare2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShare(ctx, sel, v[i])
+		return ec.marshalNFileShare2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShare(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -8255,7 +8255,7 @@ func (ec *executionContext) marshalNFileShare2ᚕᚖfileᚑvaultᚗlocalᚋapi�
 	return ret
 }
 
-func (ec *executionContext) marshalNFileShare2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShare(ctx context.Context, sel ast.SelectionSet, v *model.FileShare) graphql.Marshaler {
+func (ec *executionContext) marshalNFileShare2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileShare(ctx context.Context, sel ast.SelectionSet, v *model.FileShare) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8265,7 +8265,7 @@ func (ec *executionContext) marshalNFileShare2ᚖfileᚑvaultᚗlocalᚋapiᚋin
 	return ec._FileShare(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNFileSharing2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileSharing(ctx context.Context, sel ast.SelectionSet, v *model.FileSharing) graphql.Marshaler {
+func (ec *executionContext) marshalNFileSharing2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileSharing(ctx context.Context, sel ast.SelectionSet, v *model.FileSharing) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8307,12 +8307,12 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) unmarshalNLoginInput2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐLoginInput(ctx context.Context, v any) (model.LoginInput, error) {
+func (ec *executionContext) unmarshalNLoginInput2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐLoginInput(ctx context.Context, v any) (model.LoginInput, error) {
 	res, err := ec.unmarshalInputLoginInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNLoginPayload2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐLoginPayload(ctx context.Context, sel ast.SelectionSet, v *model.LoginPayload) graphql.Marshaler {
+func (ec *executionContext) marshalNLoginPayload2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐLoginPayload(ctx context.Context, sel ast.SelectionSet, v *model.LoginPayload) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8322,7 +8322,7 @@ func (ec *executionContext) marshalNLoginPayload2ᚖfileᚑvaultᚗlocalᚋapi�
 	return ec._LoginPayload(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNQuota2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐQuota(ctx context.Context, sel ast.SelectionSet, v *model.Quota) graphql.Marshaler {
+func (ec *executionContext) marshalNQuota2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐQuota(ctx context.Context, sel ast.SelectionSet, v *model.Quota) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8332,7 +8332,7 @@ func (ec *executionContext) marshalNQuota2ᚖfileᚑvaultᚗlocalᚋapiᚋintern
 	return ec._Quota(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNServiceInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐServiceInfo(ctx context.Context, sel ast.SelectionSet, v *model.ServiceInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNServiceInfo2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐServiceInfo(ctx context.Context, sel ast.SelectionSet, v *model.ServiceInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8342,7 +8342,7 @@ func (ec *executionContext) marshalNServiceInfo2ᚖfileᚑvaultᚗlocalᚋapiᚋ
 	return ec._ServiceInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSessionBootstrap2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSessionBootstrap(ctx context.Context, sel ast.SelectionSet, v *model.SessionBootstrap) graphql.Marshaler {
+func (ec *executionContext) marshalNSessionBootstrap2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSessionBootstrap(ctx context.Context, sel ast.SelectionSet, v *model.SessionBootstrap) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8352,17 +8352,17 @@ func (ec *executionContext) marshalNSessionBootstrap2ᚖfileᚑvaultᚗlocalᚋa
 	return ec._SessionBootstrap(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSharePermission2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx context.Context, v any) (model.SharePermission, error) {
+func (ec *executionContext) unmarshalNSharePermission2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx context.Context, v any) (model.SharePermission, error) {
 	var res model.SharePermission
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSharePermission2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx context.Context, sel ast.SelectionSet, v model.SharePermission) graphql.Marshaler {
+func (ec *executionContext) marshalNSharePermission2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx context.Context, sel ast.SelectionSet, v model.SharePermission) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNStorageStats2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐStorageStats(ctx context.Context, sel ast.SelectionSet, v *model.StorageStats) graphql.Marshaler {
+func (ec *executionContext) marshalNStorageStats2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐStorageStats(ctx context.Context, sel ast.SelectionSet, v *model.StorageStats) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8500,21 +8500,21 @@ func (ec *executionContext) marshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgen�
 	return res
 }
 
-func (ec *executionContext) unmarshalNUserRole2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐUserRole(ctx context.Context, v any) (model.UserRole, error) {
+func (ec *executionContext) unmarshalNUserRole2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐUserRole(ctx context.Context, v any) (model.UserRole, error) {
 	var res model.UserRole
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNUserRole2fileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐUserRole(ctx context.Context, sel ast.SelectionSet, v model.UserRole) graphql.Marshaler {
+func (ec *executionContext) marshalNUserRole2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐUserRole(ctx context.Context, sel ast.SelectionSet, v model.UserRole) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNVaultFile2ᚕᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.VaultFile) graphql.Marshaler {
+func (ec *executionContext) marshalNVaultFile2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFileᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.VaultFile) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNVaultFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx, sel, v[i])
+		return ec.marshalNVaultFile2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -8526,7 +8526,7 @@ func (ec *executionContext) marshalNVaultFile2ᚕᚖfileᚑvaultᚗlocalᚋapi�
 	return ret
 }
 
-func (ec *executionContext) marshalNVaultFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx context.Context, sel ast.SelectionSet, v *model.VaultFile) graphql.Marshaler {
+func (ec *executionContext) marshalNVaultFile2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx context.Context, sel ast.SelectionSet, v *model.VaultFile) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8706,7 +8706,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) unmarshalOFileFilter2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileFilter(ctx context.Context, v any) (*model.FileFilter, error) {
+func (ec *executionContext) unmarshalOFileFilter2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐFileFilter(ctx context.Context, v any) (*model.FileFilter, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -8732,7 +8732,7 @@ func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalOSharedFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharedFile(ctx context.Context, sel ast.SelectionSet, v *model.SharedFile) graphql.Marshaler {
+func (ec *executionContext) marshalOSharedFile2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharedFile(ctx context.Context, sel ast.SelectionSet, v *model.SharedFile) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -8810,7 +8810,7 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	return res
 }
 
-func (ec *executionContext) marshalOVaultFile2ᚖfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx context.Context, sel ast.SelectionSet, v *model.VaultFile) graphql.Marshaler {
+func (ec *executionContext) marshalOVaultFile2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐVaultFile(ctx context.Context, sel ast.SelectionSet, v *model.VaultFile) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

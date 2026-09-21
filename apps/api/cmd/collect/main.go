@@ -4,8 +4,8 @@ package main
 import (
 	"context"
 	"errors"
-	"full-stack-file-vault.local/api/internal/telemetry"
 	"flag"
+	"full-stack-file-vault.local/api/internal/telemetry"
 	"log/slog"
 	"net"
 	"net/http"

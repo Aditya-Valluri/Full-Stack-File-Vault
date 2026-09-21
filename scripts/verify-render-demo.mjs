@@ -91,6 +91,12 @@ try {
  if(!cookies.some(c=>c.name==='__Host-vault_session'&&c.secure&&c.httpOnly))throw new Error('Demo cookie is not secure.');
  const bytes=Buffer.from('Render rehearsal content '+randomBytes(8).toString('hex'));
  await page.getByRole('button',{name:'Upload files',exact:true}).click();
+ // The demo UI must reject the first byte beyond the backend's file budget,
+ // before submitting a request; successful small uploads must still work afterward.
+ await page.getByText('Choose up to 10 files. Each batch can contain up to 10 MB, within your remaining quota.',{exact:true}).waitFor();
+ await page.getByLabel('Select files to upload').setInputFiles({name:'over-limit.bin',mimeType:'application/octet-stream',buffer:Buffer.alloc(10_000_001)});
+ await page.getByRole('dialog').getByText('Choose up to 10 files, each no larger than 10 MB.',{exact:true}).waitFor();
+ if(await page.getByRole('button',{name:'Upload selected files',exact:true}).isEnabled())throw new Error('Oversized demo selection remained uploadable.');
  await page.getByLabel('Select files to upload').setInputFiles([
   {name:'review-notes.txt',mimeType:'text/plain',buffer:bytes},
   {name:'review-copy.txt',mimeType:'text/plain',buffer:bytes},
@@ -170,7 +176,7 @@ try {
  }
  await page.setViewportSize({width:1280,height:800});
  await page.screenshot({path:resolve(root,'tmp/render-demo-rehearsal.png'),fullPage:true});
- await writeFile(resolve(root,'tmp/render-demo-verification.json'),JSON.stringify({testedAt:new Date().toISOString(),nonSuperuserMigrations:true,repeatSetup:true,secureCookie:true,persistentReplacement:true,sharedDownload:true,adminFiles:true,demoBanner:true,duplicateDeletion:true,byteCapacityReleased:true},null,2));
+ await writeFile(resolve(root,'tmp/render-demo-verification.json'),JSON.stringify({testedAt:new Date().toISOString(),nonSuperuserMigrations:true,repeatSetup:true,secureCookie:true,persistentReplacement:true,sharedDownload:true,adminFiles:true,demoBanner:true,uploadLimit:true,duplicateDeletion:true,byteCapacityReleased:true},null,2));
  console.log('PASS: Free Render demo, separate roles, TLS-edge login, PostgreSQL bytes, deduplication, sharing, admin, ephemeral container replacement and deletion/GC.');
 } finally {
  if(browser)await browser.close();
