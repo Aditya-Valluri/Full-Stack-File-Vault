@@ -1,5 +1,6 @@
 # Free, temporary hiring demo. No paid disk or pre-deploy job.
-# Use a new Blueprint: never convert an existing disk-backed database in place.
+# Existing deployment: preserve its Blueprint and database resource identity.
+# Dashboard display names are not a reason to replace Blueprint identifiers.
 services:
  - type: web
    name: full-stack-file-vault-web
@@ -14,7 +15,7 @@ services:
    envVars:
     - key: DEMO_OPERATOR_URL
       fromDatabase:
-       name: full-stack-file-vault-db
+       name: full-stack-file-vault-free-demo-db
        property: connectionString
     - key: DEMO_RUNTIME_SEED
       generateValue: true
@@ -25,7 +26,8 @@ services:
     - key: DEMO_ADMIN_PASSWORD
       generateValue: true
 databases:
- - name: full-stack-file-vault-db
+ # Preserve the original Blueprint name; dashboard display: full-stack-file-vault-db.
+ - name: full-stack-file-vault-free-demo-db
    plan: free
    region: virginia
    databaseName: vault_demo

@@ -40,18 +40,28 @@ Sources: [Free instances and overages](https://render.com/docs/free),
 
 ## Renaming an existing deployment
 
-The Render resource names are `full-stack-file-vault-web` and
-`full-stack-file-vault-db`. For an existing deployment, set the Blueprint's
-Settings > Auto Sync to No before pushing resource-name changes. Rename the
-existing web service and Postgres instance in Render, preserving their resource
-IDs and data. Then manually sync the same Blueprint and review that it matches
-those existing resources rather than creating replacements.
+The existing deployment uses these distinct names:
 
-Blueprint resource names identify resources; changing YAML alone is not a
-safe in-place rename. Do not create a replacement database or regenerate secrets
-for a naming change. Keep `databaseName: vault_demo` and the existing database
-user unchanged: those are connection identifiers, not dashboard display names.
-The resource rename does not change the Free plans or the demo-only storage adapter.
+| Resource | Desired dashboard display name | Blueprint resource name |
+| --- | --- | --- |
+| Web service | `full-stack-file-vault-web` | `full-stack-file-vault-web`, only when matched to the existing service |
+| PostgreSQL instance | `full-stack-file-vault-db` | `full-stack-file-vault-free-demo-db` |
+
+The actual PostgreSQL database is `vault_demo`; its user is `vault_operator`.
+These are connection identifiers, not dashboard display names. Preserve both.
+
+Keep Auto Sync set to No while correcting the existing Blueprint. Preserve the
+original database Blueprint name in `databases[].name` and every `fromDatabase`
+reference, even when its dashboard display name differs.
+
+The web service already has its desired name in YAML. Before synchronization,
+confirm Render associates it with the existing service ID. Name matching alone
+is not proof of adoption. If Render proposes creating either resource, stop and
+resolve the existing-resource association with Render support.
+
+Do not delete, recreate, replace, or migrate the database for cosmetic naming.
+Do not create another Blueprint, regenerate secrets, or change either Free plan.
+Local YAML validation cannot verify Render's live resource associations.
 Use the actual service URL shown by Render; do not infer a new hostname from its name.
 
 See [Blueprint resource matching](https://render.com/docs/blueprint-spec) and
@@ -59,11 +69,14 @@ See [Blueprint resource matching](https://render.com/docs/blueprint-spec) and
 
 ## Deploy a fresh demo
 
+This section applies only to a separate first-time deployment. Do not use it to
+repair or rename the existing deployment.
+
 1. Open https://dashboard.render.com and connect GitHub to
    Aditya-Valluri/Full-Stack-File-Vault. Do not paste API keys or passwords into chat.
 2. Choose New > Blueprint, select main and the root render.yaml.
-3. Use a new Blueprint, for example Full Stack File Vault. Resource names are
-   full-stack-file-vault-web and full-stack-file-vault-db. Do not sync the old paid
+3. Use a new Blueprint, for example Full Stack File Vault. Blueprint resource names are
+   full-stack-file-vault-web and full-stack-file-vault-free-demo-db. Do not sync the old paid
    Blueprint as an in-place migration: disk contents are not copied into PostgreSQL.
    A workspace supports only one Free PostgreSQL database; resolve an existing
    free-database conflict before creation, without discarding needed data.
