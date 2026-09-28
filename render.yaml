@@ -1,6 +1,4 @@
-# Free, temporary hiring demo. No paid disk or pre-deploy job.
-# Existing deployment: preserve its Blueprint and database resource identity.
-# Dashboard display names are not a reason to replace Blueprint identifiers.
+# Preserve existing Render resource identifiers to avoid accidental recreation.
 services:
  - type: web
    name: full-stack-file-vault-web

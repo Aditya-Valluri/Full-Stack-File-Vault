@@ -1,10 +1,10 @@
-# Free temporary hiring demo on Render
+# Render deployment
 
 ## Scope and limitations
 
 The root render.yaml requests one Free web service and one Free PostgreSQL 17
 database. There is no paid disk, pre-deploy job, AWS service or paid workspace
-requirement in this configuration. This is a temporary reviewer environment.
+requirement in this configuration. This is a temporary public demo environment.
 
 Render Free web services sleep after 15 minutes without traffic; waking takes
 about a minute. Their local files disappear on sleep, restart and redeploy.
@@ -22,7 +22,7 @@ for the adapter contract, size limits, privileges and production object-storage 
 1. Use a Hobby workspace and verify both proposed resources explicitly show Free.
 2. The Blueprint contains no chargeable disk and no database diskSizeGB override.
 3. Check Billing for existing paid resources from earlier attempts. Creating this
-   free demo does not cancel them. Do not delete anything without exporting data
+   deployment does not cancel them. Do not delete anything without exporting data
    you need; no existing resource is removed by this repository change.
 4. Render documents that, without a payment method, exhausted bandwidth suspends
    free services and exhausted build minutes disables further builds. With a
@@ -82,18 +82,18 @@ repair or rename the existing deployment.
    free-database conflict before creation, without discarding needed data.
 4. Confirm both plans show Free, then create the Blueprint.
 5. Startup applies normal migrations, installs the separate demo byte-storage
-   schema, and creates reviewer accounts. Setup runs on every wake and is
+   schema, and creates demo accounts. Setup runs on every wake and is
    repeatable; free services do not have a pre-deploy phase or dashboard shell.
 6. Wait for Live and copy the actual assigned HTTPS URL. Render provides TLS;
    PUBLIC_ORIGIN defaults to RENDER_EXTERNAL_URL.
 7. Retrieve generated passwords from the web service's Environment settings:
    - reviewer: DEMO_REVIEWER_PASSWORD
    - reviewer-admin: DEMO_ADMIN_PASSWORD
-8. Share the verified URL and reviewer credentials privately. The normal local
+8. Share the verified URL and demo-account credentials privately. The normal local
    safeandsecure account and its password are not copied to this database.
 
 The independent DEMO_RUNTIME_SEED and DEMO_GC_SEED derive stable restricted
-database passwords. Do not regenerate these or reviewer passwords casually.
+database passwords. Do not regenerate these or demo-account passwords casually.
 Existing accounts with changed passwords/roles/disabled status cause setup to
 fail rather than silently overwriting operator decisions. Correct the account or
 configuration through an explicitly authorized workflow.
@@ -167,15 +167,15 @@ Go/PostgreSQL integration tests additionally cover file-size boundaries, concurr
 capacity admission, immutable generations, privilege separation and quota rollback.
 Cloud deployment, account billing and database expiration are not simulated by Docker.
 
-## Reviewer handoff
+## Deployment access
 
-Send the actual verified URL, reviewer username and password privately, together
+Send the actual verified URL, demo-account username and password privately, together
 with the GitHub repository and access if private. Include the expiry date shown
 by Render and mention that the first visit can take about a minute to wake.
 
 Suggested message:
 
-> Full Stack File Vault: [verified URL]. Please use the reviewer credentials
+> Full Stack File Vault: [verified URL]. Please use the supplied demo-account credentials
 > supplied separately and sample files only. The demo is available until [date],
 > and its first page load after inactivity may take about a minute.
 > Try duplicate uploads, private tags/search, downloads and revocable sharing.

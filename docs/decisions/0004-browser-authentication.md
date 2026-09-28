@@ -30,7 +30,7 @@ will need deliberate introduction. Do not silently edit existing migrations.
 
 | Choice | Benefits | Costs |
 |---|---|---|
-| First-party credentials | Self-contained reviewer setup; no external tenant | Password handling, throttling and account lifecycle become our responsibility |
+| First-party credentials | Self-contained account setup; no external tenant | Password handling, throttling and account lifecycle become our responsibility |
 | OIDC provider | Delegated identity, recovery and potentially MFA | Provider setup and protocol integration; provider availability becomes a dependency |
 | PostgreSQL opaque sessions | Immediate server-side revocation, shared multi-replica state | Database lookup per request; expiry cleanup |
 | Signed JWT sessions | Local verification | Revocation/role changes require additional state or stale-access windows |
@@ -40,7 +40,7 @@ initial submission. OIDC is a viable alternative, not an inferior architecture.
 No Redis is required for session storage. No long-lived bearer tokens in browser
 storage. These recommendations are ADRs, not assignment requirements.
 
-Accepted follow-up: first-party identity with operator-provisioned reviewer accounts, not public
+Accepted follow-up: first-party identity with operator-provisioned accounts, not public
 self-registration. Registration, email verification and password recovery are
 separate product scope; do not claim a complete public identity service without them.
 

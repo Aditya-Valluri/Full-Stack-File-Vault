@@ -72,7 +72,7 @@ disposable test environment. Never rollback a production identity store casually
 - Migration 3 applied to local PostgreSQL; schema_migrations reports 3, dirty=false.
 - `db/tests/credentials.sql` passed with all test data rolled back. It checks role
   defaults/constraints, canonical/duplicate logins and restricted runtime privileges.
-- No persistent reviewer/admin account was created; choose credentials interactively
+- No persistent demo/admin account was created; choose credentials interactively
   when provisioning. Initially SQL constraints and password primitives were tested
   separately; the command-level follow-up below now covers their integration.
 

@@ -1,4 +1,4 @@
-// Command render-demo packages a temporary free demo behind one public gateway.
+// Command render-demo packages a cost-constrained deployment behind one public gateway.
 // File bytes live in PostgreSQL; local directories hold disposable staging only.
 package main
 

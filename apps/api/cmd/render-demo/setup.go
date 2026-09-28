@@ -46,7 +46,7 @@ func setup() error {
 		return errors.New("demo byte-storage schema setup failed")
 	}
 	// Refuse an in-place switch from disk storage: metadata without its bytes
-	// would silently break downloads. Deploy the free demo to a fresh database.
+	// would silently break downloads. Initialize this deployment with a fresh database.
 	var missing bool
 	if err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM vault.blobs b LEFT JOIN vault_demo.objects o USING(storage_key) WHERE o.storage_key IS NULL)").Scan(&missing); err != nil || missing {
 		return errors.New("demo database contains disk-backed blobs; use a fresh database")

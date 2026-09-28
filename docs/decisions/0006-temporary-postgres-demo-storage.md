@@ -1,6 +1,6 @@
-# ADR 0006: Temporary PostgreSQL BlobStore for a free Render demo
+# ADR 0006: Temporary PostgreSQL BlobStore for a cost-constrained Render deployment
 
-Status: Accepted for the temporary hiring demo only.
+Status: Accepted for the temporary Render deployment only.
 Does not supersede ADR 0005's production storage design.
 
 ## Context and decision
@@ -80,7 +80,7 @@ Payload memory budgets exclude Go/driver allocation overhead; the demo uses boun
 These are application admission bounds, not a guarantee about the provider's
 storage meter. Metadata, receipts, database overhead, dead tuples and WAL have
 their own growth. Repeated duplicate references do not add object bytes but do
-add metadata. Monitor database usage and keep this a small reviewer demo.
+add metadata. Monitor database usage and keep this a small public demo deployment.
 Logical deletion releases a user's quota immediately; physical demo capacity is
 released only after reference-safe GC and its normal grace period.
 
@@ -92,10 +92,10 @@ re-enable accounts, wipe data, or migrate disk-backed content implicitly.
 Existing disk-backed blob metadata makes setup fail with a fixed explanation;
 use the configured Render resource names and a fresh database.
 
-The UI labels the build as temporary and asks reviewers to use sample files.
+The UI labels the build as temporary and asks users to use sample files.
 A database expiring after 30 days makes the demo unavailable; it is not silently
 recreated, upgraded, or kept alive with artificial traffic. Provision a fresh
-review environment explicitly when needed. Production paired disk/DB backup
+development environment explicitly when needed. Production paired disk/DB backup
 scripts do not constitute a tested backup workflow for this alternative adapter.
 
 Free plans do not guarantee a permanently free bill when a payment method and

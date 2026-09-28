@@ -400,10 +400,10 @@ responses, then displayed it with its initial and a labeled account-ID copy acti
 No migration or credential change was required. Backend unit/integration checks
 and vet passed; all four browser scenarios passed, including identity after reload
 and mobile accessibility/layout checks. The local container images were rebuilt.
-## Render hiring demo preparation
+## Render deployment preparation
 
 Added a paid-resource Blueprint, non-root combined demo image, loopback API/worker
-supervision, restricted child database credentials, and repeatable reviewer setup.
+supervision, restricted child database credentials, and repeatable demo-account setup.
 The official Render JSON schema validation, image build, command tests/vet and
 isolated HTTPS browser rehearsal passed. The rehearsal covered non-superuser
 migrations, login, uploads, deduplication, sharing, admin, repeat setup and restart
@@ -414,9 +414,9 @@ public HTTPS and managed-database deployment remain to be verified. Cost approva
 and account access are required for deployment. Operator credentials remain in
 the demo supervisor environment; this is not process-level security isolation.
 
-## Free Render demo-only PostgreSQL BlobStore
+## Cost-constrained Render PostgreSQL BlobStore
 
-User required a $0 Render-only recruiter demo and explicitly constrained database
+User required a $0 Render-only public demo deployment and explicitly constrained database
 file storage to a demo adapter when durable storage is impractical. Free Render
 cannot attach a volume; another object provider would exceed that hosting scope.
 Added demostore.BlobStore selected by BLOB_STORAGE_BACKEND=postgres-demo, retaining
@@ -437,7 +437,7 @@ mobile overflow checks also passed. No live Render resource or public URL is cla
 
 The root Blueprint requests only Free services under new names, with startup setup
 instead of a paid pre-deploy phase. Docs describe expiration after 30 days, account
-usage overages, preservation of existing deployments, and explicit reviewer access.
+usage overages, preservation of existing deployments, and explicit demo-account access.
 
 ## Project naming consistency
 
