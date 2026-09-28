@@ -179,6 +179,7 @@ func TestProvisionCommandIntegration(t *testing.T) {
 	if users != 2 || credentials != 2 {
 		t.Fatal("failed command left partial records")
 	}
+	t.Run("identity foundation", func(t *testing.T) { testIdentityFoundation(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
 	t.Run("session lifecycle", func(t *testing.T) { testSessionLifecycle(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
 	t.Run("pre-login rotation", func(t *testing.T) {
 		testLoginRotation(t, ctx, conn, dsn("vault_runtime", runtimePassword), accountPassword)
@@ -220,5 +221,8 @@ func TestProvisionCommandIntegration(t *testing.T) {
 	t.Run("demo PostgreSQL storage", func(t *testing.T) {
 		testDemoStorage(t, ctx, conn, dsn("vault_runtime", runtimePassword), dsn("vault_gc", runtimePassword))
 	})
+	t.Run("email registration", func(t *testing.T) { testEmailRegistration(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
+	t.Run("password recovery", func(t *testing.T) { testPasswordRecovery(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
+	t.Run("administrator contact", func(t *testing.T) { testContact(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
 	t.Log(fmt.Sprintf("Verified accounts and sessions; test container %s will be removed", name))
 }

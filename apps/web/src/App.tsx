@@ -4,6 +4,7 @@ import { bootstrap, client, errorCode, explainError, mutate, restoreIdentity, se
 import { LogoutDocument, UserRole, type IdentityQuery } from './generated/graphql';
 import { Button, Notice } from './components/ui';
 import { LoginView } from './views/Login';
+import { PasswordRecovery } from './views/PasswordRecovery';
 import { VaultView } from './views/Vault';
 const SharedView = lazy(() => import('./views/Shared').then(module => ({ default: module.SharedView })));
 const AdminView = lazy(() => import('./views/Admin').then(module => ({ default: module.AdminView })));
@@ -27,7 +28,7 @@ export function App() {
   window.addEventListener('hashchange', reopenShare);
   return () => window.removeEventListener('hashchange', reopenShare);
  }, []);
- const [tab, setTab] = useState<'vault' | 'admin'>('vault');
+ const [tab, setTab] = useState<'vault' | 'admin' | 'password'>('vault');
  const [showLogin, setShowLogin] = useState(false);
  const [error, setError] = useState('');
  const [busy, setBusy] = useState(false);
@@ -75,13 +76,14 @@ export function App() {
    <nav aria-label="Main navigation">
     <button className={tab === 'vault' && !isSharedRoute ? 'nav-item active' : 'nav-item'} onClick={() => { if (isSharedRoute) window.location.assign('/'); else setTab('vault'); }}><Archive size={18} />My files</button>
     {identity?.role === UserRole.Admin && <button className={tab === 'admin' ? 'nav-item active' : 'nav-item'} onClick={() => { if (isSharedRoute) window.location.assign('/'); else setTab('admin'); }}><ShieldCheck size={18} />Administration</button>}
+    {identity && <button className={tab === 'password' ? 'nav-item active' : 'nav-item'} onClick={() => { if (isSharedRoute) window.location.assign('/'); else setTab('password'); }}><ShieldCheck size={18} />Account security</button>}
    </nav>
    <div className="sidebar-note"><ShieldCheck size={20} /><strong>Private by default</strong><p>You choose what to share. Revoke access whenever you need.</p></div>
    <div className="sidebar-footer"><span className="status-dot" />Full Stack File Vault workspace</div>
   </aside>
   <div className="workspace">
    <header className="topbar">
-    <div className="breadcrumb">Workspace <span>/</span> <strong>{isSharedRoute ? 'Shared file' : tab === 'admin' ? 'Administration' : 'My files'}</strong></div>
+    <div className="breadcrumb">Workspace <span>/</span> <strong>{isSharedRoute ? 'Shared file' : tab === 'admin' ? 'Administration' : tab === 'password' ? 'Account security' : 'My files'}</strong></div>
     <div className="account">
      {identity ? <>
       <button className="account-id" aria-label="Copy account ID for sharing" title="Copy your account ID for recipient-specific sharing" onClick={() => {
@@ -94,7 +96,7 @@ export function App() {
    <main id="main-content" className="main-content">
     {error && <Notice error>{error}</Notice>}
     <Suspense fallback={<p role="status">Loading workspace...</p>}>{isSharedRoute ? <SharedView key={`${identity?.id ?? 'anonymous'}:${sharedLink.revision}`} initialToken={sharedLink.token} signedIn={Boolean(identity)} onSignIn={() => setShowLogin(true)} />
-     : tab === 'admin' && identity?.role === UserRole.Admin ? <AdminView key={identity.id} /> : <VaultView key={identity?.id} />}</Suspense>
+     : tab === 'password' ? <PasswordRecovery mode="change" onBack={() => setTab('vault')} /> : tab === 'admin' && identity?.role === UserRole.Admin ? <AdminView key={identity.id} /> : <VaultView key={identity?.id} />}</Suspense>
    </main>
    <footer className="workspace-footer">Full Stack File Vault<span>Private files. Deliberate sharing.</span></footer>
   </div>

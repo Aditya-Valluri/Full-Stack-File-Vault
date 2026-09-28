@@ -3,8 +3,8 @@
 :root { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #24333e; background: #f5f7f9; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; }
-button, input, select { font: inherit; }
-button, a, input, select { -webkit-tap-highlight-color: transparent; }
+button, input, select, textarea { font: inherit; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .55; }
 a { color: inherit; text-decoration: none; }
@@ -14,9 +14,9 @@ h2 { font-size: 24px; font-weight: 650; letter-spacing: -.4px; }
 h3 { font-size: 15px; font-weight: 650; }
 small { display: block; font-size: 12px; color: #647480; }
 code { font-family: ui-monospace, monospace; font-size: 11px; }
-input, select { width: 100%; min-height: 41px; border: 1px solid #d3dce2; background: white; color: #24333e; border-radius: 7px; padding: 9px 12px; outline: none; font-size: 13px; }
+input, select, textarea { width: 100%; min-height: 41px; border: 1px solid #d3dce2; background: white; color: #24333e; border-radius: 7px; padding: 9px 12px; outline: none; font-size: 13px; }
 input::placeholder { color: #586b76; }
-input:focus, select:focus { border-color: #177d70; box-shadow: 0 0 0 3px #177d701a; }
+input:focus, select:focus, textarea:focus { border-color: #177d70; box-shadow: 0 0 0 3px #177d701a; }
 label { display: grid; gap: 7px; font-size: 13px; font-weight: 550; }
 :focus-visible { outline: 3px solid #3c9c91; outline-offset: 3px; }
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid transparent; border-radius: 7px; min-height: 39px; padding: 9px 15px; font-size: 13px; font-weight: 600; white-space: nowrap; transition: background .15s, border-color .15s; }
@@ -233,8 +233,4 @@ tbody tr:hover { background: #fbfdfd; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 
-.demo-notice { padding: 10px 20px; background: #fff4d6; color: #523b10; text-align: center; font-size: 14px; line-height: 1.5; }
-/* Keep the demo notice clear of the fixed desktop sidebar at each layout width. */
-.demo-notice:has(+ .app-shell) { margin-left: 235px; }
-@media (max-width: 1100px) { .demo-notice:has(+ .app-shell) { margin-left: 205px; } }
-@media (max-width: 780px) { .demo-notice:has(+ .app-shell) { margin-left: 0; } }
+textarea { resize: vertical; }

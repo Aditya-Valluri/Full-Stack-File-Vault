@@ -1,0 +1,23 @@
+import { test, expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+test('sign-in help and administrator contact deliver only to the project inbox', async ({page})=>{
+ await page.goto('/');
+ await expect(page.getByRole('button',{name:'New user? Create account',exact:true})).toBeEnabled();
+ await page.getByRole('button',{name:'Help signing in',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Help signing in',exact:true})).toBeVisible();
+ await expect(page.getByText(/not your Gmail password/)).toBeVisible();
+ await page.getByRole('button',{name:'Back to sign in',exact:true}).click();
+ await page.getByRole('button',{name:'Contact administrator',exact:true}).click();
+ const dialog=page.getByRole('dialog');
+ await expect(dialog).toBeVisible();
+ await dialog.getByLabel('Subject',{exact:true}).fill('Browser support test');
+ await dialog.getByLabel('Message',{exact:true}).fill('Synthetic support request. Reply: visitor@example.test');
+ await dialog.getByRole('button',{name:'Send message',exact:true}).click();
+ await expect(dialog.getByRole('status')).toHaveText('Your message was accepted for delivery to the administrator.');
+ const raw=await readFile(process.env.E2E_MAIL_PATH!,'utf8');
+ expect(raw).toContain('To: fullstackfilevault@gmail.com');
+ expect(raw).toContain('Subject: Full Stack File Vault support request');
+ expect(Buffer.from(raw.split('\r\n\r\n')[1].replace(/\s/g,''),'base64').toString()).toContain('Synthetic support request');
+ await dialog.getByRole('button',{name:'Close dialog'}).click();
+ await expect(page.getByRole('button',{name:'Contact administrator',exact:true})).toBeFocused();
+});

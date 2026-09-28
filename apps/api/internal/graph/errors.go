@@ -66,7 +66,7 @@ func domainErrorPresenter(logger *slog.Logger) graphql.ErrorPresenterFunc {
 			return &gqlerror.Error{Message: "user request rate exceeded", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "RATE_LIMITED"}}
 		}
 		if errors.Is(err, upload.ErrDemoCapacity) {
-			return &gqlerror.Error{Message: "temporary demo storage capacity reached", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "DEMO_CAPACITY_REACHED"}}
+			return &gqlerror.Error{Message: "storage capacity reached", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "DEMO_CAPACITY_REACHED"}}
 		}
 		if errors.Is(err, upload.ErrQuotaExceeded) {
 			return &gqlerror.Error{Message: "storage quota exceeded", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "QUOTA_EXCEEDED"}}
@@ -79,6 +79,24 @@ func domainErrorPresenter(logger *slog.Logger) graphql.ErrorPresenterFunc {
 		}
 		if errors.Is(err, auth.ErrLoginLimited) {
 			return &gqlerror.Error{Message: "login temporarily limited", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "RATE_LIMITED"}}
+		}
+		if errors.Is(err, auth.ErrResetRejected) {
+			return &gqlerror.Error{Message: "reset code invalid or expired", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "RESET_REJECTED"}}
+		}
+		if errors.Is(err, auth.ErrPasswordRejected) {
+			return &gqlerror.Error{Message: "current password not accepted", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "PASSWORD_REJECTED"}}
+		}
+		if errors.Is(err, auth.ErrWeakPassword) {
+			return &gqlerror.Error{Message: "choose a longer, less predictable password", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "WEAK_PASSWORD"}}
+		}
+		if errors.Is(err, auth.ErrEmailInput) || errors.Is(err, auth.ErrEmailVerification) {
+			return &gqlerror.Error{Message: "invalid input or expired verification code", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "INVALID_INPUT"}}
+		}
+		if errors.Is(err, auth.ErrContactInvalid) {
+			return &gqlerror.Error{Message: "invalid contact request", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "CONTACT_INVALID"}}
+		}
+		if errors.Is(err, auth.ErrEmailDisabled) {
+			return &gqlerror.Error{Message: "email registration unavailable", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "FORBIDDEN"}}
 		}
 		if errors.Is(err, auth.ErrLoginRejected) {
 			return &gqlerror.Error{Message: "invalid login credentials", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "UNAUTHENTICATED"}}

@@ -1,5 +1,6 @@
 """Application queries. Operational readiness is exposed separately at /readyz."""
 type Query {
+  emailRegistrationEnabled: Boolean!
   adminUsers(first: Int! = 20, after: String): AdminUserConnection!
   adminFiles(first: Int! = 20, after: String, ownerId: ID): AdminFileConnection!
   adminStorageStats: AdminStorageStats!
@@ -29,6 +30,18 @@ type ServiceInfo {
 }
 
 type Mutation {
+ """Send a bounded plain-text support request to the fixed administrator inbox."""
+ contactAdministrator(subject: String!, message: String!): Boolean!
+ """Send a reset code without disclosing account existence. Anonymous session required."""
+ requestPasswordReset(email: String!): Boolean!
+ """Reset a verified email password; revoke all sessions and require fresh login."""
+ completePasswordReset(code: String!, password: String!): Boolean!
+ """Verify current password, replace it, and revoke all sessions."""
+ changePassword(currentPassword: String!, newPassword: String!): Boolean!
+ """Send a verification code. Does not disclose existing accounts."""
+ requestEmailRegistration(email: String!): Boolean!
+ """Verify mailbox ownership, set password, and rotate the anonymous session."""
+ completeEmailRegistration(code: String!, password: String!): LoginPayload!
  """Replace private tags on an owned file. Up to 20 ASCII tags, 1..32 characters; lowercase, digits, spaces, hyphens and underscores. Empty list clears."""
  setFileTags(fileId: ID!, tags: [String!]!): [String!]!
   """Administrator-only; refuses quota below current logical usage."""
@@ -68,7 +81,7 @@ type LoginPayload {
 }
 
 type AuthenticatedUser {
-  """Current account username; empty only for an account without login credentials."""
+  """Current account username or verified account email; visible only to this account."""
   loginName: String!
   id: ID!
   role: UserRole!

@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { basename, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { captureMail } from './mail-capture';
+
 const web = fileURLToPath(new URL('..', import.meta.url));
 const api = resolve(web, '../api');
 const repository = resolve(web, '../..');
@@ -38,8 +40,12 @@ export default async function setup() {
  const runtimePassword = randomBytes(24).toString('hex');
  const accountPassword = randomBytes(24).toString('hex');
  const children: ChildProcess[] = [];
+ const mailPath = resolve(workspace, 'verification.eml');
+ const mail = await captureMail(mailPath);
+ process.env.E2E_MAIL_PATH = mailPath;
  let containerCreated = false;
  async function cleanup() {
+  await mail.close();
   for (const child of children.reverse()) {
    if (child.exitCode === null) await new Promise<void>(resolve => {
     const timer = setTimeout(resolve, 3000);
@@ -85,7 +91,7 @@ export default async function setup() {
   process.env.E2E_PASSWORD = accountPassword;
   const backend = spawn(server, [], {
    cwd: workspace, windowsHide: true, stdio: 'ignore',
-   env: { ...process.env, DATABASE_URL: runtimeURL, APP_ENV: 'development', HTTP_ADDR: '127.0.0.1:18881', PUBLIC_ORIGIN: 'http://127.0.0.1:4173', BLOB_STORAGE_DIR: resolve(workspace, 'blobs'), UPLOAD_STAGING_DIR: resolve(workspace, 'staging') },
+   env: { ...process.env, AUTH_MAIL_MODE: 'development', AUTH_DEV_SMTP_ADDR: mail.address, DATABASE_URL: runtimeURL, APP_ENV: 'development', HTTP_ADDR: '127.0.0.1:18881', PUBLIC_ORIGIN: 'http://127.0.0.1:4173', BLOB_STORAGE_DIR: resolve(workspace, 'blobs'), UPLOAD_STAGING_DIR: resolve(workspace, 'staging') },
   });
   children.push(backend);
   await ready('http://127.0.0.1:18881/readyz', backend);

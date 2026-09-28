@@ -74,11 +74,12 @@ func (s *SessionStore) Login(ctx context.Context, anonymous, csrf, login string,
 	if len(csrf) != 43 || subtle.ConstantTimeCompare([]byte(csrf), []byte(state.CSRFToken)) != 1 {
 		return "", Session{}, ErrLoginRejected
 	}
-	name, nameErr := NormalizeLogin(login)
+	name, nameErr := normalizeIdentifier(login)
 	var user, hash string
 	var version int64
 	err = s.pool.QueryRow(ctx, `SELECT u.id::text,c.password_hash,u.auth_version FROM vault.credentials c
- JOIN vault.users u ON u.id=c.user_id WHERE c.login_name=$1 AND u.disabled_at IS NULL`, name).Scan(&user, &hash, &version)
+ JOIN vault.users u ON u.id=c.user_id WHERE c.login_name=$1 AND u.disabled_at IS NULL
+ UNION ALL SELECT u.id::text,i.password_hash,u.auth_version FROM vault.user_identities i JOIN vault.users u ON u.id=i.user_id WHERE i.provider='password' AND i.provider_subject=$1 AND u.email_normalized=$1 AND u.disabled_at IS NULL`, name).Scan(&user, &hash, &version)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return "", Session{}, ErrSessionStore
 	}
@@ -115,7 +116,7 @@ func (s *SessionStore) Login(ctx context.Context, anonymous, csrf, login string,
 		return "", Session{}, ErrSessionStore
 	}
 	var currentHash string
-	if err = tx.QueryRow(ctx, "SELECT password_hash FROM vault.credentials WHERE user_id=$1", user).Scan(&currentHash); err != nil {
+	if err = tx.QueryRow(ctx, "SELECT password_hash FROM vault.credentials WHERE user_id=$1 UNION ALL SELECT password_hash FROM vault.user_identities WHERE user_id=$1 AND provider='password'", user).Scan(&currentHash); err != nil {
 		return "", Session{}, ErrSessionStore
 	}
 	if currentHash != hash {

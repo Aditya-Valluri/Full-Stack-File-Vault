@@ -35,7 +35,7 @@ try {
     try {
         $env:DATABASE_URL = "postgres://vault_runtime:${password}@127.0.0.1:5432/${escapedDbName}?sslmode=disable"
         if (-not $env:APP_ENV) { $env:APP_ENV = 'development' }
-        if (-not $env:PUBLIC_ORIGIN -and $env:APP_ENV -eq 'development') { $env:PUBLIC_ORIGIN = 'http://127.0.0.1:8080' }
+        if (-not $env:PUBLIC_ORIGIN -and $env:APP_ENV -eq 'development') { $env:PUBLIC_ORIGIN = 'http://127.0.0.1:5173' }
         Push-Location 'apps/api'
         try {
             go run ./cmd/server

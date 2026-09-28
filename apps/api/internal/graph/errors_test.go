@@ -21,6 +21,9 @@ type failingResolver struct {
 	panicValue any
 }
 
+func (r *failingResolver) EmailRegistrationEnabled(ctx context.Context) (bool, error) {
+	return false, nil
+}
 func (r *failingResolver) Query() QueryResolver { return r }
 func (r *failingResolver) AdminUsers(ctx context.Context, first int, after *string) (*model.AdminUserConnection, error) {
 	return (&Resolver{}).Query().AdminUsers(ctx, first, after)

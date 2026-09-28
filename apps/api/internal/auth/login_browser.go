@@ -46,7 +46,7 @@ func (s *SessionStore) reserveLoginAttempt(ctx context.Context, peer, login stri
 	if err != nil {
 		return ErrSessionStore
 	}
-	name, err := NormalizeLogin(login)
+	name, err := normalizeIdentifier(login)
 	if err != nil {
 		name = "\x00invalid-login"
 	}

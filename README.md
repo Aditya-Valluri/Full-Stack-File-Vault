@@ -109,3 +109,11 @@ The project is named **Full Stack File Vault**. New installations use the Compos
 identifier `full-stack-file-vault`; the Go module is `full-stack-file-vault.local/api`.
 
 The application Compose project is `full-stack-file-vault-application`. Set any local `.env` override of `COMPOSE_PROJECT_NAME` to the matching project name. Existing Docker projects must have their data volumes migrated before recreation; changing a project name alone does not transfer data. The checkout folder can have any name.
+
+## Authentication expansion status
+
+Legacy username login remains active. Additive email/provider identity migrations
+and the Gmail/local MailSender adapters are available in the working implementation.
+Verified email registration and email/password login are available when a mail
+sender is configured. Password reset/change are implemented and validated with isolated PostgreSQL and browser tests. Real Gmail recovery delivery remains unverified. Google OIDC remains pending. See [email sender setup](docs/authentication-email.md)
+and [ADR 0007](docs/decisions/0007-account-identities-and-recovery.md).

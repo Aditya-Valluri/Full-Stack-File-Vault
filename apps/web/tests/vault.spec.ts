@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 async function login(page: Page, name: string) {
  await page.goto('/');
- await page.getByLabel('Username', { exact: true }).fill(name);
+ await page.getByLabel('Username or email', { exact: true }).fill(name);
  await page.getByLabel('Password', { exact: true }).fill(process.env.E2E_PASSWORD!);
  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
  await expect(page.getByRole('heading', { name: 'My files', exact: true })).toBeVisible();

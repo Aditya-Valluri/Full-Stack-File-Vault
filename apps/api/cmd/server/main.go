@@ -17,6 +17,7 @@ import (
 	"full-stack-file-vault.local/api/internal/database"
 	"full-stack-file-vault.local/api/internal/files"
 	"full-stack-file-vault.local/api/internal/graph"
+	"full-stack-file-vault.local/api/internal/mailer"
 	"full-stack-file-vault.local/api/internal/server"
 	"full-stack-file-vault.local/api/internal/sharing"
 	"full-stack-file-vault.local/api/internal/telemetry"
@@ -52,6 +53,11 @@ func run(logger *slog.Logger) error {
 	if err != nil {
 		return err
 	}
+	sender, err := mailer.FromEnvironment(cfg.Browser.Development, cfg.Browser.Origin)
+	if err != nil {
+		return err
+	}
+	sessions.ConfigureMail(sender)
 	browser, err := auth.NewBrowserSecurity(cfg.Browser, sessions)
 	if err != nil {
 		return err

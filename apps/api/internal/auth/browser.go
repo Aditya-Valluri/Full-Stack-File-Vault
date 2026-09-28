@@ -124,6 +124,9 @@ func (b *BrowserSecurity) WrapAuthentication(next http.Handler, validate func(*h
 
 func (b *BrowserSecurity) wrap(next http.Handler, validate func(*http.Request) error, begin BootstrapFunc, login LoginFunc, logout LogoutFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if store, ok := b.sessions.(*SessionStore); ok {
+			r = r.WithContext(context.WithValue(r.Context(), registrationEnabledKey{}, store.EmailRegistrationEnabled()))
+		}
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		if r.Method != http.MethodPost {
@@ -239,6 +242,23 @@ func (b *BrowserSecurity) wrap(next http.Handler, validate func(*http.Request) e
 				return authenticated, nil
 			})
 			requestCtx = context.WithValue(requestCtx, loginContextKey{}, capability)
+			if store, ok := b.sessions.(*SessionStore); ok && store.EmailRegistrationEnabled() {
+				requestCtx = context.WithValue(requestCtx, registrationContextKey{}, registrationCapability{
+					request: func(ctx context.Context, email string) error {
+						return store.RequestEmailRegistration(ctx, token, csrf[0], peer, email)
+					},
+					complete: func(ctx context.Context, code string, password []byte) (Session, error) {
+						raw, state, err := store.CompleteEmailRegistration(ctx, token, csrf[0], peer, code, password)
+						if err != nil {
+							return Session{}, err
+						}
+						if err = b.SetSessionCookie(w, raw, state.ExpiresAt); err != nil {
+							return Session{}, err
+						}
+						return state, nil
+					},
+				})
+			}
 		}
 		if logout != nil && state.UserID != "" {
 			capability := logoutCapability(func(ctx context.Context) error {
@@ -249,6 +269,38 @@ func (b *BrowserSecurity) wrap(next http.Handler, validate func(*http.Request) e
 				return nil
 			})
 			requestCtx = context.WithValue(requestCtx, logoutContextKey{}, capability)
+		}
+		if store, ok := b.sessions.(*SessionStore); ok && login != nil {
+			peer, _, err := net.SplitHostPort(r.RemoteAddr)
+			if err != nil {
+				browserReject(w, 503, "INTERNAL_ERROR", "session service unavailable")
+				return
+			}
+			capability := passwordCapability{}
+			if state.UserID == "" && store.EmailRegistrationEnabled() {
+				requestCtx = context.WithValue(requestCtx, contactContextKey{}, contactCapability(func(ctx context.Context, subject, message string) error {
+					return store.ContactAdministrator(ctx, token, csrf[0], peer, subject, message)
+				}))
+				capability.request = func(ctx context.Context, email string) error {
+					return store.RequestPasswordReset(ctx, token, csrf[0], peer, email)
+				}
+				capability.complete = func(ctx context.Context, code string, password []byte) error {
+					if err := store.CompletePasswordReset(ctx, token, csrf[0], peer, code, password); err != nil {
+						return err
+					}
+					b.ClearSessionCookie(w)
+					return nil
+				}
+			} else if state.UserID != "" {
+				capability.change = func(ctx context.Context, current, next []byte) error {
+					if err := store.ChangePassword(ctx, token, csrf[0], peer, current, next); err != nil {
+						return err
+					}
+					b.ClearSessionCookie(w)
+					return nil
+				}
+			}
+			requestCtx = context.WithValue(requestCtx, passwordContextKey{}, capability)
 		}
 		next.ServeHTTP(w, r.WithContext(requestCtx))
 	})

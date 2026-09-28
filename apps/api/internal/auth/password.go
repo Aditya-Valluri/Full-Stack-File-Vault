@@ -8,7 +8,6 @@ import (
 	"errors"
 	"golang.org/x/crypto/argon2"
 	"strings"
-	"unicode/utf8"
 )
 
 const MaxPasswordBytes = 1024
@@ -17,8 +16,8 @@ const hashPrefix = "$argon2id$v=19$m=19456,t=2,p=1$"
 // HashPassword preserves password bytes. The initial profile uses 19 MiB, two
 // iterations and one lane; benchmark concurrency before exposing login publicly.
 func HashPassword(password []byte) (string, error) {
-	if !utf8.Valid(password) || utf8.RuneCount(password) < 15 || len(password) > MaxPasswordBytes {
-		return "", errors.New("password requires at least 15 characters and at most 1024 UTF-8 bytes")
+	if err := ValidateNewPassword(password); err != nil {
+		return "", err
 	}
 	salt := make([]byte, 16)
 	if _, err := rand.Read(salt); err != nil {

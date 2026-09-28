@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
+	"full-stack-file-vault.local/api/internal/mailer"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -31,6 +32,7 @@ type Session struct {
 // credentials before creation. It does not authorize browser requests by itself.
 type SessionStore struct {
 	pool           *pgxpool.Pool
+	mail           mailer.MailSender
 	absolute, idle time.Duration
 	dummyHash      string
 	hashSlots      chan struct{}
@@ -117,7 +119,7 @@ func (s *SessionStore) createInTransaction(ctx context.Context, tx pgx.Tx, userI
  SELECT $1,u.id,$3,t,t,t+make_interval(secs => $4),t+make_interval(secs => $5)
  FROM vault.users u CROSS JOIN instant WHERE u.id=$2 AND u.disabled_at IS NULL
  RETURNING user_id::text,csrf_token,idle_expires_at,expires_at,
- (SELECT role FROM vault.users WHERE id=user_id), COALESCE((SELECT c.login_name FROM vault.credentials c WHERE c.user_id=vault.sessions.user_id),'')`, digest, userID, csrf, s.idle.Seconds(), s.absolute.Seconds()).Scan(&state.UserID, &state.CSRFToken, &state.IdleExpiresAt, &state.ExpiresAt, &state.Role, &state.LoginName)
+ (SELECT role FROM vault.users WHERE id=user_id), COALESCE((SELECT c.login_name FROM vault.credentials c WHERE c.user_id=vault.sessions.user_id),(SELECT email_address FROM vault.users WHERE id=vault.sessions.user_id),'')`, digest, userID, csrf, s.idle.Seconds(), s.absolute.Seconds()).Scan(&state.UserID, &state.CSRFToken, &state.IdleExpiresAt, &state.ExpiresAt, &state.Role, &state.LoginName)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", Session{}, ErrInvalidSession
 	}
@@ -159,7 +161,7 @@ func (s *SessionStore) LookupAndTouch(ctx context.Context, token string) (Sessio
  idle_expires_at=LEAST(s.expires_at,t+make_interval(secs => $2))
  FROM instant,vault.users u WHERE s.token_hash=$1 AND u.id=s.user_id
  AND u.disabled_at IS NULL AND s.revoked_at IS NULL AND s.expires_at>t AND s.idle_expires_at>t
- RETURNING s.user_id::text,u.role,s.csrf_token,s.idle_expires_at,s.expires_at,COALESCE((SELECT c.login_name FROM vault.credentials c WHERE c.user_id=s.user_id),'')`, digest, s.idle.Seconds()).Scan(&state.UserID, &state.Role, &state.CSRFToken, &state.IdleExpiresAt, &state.ExpiresAt, &state.LoginName)
+ RETURNING s.user_id::text,u.role,s.csrf_token,s.idle_expires_at,s.expires_at,COALESCE((SELECT c.login_name FROM vault.credentials c WHERE c.user_id=s.user_id),u.email_address,'')`, digest, s.idle.Seconds()).Scan(&state.UserID, &state.Role, &state.CSRFToken, &state.IdleExpiresAt, &state.ExpiresAt, &state.LoginName)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return Session{}, ErrInvalidSession
 	}
@@ -182,7 +184,7 @@ func (s *SessionStore) LookupBrowserSession(ctx context.Context, token string) (
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	var state Session
-	err = s.pool.QueryRow(ctx, `SELECT COALESCE(s.user_id::text,''),COALESCE(u.role,''),s.csrf_token,s.idle_expires_at,s.expires_at,COALESCE((SELECT c.login_name FROM vault.credentials c WHERE c.user_id=s.user_id),'')
+	err = s.pool.QueryRow(ctx, `SELECT COALESCE(s.user_id::text,''),COALESCE(u.role,''),s.csrf_token,s.idle_expires_at,s.expires_at,COALESCE((SELECT c.login_name FROM vault.credentials c WHERE c.user_id=s.user_id),u.email_address,'')
  FROM vault.sessions s LEFT JOIN vault.users u ON u.id=s.user_id
  WHERE s.token_hash=$1 AND s.revoked_at IS NULL AND s.expires_at>clock_timestamp()
  AND s.idle_expires_at>clock_timestamp() AND (s.user_id IS NULL OR u.disabled_at IS NULL)`, digest).Scan(&state.UserID, &state.Role, &state.CSRFToken, &state.IdleExpiresAt, &state.ExpiresAt, &state.LoginName)

@@ -68,7 +68,7 @@ type AdminUserConnection struct {
 }
 
 type AuthenticatedUser struct {
-	// Current account username; empty only for an account without login credentials.
+	// Current account username or verified account email; visible only to this account.
 	LoginName string   `json:"loginName"`
 	ID        string   `json:"id"`
 	Role      UserRole `json:"role"`

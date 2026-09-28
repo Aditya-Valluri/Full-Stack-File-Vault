@@ -133,7 +133,6 @@ shown in Render's database dashboard.
 ## Public acceptance checks
 
 - Trusted HTTPS loads without accepting a certificate warning.
-- The temporary-demo notice is visible.
 - Sign in as reviewer and refresh; the username remains correct.
 - Upload docs/demo-samples/review-notes.txt and review-notes-copy.txt.
   Observe two logical files and 50% unique-content savings.
@@ -176,7 +175,7 @@ by Render and mention that the first visit can take about a minute to wake.
 
 Suggested message:
 
-> Full Stack File Vault temporary demo: [verified URL]. Please use the reviewer credentials
+> Full Stack File Vault: [verified URL]. Please use the reviewer credentials
 > supplied separately and sample files only. The demo is available until [date],
 > and its first page load after inactivity may take about a minute.
 > Try duplicate uploads, private tags/search, downloads and revocable sharing.

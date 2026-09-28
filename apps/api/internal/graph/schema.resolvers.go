@@ -16,6 +16,53 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+// ContactAdministrator is the resolver for the contactAdministrator field.
+func (r *mutationResolver) ContactAdministrator(ctx context.Context, subject string, message string) (bool, error) {
+	err := auth.ContactAdministratorFromContext(ctx, subject, message)
+	return err == nil, err
+}
+
+// RequestPasswordReset is the resolver for the requestPasswordReset field.
+func (r *mutationResolver) RequestPasswordReset(ctx context.Context, email string) (bool, error) {
+	err := auth.RequestPasswordResetFromContext(ctx, email)
+	return err == nil, err
+}
+
+// CompletePasswordReset is the resolver for the completePasswordReset field.
+func (r *mutationResolver) CompletePasswordReset(ctx context.Context, code string, password string) (bool, error) {
+	secret := []byte(password)
+	defer clear(secret)
+	err := auth.CompletePasswordResetFromContext(ctx, code, secret)
+	return err == nil, err
+}
+
+// ChangePassword is the resolver for the changePassword field.
+func (r *mutationResolver) ChangePassword(ctx context.Context, currentPassword string, newPassword string) (bool, error) {
+	current := []byte(currentPassword)
+	next := []byte(newPassword)
+	defer clear(current)
+	defer clear(next)
+	err := auth.ChangePasswordFromContext(ctx, current, next)
+	return err == nil, err
+}
+
+// RequestEmailRegistration is the resolver for the requestEmailRegistration field.
+func (r *mutationResolver) RequestEmailRegistration(ctx context.Context, email string) (bool, error) {
+	err := auth.RequestRegistrationFromContext(ctx, email)
+	return err == nil, err
+}
+
+// CompleteEmailRegistration is the resolver for the completeEmailRegistration field.
+func (r *mutationResolver) CompleteEmailRegistration(ctx context.Context, code string, password string) (*model.LoginPayload, error) {
+	secret := []byte(password)
+	defer clear(secret)
+	state, err := auth.CompleteRegistrationFromContext(ctx, code, secret)
+	if err != nil {
+		return nil, err
+	}
+	return &model.LoginPayload{CsrfToken: state.CSRFToken, User: &model.AuthenticatedUser{ID: state.UserID, Role: model.UserRole(state.Role), LoginName: state.LoginName}}, nil
+}
+
 // SetFileTags is the resolver for the setFileTags field.
 func (r *mutationResolver) SetFileTags(ctx context.Context, fileID string, tags []string) ([]string, error) {
 	if r.FilesStore == nil {
@@ -157,6 +204,11 @@ func (r *mutationResolver) UploadFile(ctx context.Context, file graphql.Upload, 
 // UploadFiles is the resolver for the uploadFiles field.
 func (r *mutationResolver) UploadFiles(ctx context.Context, files []*graphql.Upload, idempotencyKey *string) ([]*model.VaultFile, error) {
 	return r.publish(ctx, files, idempotencyKey)
+}
+
+// EmailRegistrationEnabled is the resolver for the emailRegistrationEnabled field.
+func (r *queryResolver) EmailRegistrationEnabled(ctx context.Context) (bool, error) {
+	return auth.RegistrationEnabled(ctx), nil
 }
 
 // AdminUsers is the resolver for the adminUsers field.

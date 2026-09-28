@@ -43,3 +43,15 @@ query AdminAudit($first: Int!, $after: String) {
 }
 mutation SetQuota($id: ID!, $bytes: String!) { adminSetQuota(userId: $id, quotaBytes: $bytes) { id quotaBytes } }
 mutation SetDisabled($id: ID!, $disabled: Boolean!) { adminSetUserDisabled(userId: $id, disabled: $disabled) { id disabledAt } }
+
+query EmailRegistrationEnabled { emailRegistrationEnabled }
+mutation RequestEmailRegistration($email: String!) { requestEmailRegistration(email: $email) }
+mutation CompleteEmailRegistration($code: String!, $password: String!) {
+ completeEmailRegistration(code: $code, password: $password) { csrfToken user { id role loginName } }
+}
+
+mutation ContactAdministrator($subject: String!, $message: String!) { contactAdministrator(subject: $subject, message: $message) }
+
+mutation RequestPasswordReset($email: String!) { requestPasswordReset(email: $email) }
+mutation CompletePasswordReset($code: String!, $password: String!) { completePasswordReset(code: $code, password: $password) }
+mutation ChangePassword($currentPassword: String!, $newPassword: String!) { changePassword(currentPassword: $currentPassword, newPassword: $newPassword) }

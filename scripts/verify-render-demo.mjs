@@ -56,7 +56,7 @@ async function ready(port) {
 }
 async function login(page, username, password) {
  await page.goto(origin);
- await page.getByLabel('Username', {exact:true}).fill(username);
+ await page.getByLabel('Username or email', {exact:true}).fill(username);
  await page.getByLabel('Password', {exact:true}).fill(password);
  await page.getByRole('button',{name:'Sign in',exact:true}).click();
  await page.getByRole('heading',{name:'My files',exact:true}).waitFor();
@@ -86,7 +86,6 @@ try {
  const context=await browser.newContext({ignoreHTTPSErrors:true});
  const page=await context.newPage();
  await login(page,'reviewer',secrets.DEMO_REVIEWER_PASSWORD);
- await page.getByRole('note').filter({hasText:'Temporary hiring demo'}).waitFor();
  const cookies=await context.cookies();
  if(!cookies.some(c=>c.name==='__Host-vault_session'&&c.secure&&c.httpOnly))throw new Error('Demo cookie is not secure.');
  const bytes=Buffer.from('Render rehearsal content '+randomBytes(8).toString('hex'));
@@ -167,16 +166,12 @@ try {
  await mkdir(resolve(root,'tmp'),{recursive:true});
  for(const width of [1024,390]) {
   await page.setViewportSize({width,height:800});
-  const notice=await page.getByRole('note').boundingBox();
-  const sidebar=await page.locator('.sidebar').boundingBox();
-  if(!notice || (width===1024 && notice.x<sidebar.x+sidebar.width))
-   throw new Error('Demo notice is obscured by the sidebar.');
   if(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth))
-   throw new Error('Demo notice/layout overflows the viewport.');
+   throw new Error('Application layout overflows the viewport.');
  }
  await page.setViewportSize({width:1280,height:800});
  await page.screenshot({path:resolve(root,'tmp/render-demo-rehearsal.png'),fullPage:true});
- await writeFile(resolve(root,'tmp/render-demo-verification.json'),JSON.stringify({testedAt:new Date().toISOString(),nonSuperuserMigrations:true,repeatSetup:true,secureCookie:true,persistentReplacement:true,sharedDownload:true,adminFiles:true,demoBanner:true,uploadLimit:true,duplicateDeletion:true,byteCapacityReleased:true},null,2));
+ await writeFile(resolve(root,'tmp/render-demo-verification.json'),JSON.stringify({testedAt:new Date().toISOString(),nonSuperuserMigrations:true,repeatSetup:true,secureCookie:true,persistentReplacement:true,sharedDownload:true,adminFiles:true,uploadLimit:true,duplicateDeletion:true,byteCapacityReleased:true},null,2));
  console.log('PASS: Free Render demo, separate roles, TLS-edge login, PostgreSQL bytes, deduplication, sharing, admin, ephemeral container replacement and deletion/GC.');
 } finally {
  if(browser)await browser.close();

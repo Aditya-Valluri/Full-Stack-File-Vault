@@ -89,7 +89,7 @@ func singleAuthRoot(doc *ast.QueryDocument, selected *ast.OperationDefinition, e
 			switch node := selection.(type) {
 			case *ast.Field:
 				roots++
-				if roots > 1 || (expected != "" && node.Name != expected) || (node.Name != "beginSession" && node.Name != "login" && node.Name != "logout") || len(node.Directives) > 0 {
+				if roots > 1 || (expected != "" && node.Name != expected) || (node.Name != "beginSession" && node.Name != "login" && node.Name != "logout" && node.Name != "requestEmailRegistration" && node.Name != "completeEmailRegistration" && node.Name != "requestPasswordReset" && node.Name != "completePasswordReset" && node.Name != "changePassword" && node.Name != "contactAdministrator") || len(node.Directives) > 0 {
 					return false
 				}
 			case *ast.InlineFragment:
