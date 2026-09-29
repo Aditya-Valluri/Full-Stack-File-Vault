@@ -44,6 +44,7 @@ export function VaultView() {
  const [deleting, setDeleting] = useState(false);
  const [deleteTarget, setDeleteTarget] = useState<VaultFile>();
  const [sharing, setSharing] = useState<VaultFile>();
+ const [details,setDetails]=useState<VaultFile>();
  const [preview, setPreview] = useState<{ file: VaultFile; url?: string }>();
  const [actionID, setActionID] = useState('');
  const generation = useRef(0);
@@ -161,6 +162,7 @@ export function VaultView() {
      <td><div className="file-name"><span className="file-icon"><FileText size={20} /></span><div><strong>{file.name}</strong><small>{file.detectedMIME.split(';')[0]}</small>{file.tags.length > 0 && <small aria-label={`Private tags for ${file.name}`}>{file.tags.join(', ')}</small>}</div></div></td><td className="nowrap">{formatBytes(file.sizeBytes)}</td><td className="muted nowrap">{formatDate(file.createdAt)}</td>
      <td><div className="row-actions"><Button variant="ghost" disabled={Boolean(actionID)} aria-label={`Download ${file.name}`} onClick={() => void access(file, FileAccessMode.Download)}><Download size={17} /></Button>
       {['image/png', 'image/jpeg', 'image/webp'].includes(file.detectedMIME.split(';')[0]) && <Button variant="ghost" disabled={Boolean(actionID)} aria-label={`Preview ${file.name}`} onClick={event => { rememberFocus(event); void access(file, FileAccessMode.Preview); }}><Eye size={17} /></Button>}
+      <Button variant="ghost" aria-label={`Details for ${file.name}`} onClick={event=>{rememberFocus(event);setDetails(file);}}>Details</Button>
       <Button variant="ghost" aria-label={`Edit tags for ${file.name}`} onClick={event => { rememberFocus(event); setTagTarget(file); setTagText(file.tags.join(', ')); setTagError(''); }}>Tags</Button>
       <Button variant="ghost" aria-label={`Share ${file.name}`} onClick={event => { rememberFocus(event); setSharing(file); }}><Link2 size={17} /></Button><Button variant="ghost" aria-label={`Delete ${file.name}`} disabled={deleting} onClick={event => { rememberFocus(event); setDeleteTarget(file); }}><Trash2 size={17} /></Button></div></td>
     </tr>)}</tbody></table></div>}
@@ -184,6 +186,16 @@ export function VaultView() {
     {tagError && <Notice error>{tagError}</Notice>}
     <div className="dialog-actions"><Button type="submit" disabled={tagBusy}>{tagBusy ? 'Saving…' : 'Save tags'}</Button></div>
    </form>
+  </Dialog>
+  <Dialog open={Boolean(details)} onClose={()=>setDetails(undefined)} title="File details" description={details?.name}>
+   {details && <div className="form-stack"><dl>
+    <dt>Logical file ID</dt><dd>{details.id}</dd>
+    <dt>Logical size</dt><dd>{formatBytes(details.sizeBytes)} ({details.sizeBytes} bytes)</dd>
+    <dt>Detected MIME type</dt><dd>{details.detectedMIME}</dd>
+    <dt>Uploaded</dt><dd>{formatDate(details.createdAt)}</dd>
+    <dt>Private tags</dt><dd>{details.tags.join(', ') || 'None'}</dd>
+    <dt>Preview</dt><dd>{['image/png','image/jpeg','image/webp'].includes(details.detectedMIME.split(';')[0]) ? 'Image preview available' : 'Download only'}</dd>
+   </dl><p className="help-text">Private to your account unless explicitly shared. Duplicate contents still use this file's full logical quota. Storage savings are shown for your account, not inferred from other users' files. Embedded metadata is not extracted or displayed; original downloads may retain it. No malware scan is claimed.</p><ShareManager key={details.id} fileID={details.id} /></div>}
   </Dialog>
   <Dialog open={Boolean(sharing)} onClose={() => setSharing(undefined)} title="Share file" description={sharing?.name}>{sharing && <ShareManager key={sharing.id} fileID={sharing.id} />}</Dialog>
   <Dialog open={Boolean(preview)} onClose={() => { previewGeneration.current++; setPreview(undefined); }} title="File preview" description={preview?.file.name} wide>

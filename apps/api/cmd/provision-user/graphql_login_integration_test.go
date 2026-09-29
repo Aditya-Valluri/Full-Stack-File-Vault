@@ -193,11 +193,11 @@ func testGraphQLLogin(t *testing.T, ctx context.Context, admin *pgx.Conn, dsn, p
 			t.Fatal(e)
 		}
 	}
-	if admitted != 5 || limited != 3 {
+	if admitted != 4 || limited != 4 {
 		t.Fatalf("identifier budget: admitted=%d limited=%d", admitted, limited)
 	}
 	status, body, cookies = request(query, "reviewer.one", password, state.CSRFToken, cookie)
-	if status != 200 || !strings.Contains(body, "RATE_LIMITED") || len(cookies) != 0 {
+	if status != 200 || !strings.Contains(body, "LOGIN_TEMPORARILY_BLOCKED") || len(cookies) != 0 {
 		t.Fatal("identifier budget bypassed")
 	}
 	// Expiry permits attempts again, without resetting the global guard.
@@ -207,6 +207,76 @@ func testGraphQLLogin(t *testing.T, ctx context.Context, admin *pgx.Conn, dsn, p
 	status, body, cookies = request(query, "reviewer.one", password, state.CSRFToken, cookie)
 	if status != 200 || len(cookies) != 1 || strings.Contains(body, `"errors"`) {
 		t.Fatal("expired throttle did not recover")
+	}
+
+	reset()
+	anon, state, err = store.CreateAnonymous(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Only fixture timestamps move; production always uses the PostgreSQL clock.
+	for level, seconds := range []int{300, 900, 1800, 3600, 3600} {
+		if _, err = admin.Exec(ctx, "UPDATE vault.login_budget SET attempts=0; DELETE FROM vault.login_attempts WHERE scope='peer'"); err != nil {
+			t.Fatal(err)
+		}
+		for attempt := 1; attempt <= 5; attempt++ {
+			_, _, failure := store.LoginBrowser(ctx, anon, state.CSRFToken, "192.0.2.90", "missing.backoff", []byte("wrong"))
+			var blocked *auth.PasswordBackoffError
+			if attempt < 5 && !errors.Is(failure, auth.ErrLoginRejected) {
+				t.Fatal("early restriction")
+			}
+			if attempt == 5 && (!errors.As(failure, &blocked) || blocked.RetryAfterSeconds != seconds) {
+				t.Fatalf("incorrect escalation level %d", level)
+			}
+		}
+		var before, after time.Time
+		if err = admin.QueryRow(ctx, "SELECT blocked_until FROM vault.login_attempts WHERE scope='password'").Scan(&before); err != nil {
+			t.Fatal(err)
+		}
+		_, _, failure := other.LoginBrowser(ctx, anon, state.CSRFToken, "192.0.2.91", "MISSING.BACKOFF", []byte("wrong"))
+		if !errors.Is(failure, auth.ErrLoginLimited) {
+			t.Fatal("replica bypass")
+		}
+		if err = admin.QueryRow(ctx, "SELECT blocked_until FROM vault.login_attempts WHERE scope='password'").Scan(&after); err != nil || !before.Equal(after) {
+			t.Fatal("blocked request extended restriction")
+		}
+		if _, err = admin.Exec(ctx, "UPDATE vault.login_attempts SET blocked_until=clock_timestamp()-interval '1 second' WHERE scope='password'"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	reset()
+	for attempt := 0; attempt < 4; attempt++ {
+		if _, _, err = store.LoginBrowser(ctx, anon, state.CSRFToken, "192.0.2.92", "reviewer.one", []byte("wrong")); !errors.Is(err, auth.ErrLoginRejected) {
+			t.Fatal("bad password unexpectedly admitted")
+		}
+	}
+	if _, _, err = store.LoginBrowser(ctx, anon, state.CSRFToken, "192.0.2.92", "reviewer.one", []byte(password)); err != nil {
+		t.Fatal("valid fifth attempt rejected")
+	}
+	var failures, pending, level int
+	if err = admin.QueryRow(ctx, "SELECT failures,pending,lockouts FROM vault.login_attempts WHERE scope='password'").Scan(&failures, &pending, &level); err != nil || failures != 0 || pending != 0 || level != 0 {
+		t.Fatal("success did not clear failure state")
+	}
+
+	reset()
+	anon, state, err = store.CreateAnonymous(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err = store.LoginBrowser(ctx, anon, state.CSRFToken, "192.0.2.93", "missing.lease", []byte("wrong")); !errors.Is(err, auth.ErrLoginRejected) {
+		t.Fatal(err)
+	}
+	if _, err = admin.Exec(ctx, "UPDATE vault.login_attempts SET pending=4,lease_until=clock_timestamp()+interval '20 seconds' WHERE scope='password'"); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err = other.LoginBrowser(ctx, anon, state.CSRFToken, "192.0.2.94", "missing.lease", []byte("wrong")); !errors.Is(err, auth.ErrLoginLimited) {
+		t.Fatal("outstanding attempts bypassed")
+	}
+	if _, err = admin.Exec(ctx, "UPDATE vault.login_attempts SET lease_until=clock_timestamp()-interval '1 second' WHERE scope='password'"); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err = other.LoginBrowser(ctx, anon, state.CSRFToken, "192.0.2.94", "missing.lease", []byte("wrong")); !errors.Is(err, auth.ErrLoginRejected) {
+		t.Fatal("abandoned reservations did not expire")
 	}
 
 	reset()

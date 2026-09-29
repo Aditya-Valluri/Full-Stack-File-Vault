@@ -27,6 +27,9 @@ func (s *Store) Inspect(ctx context.Context, token string) (SharedFile, error) {
 	defer rollback(tx)
 	result := SharedFile{Name: c.file.Name, DetectedMIME: c.file.DetectedMIME, SizeBytes: c.file.SizeBytes, ExpiresAt: c.share.ExpiresAt,
 		PreviewAllowed: c.share.Permission == "PREVIEW_AND_DOWNLOAD" && files.PreviewAllowed(c.file.DetectedMIME)}
+	if err = recordActivity(ctx, tx, c, "OPENED"); err != nil {
+		return SharedFile{}, files.ErrUnavailable
+	}
 	if err = tx.Commit(ctx); err != nil {
 		return SharedFile{}, files.ErrUnavailable
 	}
@@ -127,6 +130,9 @@ func (s *Store) OpenAccess(ctx context.Context, token string, storage files.Cont
 			return files.OpenContent{}, files.ErrUnavailable
 		}
 		if counted.RowsAffected() == 1 {
+			if err = recordActivity(ctx, tx, c, "DOWNLOAD_STARTED"); err != nil {
+				return files.OpenContent{}, files.ErrUnavailable
+			}
 			if _, err = tx.Exec(ctx, `INSERT INTO vault.file_download_counts(file_id,shared_downloads) VALUES($1,1)
  ON CONFLICT(file_id) DO UPDATE SET shared_downloads=vault.file_download_counts.shared_downloads+1`, c.file.ID); err != nil {
 				return files.OpenContent{}, files.ErrUnavailable

@@ -32,16 +32,34 @@ func LoginFromContext(ctx context.Context, login string, password []byte) (Sessi
 // commit independently so failed credentials, cancellation and successful login all
 // count. The internal Login primitive still rechecks anonymous state and CSRF.
 func (s *SessionStore) LoginBrowser(ctx context.Context, anonymous, csrf, peer, login string, password []byte) (string, Session, error) {
-	if err := s.reserveLoginAttempt(ctx, peer, login); err != nil {
+	if err := s.reserveAttempt(ctx, peer, login, false); err != nil {
 		return "", Session{}, err
 	}
-	return s.Login(ctx, anonymous, csrf, login, password)
+	if err := s.checkAnonymous(ctx, anonymous, csrf); err != nil {
+		return "", Session{}, ErrLoginRejected
+	}
+	ticket, err := s.beginPasswordAttempt(ctx, login)
+	if err != nil {
+		return "", Session{}, err
+	}
+	token, state, loginErr := s.Login(ctx, anonymous, csrf, login, password)
+	finishErr := s.finishPasswordAttempt(ticket, loginErr)
+	if loginErr == nil {
+		return token, state, nil
+	}
+	if finishErr != nil {
+		return "", Session{}, finishErr
+	}
+	return "", Session{}, loginErr
 }
 
 // Global admission bounds new key creation to at most two rows per admitted attempt.
 // Expired keys are pruned under the same lock; inactive rows cannot grow without new
 // admissions. Raw usernames/IPs are not retained; hashes are pseudonymous, not secret.
 func (s *SessionStore) reserveLoginAttempt(ctx context.Context, peer, login string) error {
+	return s.reserveAttempt(ctx, peer, login, true)
+}
+func (s *SessionStore) reserveAttempt(ctx context.Context, peer, login string, includeIdentifier bool) error {
 	ip, err := netip.ParseAddr(peer)
 	if err != nil {
 		return ErrSessionStore
@@ -89,6 +107,9 @@ func (s *SessionStore) reserveLoginAttempt(ctx context.Context, peer, login stri
 	}{
 		{"peer", peerHash[:], 20, time.Minute}, {"identifier", nameHash[:], 5, 15 * time.Minute},
 	} {
+		if budget.scope == "identifier" && !includeIdentifier {
+			continue
+		}
 		result, err = tx.Exec(ctx, `INSERT INTO vault.login_attempts(scope,key_hash,expires_at,attempts) VALUES($1,$2,$3,1)
  ON CONFLICT(scope,key_hash) DO UPDATE SET attempts=vault.login_attempts.attempts+1
  WHERE vault.login_attempts.attempts<$4`, budget.scope, budget.key, now.Add(budget.window), budget.limit)

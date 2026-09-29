@@ -289,7 +289,11 @@ func (r *queryResolver) FileShares(ctx context.Context, fileID string) (*model.F
 	for _, sh := range overview.Shares {
 		shares = append(shares, shareModel(sh))
 	}
-	return &model.FileSharing{Shares: shares, DownloadStarts: strconv.FormatInt(overview.DownloadStarts, 10)}, nil
+	activity := make([]*model.ShareActivity, 0, len(overview.Activity))
+	for _, event := range overview.Activity {
+		activity = append(activity, &model.ShareActivity{ID: event.ID, ShareID: event.ShareID, RecipientID: event.RecipientID, Kind: event.Kind, OccurredAt: event.OccurredAt, Status: event.Status})
+	}
+	return &model.FileSharing{Shares: shares, Activity: activity, DownloadStarts: strconv.FormatInt(overview.DownloadStarts, 10)}, nil
 }
 
 // SharedFile is the resolver for the sharedFile field.

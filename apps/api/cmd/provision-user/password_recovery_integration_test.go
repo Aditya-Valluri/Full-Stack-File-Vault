@@ -110,7 +110,24 @@ func testPasswordRecovery(t *testing.T, ctx context.Context, operator *pgx.Conn,
 		t.Fatal("account ownership changed")
 	}
 	pending, pendingState = anon()
-	code := request(pending, pendingState, email)
+	resetBudget()
+	for i := 0; i < 5; i++ {
+		_, _, failure := store.LoginBrowser(ctx, pending, pendingState.CSRFToken, "127.0.0.1", email, []byte("wrong"))
+		if i < 4 && !errors.Is(failure, auth.ErrLoginRejected) {
+			t.Fatal("unexpected password restriction")
+		}
+		if i == 4 && !errors.Is(failure, auth.ErrLoginLimited) {
+			t.Fatal("fifth failure not restricted")
+		}
+	}
+	beforeMail := len(capture.messages)
+	if err = store.RequestPasswordReset(ctx, pending, pendingState.CSRFToken, "127.0.0.1", email); err != nil {
+		t.Fatal("password lockout blocked recovery")
+	}
+	if len(capture.messages) != beforeMail+1 {
+		t.Fatal("recovery did not send exactly one code")
+	}
+	code := capture.messages[beforeMail].Code
 	foreign, foreignState := anon()
 	if err = store.CompletePasswordReset(ctx, foreign, foreignState.CSRFToken, "127.0.0.2", code, []byte(finalPassword)); err != auth.ErrResetRejected {
 		t.Fatal("reset accepted another browser")
@@ -121,7 +138,10 @@ func testPasswordRecovery(t *testing.T, ctx context.Context, operator *pgx.Conn,
 	if err = store.CompletePasswordReset(ctx, pending, pendingState.CSRFToken, "127.0.0.1", code, []byte("Password123456789!")); err != auth.ErrWeakPassword {
 		t.Fatal("weak reset accepted")
 	}
-	resetBudget()
+	// Keep the password restriction while resetting unrelated request budgets.
+	if _, err = operator.Exec(ctx, "UPDATE vault.login_budget SET attempts=0; DELETE FROM vault.login_attempts WHERE scope<>'password'"); err != nil {
+		t.Fatal(err)
+	}
 	// Two valid concurrent redemptions must yield exactly one change.
 	var wg sync.WaitGroup
 	outcomes := make(chan error, 2)
@@ -144,6 +164,14 @@ func testPasswordRecovery(t *testing.T, ctx context.Context, operator *pgx.Conn,
 	}
 	if successes != 1 {
 		t.Fatal("reset not single-use")
+	}
+	var restrictions int
+	if err = operator.QueryRow(ctx, "SELECT count(*) FROM vault.login_attempts WHERE scope='password'").Scan(&restrictions); err != nil || restrictions != 0 {
+		t.Fatal("reset left password restriction")
+	}
+	fresh, freshState := anon()
+	if _, _, err = store.LoginBrowser(ctx, fresh, freshState.CSRFToken, "127.0.0.2", email, []byte(finalPassword)); err != nil {
+		t.Fatal("fresh login after recovery failed")
 	}
 	if _, err = store.LookupBrowserSession(ctx, current); !errors.Is(err, auth.ErrInvalidSession) {
 		t.Fatal("reset left session active")

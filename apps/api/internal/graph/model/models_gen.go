@@ -131,7 +131,9 @@ type FileShare struct {
 }
 
 type FileSharing struct {
-	Shares []*FileShare `json:"shares"`
+	// Latest 100 events for this owned logical file, newest first; not lifetime analytics.
+	Activity []*ShareActivity `json:"activity"`
+	Shares   []*FileShare     `json:"shares"`
 	// Admitted DOWNLOAD GET opens, once per grant; not completed transfers.
 	DownloadStarts string `json:"downloadStarts"`
 }
@@ -168,6 +170,16 @@ type ServiceInfo struct {
 // Only CSRF material is returned; authentication tokens are HttpOnly cookies.
 type SessionBootstrap struct {
 	CsrfToken string `json:"csrfToken"`
+}
+
+// Owner-only bounded history. No raw tokens, IP addresses or device metadata.
+type ShareActivity struct {
+	ID          string    `json:"id"`
+	ShareID     string    `json:"shareId"`
+	RecipientID *string   `json:"recipientId,omitempty"`
+	Kind        string    `json:"kind"`
+	OccurredAt  time.Time `json:"occurredAt"`
+	Status      string    `json:"status"`
 }
 
 type SharedFile struct {

@@ -43,6 +43,7 @@ export default async function setup() {
  const mailPath = resolve(workspace, 'verification.eml');
  const mail = await captureMail(mailPath);
  process.env.E2E_MAIL_PATH = mailPath;
+ process.env.E2E_DATABASE_CONTAINER = container;
  let containerCreated = false;
  async function cleanup() {
   await mail.close();

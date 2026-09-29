@@ -130,6 +130,7 @@ type ComplexityRoot struct {
 	}
 
 	FileSharing struct {
+		Activity       func(childComplexity int) int
 		DownloadStarts func(childComplexity int) int
 		Shares         func(childComplexity int) int
 	}
@@ -189,6 +190,15 @@ type ComplexityRoot struct {
 
 	SessionBootstrap struct {
 		CsrfToken func(childComplexity int) int
+	}
+
+	ShareActivity struct {
+		ID          func(childComplexity int) int
+		Kind        func(childComplexity int) int
+		OccurredAt  func(childComplexity int) int
+		RecipientID func(childComplexity int) int
+		ShareID     func(childComplexity int) int
+		Status      func(childComplexity int) int
 	}
 
 	SharedFile struct {
@@ -601,6 +611,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.FileShare.RecipientID(childComplexity), true
 
+	case "FileSharing.activity":
+		if e.ComplexityRoot.FileSharing.Activity == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FileSharing.Activity(childComplexity), true
 	case "FileSharing.downloadStarts":
 		if e.ComplexityRoot.FileSharing.DownloadStarts == nil {
 			break
@@ -974,6 +990,43 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.SessionBootstrap.CsrfToken(childComplexity), true
+
+	case "ShareActivity.id":
+		if e.ComplexityRoot.ShareActivity.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShareActivity.ID(childComplexity), true
+	case "ShareActivity.kind":
+		if e.ComplexityRoot.ShareActivity.Kind == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShareActivity.Kind(childComplexity), true
+	case "ShareActivity.occurredAt":
+		if e.ComplexityRoot.ShareActivity.OccurredAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShareActivity.OccurredAt(childComplexity), true
+	case "ShareActivity.recipientId":
+		if e.ComplexityRoot.ShareActivity.RecipientID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShareActivity.RecipientID(childComplexity), true
+	case "ShareActivity.shareId":
+		if e.ComplexityRoot.ShareActivity.ShareID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShareActivity.ShareID(childComplexity), true
+	case "ShareActivity.status":
+		if e.ComplexityRoot.ShareActivity.Status == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ShareActivity.Status(childComplexity), true
 
 	case "SharedFile.detectedMIME":
 		if e.ComplexityRoot.SharedFile.DetectedMime == nil {
@@ -1363,6 +1416,8 @@ func (ec *executionContext) childFields_FileShare(ctx context.Context, field gra
 
 func (ec *executionContext) childFields_FileSharing(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
+	case "activity":
+		return ec.fieldContext_FileSharing_activity(ctx, field)
 	case "shares":
 		return ec.fieldContext_FileSharing_shares(ctx, field)
 	case "downloadStarts":
@@ -1407,6 +1462,24 @@ func (ec *executionContext) childFields_SessionBootstrap(ctx context.Context, fi
 		return ec.fieldContext_SessionBootstrap_csrfToken(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type SessionBootstrap", field.Name)
+}
+
+func (ec *executionContext) childFields_ShareActivity(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_ShareActivity_id(ctx, field)
+	case "shareId":
+		return ec.fieldContext_ShareActivity_shareId(ctx, field)
+	case "recipientId":
+		return ec.fieldContext_ShareActivity_recipientId(ctx, field)
+	case "kind":
+		return ec.fieldContext_ShareActivity_kind(ctx, field)
+	case "occurredAt":
+		return ec.fieldContext_ShareActivity_occurredAt(ctx, field)
+	case "status":
+		return ec.fieldContext_ShareActivity_status(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ShareActivity", field.Name)
 }
 
 func (ec *executionContext) childFields_SharedFile(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -3407,6 +3480,38 @@ func (ec *executionContext) fieldContext_FileShare_expiresAt(_ context.Context, 
 	return graphql.NewScalarFieldContext("FileShare", field, false, false, errors.New("field of type Time does not have child fields"))
 }
 
+func (ec *executionContext) _FileSharing_activity(ctx context.Context, field graphql.CollectedField, obj *model.FileSharing) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FileSharing_activity(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Activity, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.ShareActivity) graphql.Marshaler {
+			return ec.marshalNShareActivity2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐShareActivityᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FileSharing_activity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FileSharing",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_ShareActivity(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _FileSharing_shares(ctx context.Context, field graphql.CollectedField, obj *model.FileSharing) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -5000,6 +5105,144 @@ func (ec *executionContext) _SessionBootstrap_csrfToken(ctx context.Context, fie
 }
 func (ec *executionContext) fieldContext_SessionBootstrap_csrfToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("SessionBootstrap", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _ShareActivity_id(ctx context.Context, field graphql.CollectedField, obj *model.ShareActivity) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareActivity_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ShareActivity_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ShareActivity", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _ShareActivity_shareId(ctx context.Context, field graphql.CollectedField, obj *model.ShareActivity) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareActivity_shareId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ShareID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ShareActivity_shareId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ShareActivity", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _ShareActivity_recipientId(ctx context.Context, field graphql.CollectedField, obj *model.ShareActivity) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareActivity_recipientId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RecipientID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOID2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_ShareActivity_recipientId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ShareActivity", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _ShareActivity_kind(ctx context.Context, field graphql.CollectedField, obj *model.ShareActivity) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareActivity_kind(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Kind, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ShareActivity_kind(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ShareActivity", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _ShareActivity_occurredAt(ctx context.Context, field graphql.CollectedField, obj *model.ShareActivity) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareActivity_occurredAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.OccurredAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ShareActivity_occurredAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ShareActivity", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
+func (ec *executionContext) _ShareActivity_status(ctx context.Context, field graphql.CollectedField, obj *model.ShareActivity) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ShareActivity_status(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ShareActivity_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ShareActivity", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _SharedFile_name(ctx context.Context, field graphql.CollectedField, obj *model.SharedFile) (ret graphql.Marshaler) {
@@ -7309,6 +7552,11 @@ func (ec *executionContext) _FileSharing(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("FileSharing")
+		case "activity":
+			out.Values[i] = ec._FileSharing_activity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "shares":
 			out.Values[i] = ec._FileSharing_shares(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7998,6 +8246,69 @@ func (ec *executionContext) _SessionBootstrap(ctx context.Context, sel ast.Selec
 			out.Values[i] = graphql.MarshalString("SessionBootstrap")
 		case "csrfToken":
 			out.Values[i] = ec._SessionBootstrap_csrfToken(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var shareActivityImplementors = []string{"ShareActivity"}
+
+func (ec *executionContext) _ShareActivity(ctx context.Context, sel ast.SelectionSet, obj *model.ShareActivity) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, shareActivityImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ShareActivity")
+		case "id":
+			out.Values[i] = ec._ShareActivity_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "shareId":
+			out.Values[i] = ec._ShareActivity_shareId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "recipientId":
+			out.Values[i] = ec._ShareActivity_recipientId(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "kind":
+			out.Values[i] = ec._ShareActivity_kind(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "occurredAt":
+			out.Values[i] = ec._ShareActivity_occurredAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._ShareActivity_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -8903,6 +9214,32 @@ func (ec *executionContext) marshalNSessionBootstrap2ᚖfullᚑstackᚑfileᚑva
 		return graphql.Null
 	}
 	return ec._SessionBootstrap(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNShareActivity2ᚕᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐShareActivityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ShareActivity) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNShareActivity2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐShareActivity(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNShareActivity2ᚖfullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐShareActivity(ctx context.Context, sel ast.SelectionSet, v *model.ShareActivity) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ShareActivity(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNSharePermission2fullᚑstackᚑfileᚑvaultᚗlocalᚋapiᚋinternalᚋgraphᚋmodelᚐSharePermission(ctx context.Context, v any) (model.SharePermission, error) {

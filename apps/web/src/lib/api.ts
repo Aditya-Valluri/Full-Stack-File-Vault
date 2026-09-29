@@ -100,6 +100,11 @@ export function errorCode(error: unknown): string | undefined {
 }
 export function explainError(error: unknown): string {
  const code = errorCode(error);
+ if (code === 'LOGIN_TEMPORARILY_BLOCKED' && CombinedGraphQLErrors.is(error)) {
+  const seconds = Number(error.errors[0]?.extensions?.retryAfterSeconds);
+  const minutes = Number.isFinite(seconds) ? Math.max(1, Math.min(60, Math.ceil(seconds / 60))) : 5;
+  return `Too many unsuccessful sign-in attempts. Try again in ${minutes} minute${minutes === 1 ? '' : 's'} or reset your password.`;
+ }
  const messages: Record<string, string> = {
   UNAUTHENTICATED: 'Please sign in again to continue.',
   FORBIDDEN: 'You do not have permission to do that.',

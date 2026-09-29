@@ -106,6 +106,10 @@ func (s *Store) List(ctx context.Context, fileID string) (Overview, error) {
 	if rows.Err() != nil {
 		return Overview{}, files.ErrUnavailable
 	}
+	result.Activity, err = readActivity(ctx, tx, fileID)
+	if err != nil {
+		return Overview{}, files.ErrUnavailable
+	}
 	if err = tx.Commit(ctx); err != nil {
 		return Overview{}, files.ErrUnavailable
 	}

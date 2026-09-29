@@ -15,7 +15,7 @@ mutation UploadMany($files: [Upload!]!, $idempotencyKey: ID!) { uploadFiles(file
 mutation SetFileTags($id: ID!, $tags: [String!]!) { setFileTags(fileId: $id, tags: $tags) }
 mutation DeleteFile($id: ID!) { deleteFile(id: $id) }
 mutation FileAccess($id: ID!, $mode: FileAccessMode!) { createFileAccess(fileId: $id, mode: $mode) { url expiresAt } }
-query FileShares($id: ID!) { fileShares(fileId: $id) { downloadStarts shares { id recipientId permission createdAt expiresAt } } }
+query FileShares($id: ID!) { fileShares(fileId: $id) { activity { id shareId recipientId kind occurredAt status } downloadStarts shares { id recipientId permission createdAt expiresAt } } }
 mutation CreateShare($input: CreateShareInput!) { createShare(input: $input) { url share { id permission recipientId expiresAt } } }
 mutation RevokeShare($id: ID!) { revokeShare(id: $id) }
 query SharedFile($token: String!) { sharedFile(token: $token) { name sizeBytes detectedMIME previewAllowed expiresAt } }

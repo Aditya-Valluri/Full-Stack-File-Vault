@@ -38,6 +38,7 @@ type Created struct {
 	URL   string
 }
 type Overview struct {
+	Activity       []Activity
 	Shares         []Share
 	DownloadStarts int64
 }

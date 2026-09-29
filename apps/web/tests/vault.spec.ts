@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './fixtures';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 
@@ -50,6 +50,10 @@ test('files, dedup quota, sharing, revocation, and audited administration', asyn
  await page.getByLabel('Search filenames').fill('');
  await page.getByRole('button', { name: 'Search', exact: true }).click();
  await expect(page.getByRole('button', { name: 'Share notes-copy.txt', exact: true })).toBeVisible();
+ await page.getByRole('button', { name: 'Details for project-notes.txt', exact: true }).click();
+ await expect(page.getByRole('dialog')).toContainText('Detected MIME type');
+ await expect(page.getByRole('dialog')).toContainText('owner-private-tag, work');
+ await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
  await page.getByRole('button', { name: 'Share project-notes.txt', exact: true }).click();
  await page.getByRole('button', { name: 'Create sharing link', exact: true }).click();
  const link = await page.getByLabel('Your new link', { exact: true }).inputValue();
@@ -64,6 +68,9 @@ test('files, dedup quota, sharing, revocation, and audited administration', asyn
   const sharedDownload = guest.waitForEvent('download');
   await guest.getByRole('button', { name: 'Download file', exact: true }).click();
   expect(await readFile((await (await sharedDownload).path())!)).toEqual(bytes);
+  await page.getByRole('button', { name: 'Refresh activity', exact:true }).click();
+  await expect(page.getByText('Anonymous visitor — Opened',{exact:true}).first()).toBeVisible();
+  await expect(page.getByText('Anonymous visitor — Download started',{exact:true})).toBeVisible();
   await page.getByRole('button', { name: /^Revoke link ending/ }).first().click();
   await expect(page.getByText('No active sharing links.')).toBeVisible();
   await guest.goto(link);

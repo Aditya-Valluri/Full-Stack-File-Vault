@@ -107,6 +107,89 @@ func testSharing(t *testing.T, ctx context.Context, admin *pgx.Conn, dsn, direct
 		}
 		exec("UPDATE vault.shared_request_windows SET accepted_at='{}' WHERE session_hash=$1", binding)
 	}
+
+	t.Run("bounded private activity", func(t *testing.T) {
+		ownCtx, _, _, _ := f.user(1000)
+		items, e := publisher.Publish(ownCtx, []*upload.Staged{f.staged("activity-data")})
+		if e != nil {
+			t.Fatal(e)
+		}
+		id := items[0].ID
+		public, e := service.Create(ownCtx, id, "DOWNLOAD", 3600, nil)
+		if e != nil {
+			t.Fatal(e)
+		}
+		restricted, e := service.Create(ownCtx, id, "DOWNLOAD", 3600, &recipientID)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if public.URL == restricted.URL {
+			t.Fatal("share tokens reused")
+		}
+		resetAnon(anonCtx)
+		if _, e = service.Inspect(anonCtx, tokenOf(public)); e != nil {
+			t.Fatal(e)
+		}
+		if _, e = service.Inspect(recipientCtx, tokenOf(restricted)); e != nil {
+			t.Fatal(e)
+		}
+		overview, e := service.List(ownCtx, id)
+		if e != nil || len(overview.Activity) != 2 {
+			t.Fatal("missing activity")
+		}
+		if overview.Activity[0].RecipientID == nil || *overview.Activity[0].RecipientID != recipientID || overview.Activity[1].RecipientID != nil {
+			t.Fatal("incorrect attribution")
+		}
+		if _, e = service.List(strangerCtx, id); !errors.Is(e, files.ErrNotFound) {
+			t.Fatal("private activity leaked")
+		}
+		grant, e := service.CreateAccess(recipientCtx, tokenOf(restricted), "DOWNLOAD")
+		if e != nil {
+			t.Fatal(e)
+		}
+		// A real download GET is counted once even if its transport grant is reused.
+		transport := files.NewContentTransport("/shared-content/", service.OpenAccess, f.local, f.logger)
+		for i := 0; i < 2; i++ {
+			w := httptest.NewRecorder()
+			req := httptest.NewRequest("GET", grant.URL, nil).WithContext(recipientCtx)
+			transport.ServeHTTP(w, req)
+			if w.Code != 200 {
+				t.Fatal("download rejected")
+			}
+		}
+		overview, e = service.List(ownCtx, id)
+		if e != nil || len(overview.Activity) != 3 || overview.Activity[0].Kind != "DOWNLOAD_STARTED" {
+			t.Fatal("download event missing or duplicated")
+		}
+		if e = service.Revoke(ownCtx, restricted.Share.ID); e != nil {
+			t.Fatal(e)
+		}
+		if _, e = service.Inspect(recipientCtx, tokenOf(restricted)); !errors.Is(e, files.ErrNotFound) {
+			t.Fatal("revoked share admitted")
+		}
+		overview, e = service.List(ownCtx, id)
+		if e != nil || len(overview.Activity) != 3 || overview.Activity[0].Status != "REVOKED" {
+			t.Fatal("revoked activity lost or changed")
+		}
+		for i := 0; i < 105; i++ {
+			if _, e = service.Inspect(recipientCtx, tokenOf(public)); e != nil {
+				t.Fatal(e)
+			}
+		}
+		overview, e = service.List(ownCtx, id)
+		if e != nil || len(overview.Activity) != 100 {
+			t.Fatal("unbounded history")
+		}
+		for _, event := range overview.Activity {
+			if event.RecipientID != nil {
+				t.Fatal("public visitor identity exposed")
+			}
+		}
+		exec("UPDATE vault.file_shares SET created_at=clock_timestamp()-interval '2 hours',expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", public.Share.ID)
+		if _, e = service.Inspect(recipientCtx, tokenOf(public)); !errors.Is(e, files.ErrNotFound) {
+			t.Fatal("expired share admitted")
+		}
+	})
 	t.Run("owner control and recipient permissions", func(t *testing.T) {
 		if _, err := service.Create(strangerCtx, fileID, "DOWNLOAD", 3600, nil); !errors.Is(err, files.ErrNotFound) {
 			t.Fatal("foreign share creation", err)

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { readFile } from 'node:fs/promises';
 
 test('verified email registration rotates the session and supports subsequent email login', async ({ page }) => {

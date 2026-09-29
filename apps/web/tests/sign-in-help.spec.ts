@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { readFile } from 'node:fs/promises';
 test('sign-in help and administrator contact deliver only to the project inbox', async ({page})=>{
  await page.goto('/');

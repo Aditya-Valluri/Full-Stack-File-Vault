@@ -1,4 +1,4 @@
-import {test,expect} from '@playwright/test';
+import {test,expect} from './fixtures';
 import {readFile} from 'node:fs/promises';
 
 test('existing registration guides privately to a single reset and fresh login',async({page})=>{

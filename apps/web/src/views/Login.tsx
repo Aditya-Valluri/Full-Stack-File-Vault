@@ -26,13 +26,15 @@ export function LoginView({ onLogin, onBack, error: initialError = '' }:
  const [password, setPassword] = useState('');
  const [visible, setVisible] = useState(false);
  const [busy, setBusy] = useState(false);
+ const [blocked, setBlocked] = useState(false);
  const [error, setError] = useState(initialError);
  async function submit(event: FormEvent) {
-  event.preventDefault(); setBusy(true); setError('');
+  event.preventDefault(); setBusy(true); setError(''); setBlocked(false);
   try {
    const result = await mutate(LoginDocument, { input: { loginName, password } });
    setCSRF(result.login.csrfToken); setPassword(''); onLogin(result.login.user);
   } catch (failure) {
+   setBlocked(errorCode(failure) === 'LOGIN_TEMPORARILY_BLOCKED');
    setError(errorCode(failure) === 'UNAUTHENTICATED' ? 'The username, email or password was not accepted.' : explainError(failure));
   } finally { setBusy(false); }
  }
@@ -56,7 +58,7 @@ export function LoginView({ onLogin, onBack, error: initialError = '' }:
     <div className="form-stack">
      <Button variant="secondary" disabled={!registrationEnabled} onClick={() => { setPassword(''); setRegistering(true); }}>New user? Create account</Button>
      {!registrationEnabled && <p className="muted">Account creation and email recovery are currently unavailable.</p>}
-     {registrationEnabled && <Button variant="ghost" onClick={() => { setPassword(''); setResetEmail(''); setResetSent(false); setRecovering(true); }}>Forgot password?</Button>}
+     {registrationEnabled && <Button variant="ghost" onClick={() => { setPassword(''); setResetEmail(''); setResetSent(false); setRecovering(true); }}>{blocked ? 'Reset password' : 'Forgot password?'}</Button>}
      <Button variant="ghost" onClick={()=>{setPassword('');setHelping(true);}}>Help signing in</Button>
      <Button variant="ghost" onClick={event=>{rememberFocus(event);setPassword('');setContacting(true);}}>Contact administrator</Button>
     </div>

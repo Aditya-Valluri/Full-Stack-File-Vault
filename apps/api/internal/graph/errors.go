@@ -77,6 +77,10 @@ func domainErrorPresenter(logger *slog.Logger) graphql.ErrorPresenterFunc {
 		if errors.Is(err, auth.ErrUnauthenticated) {
 			return &gqlerror.Error{Message: "authentication required", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "UNAUTHENTICATED"}}
 		}
+		var backoff *auth.PasswordBackoffError
+		if errors.As(err, &backoff) {
+			return &gqlerror.Error{Message: "password attempts temporarily restricted", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "LOGIN_TEMPORARILY_BLOCKED", "retryAfterSeconds": backoff.RetryAfterSeconds}}
+		}
 		if errors.Is(err, auth.ErrLoginLimited) {
 			return &gqlerror.Error{Message: "login temporarily limited", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "RATE_LIMITED"}}
 		}

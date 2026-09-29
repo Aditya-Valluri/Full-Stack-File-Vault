@@ -181,7 +181,18 @@ type CreatedShare {
  """Returned once; token is in the fragment, never a query string."""
  url: String!
 }
+"""Owner-only bounded history. No raw tokens, IP addresses or device metadata."""
+type ShareActivity {
+ id: ID!
+ shareId: ID!
+ recipientId: ID
+ kind: String!
+ occurredAt: Time!
+ status: String!
+}
 type FileSharing {
+ """Latest 100 events for this owned logical file, newest first; not lifetime analytics."""
+ activity: [ShareActivity!]!
  shares: [FileShare!]!
  """Admitted DOWNLOAD GET opens, once per grant; not completed transfers."""
  downloadStarts: String!
