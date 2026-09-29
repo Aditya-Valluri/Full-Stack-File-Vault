@@ -20,7 +20,8 @@ test('password change and email reset revoke access and require fresh credential
  await page.getByRole('button', { name: 'New user? Create account', exact: true }).click();
  await page.getByLabel('Email', { exact: true }).fill(email);
  await page.getByRole('button', { name: 'Send verification code', exact: true }).click();
- await expect(page.getByRole('heading', { name: 'Verify your email' })).toBeVisible();
+ await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+ await page.getByRole('button',{name:'I received a registration code',exact:true}).click();
  await expect.poll(() => capturedCode('Verify your Full Stack File Vault email')).toHaveLength(7);
  await page.getByLabel('Verification code (7 digits)', { exact: true }).fill(await capturedCode('Verify your Full Stack File Vault email'));
  await page.getByLabel('New password', { exact: true }).fill(initialPassword);

@@ -17,6 +17,7 @@ type Purpose string
 
 const (
 	VerifyEmail          Purpose = "verify-email"
+	ExistingAccount      Purpose = "existing-account"
 	ResetPassword        Purpose = "reset-password"
 	ContactAdministrator Purpose = "contact-administrator"
 )
@@ -67,6 +68,12 @@ func validAddress(address string) bool {
 func encodeMessage(from string, m Message) ([]byte, error) {
 	if !validAddress(from) || !validAddress(m.To) {
 		return nil, ErrMessage
+	}
+	if m.Purpose == ExistingAccount {
+		if m.Code != "" {
+			return nil, ErrMessage
+		}
+		return []byte("From: Full Stack File Vault <" + from + ">\r\nTo: " + m.To + "\r\nSubject: Your Full Stack File Vault account\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Transfer-Encoding: 7bit\r\n\r\nAn account already uses this email. No new registration code was created.\r\nReturn to Full Stack File Vault and select Sign in or Reset password.\r\nReset password sends a separate one-time code; it does not change your email provider password.\r\nIf you did not request this message, ignore it. No password has been changed.\r\n"), nil
 	}
 	if m.Purpose == ContactAdministrator {
 		if m.To != AdministratorInbox || !ValidContact(m.Subject, m.Body) {

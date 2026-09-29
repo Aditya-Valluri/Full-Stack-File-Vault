@@ -8,7 +8,8 @@ test('verified email registration rotates the session and supports subsequent em
  await page.getByRole('button', { name: 'New user? Create account', exact: true }).click();
  await page.getByLabel('Email', { exact: true }).fill(email);
  await page.getByRole('button', { name: 'Send verification code', exact: true }).click();
- await expect(page.getByRole('heading', { name: 'Verify your email' })).toBeVisible();
+ await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();
+ await page.getByRole('button',{name:'I received a registration code',exact:true}).click();
  let code = '';
  await expect.poll(async () => {
   try {

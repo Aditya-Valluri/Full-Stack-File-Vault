@@ -3,9 +3,9 @@ import { ChangePasswordDocument, CompletePasswordResetDocument, RequestPasswordR
 import { bootstrap, explainError, mutate, setCSRF } from '../lib/api';
 import { Button, Notice } from '../components/ui';
 
-export function PasswordRecovery({ mode, onBack }: { mode: 'reset' | 'change'; onBack: () => void }) {
- const [email, setEmail] = useState('');
- const [sent, setSent] = useState(false);
+export function PasswordRecovery({ mode, onBack, initialEmail = '', initialCodeSent = false }: { mode: 'reset' | 'change'; onBack: () => void; initialEmail?: string; initialCodeSent?: boolean }) {
+ const [email, setEmail] = useState(initialEmail);
+ const [sent, setSent] = useState(initialCodeSent);
  const [done, setDone] = useState(false);
  const [code, setCode] = useState('');
  const [current, setCurrent] = useState('');

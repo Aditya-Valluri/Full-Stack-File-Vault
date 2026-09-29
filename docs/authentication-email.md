@@ -331,3 +331,27 @@ automatic retries, attachments, credentials, or message contents in application 
 There is no durable ticket queue: success means the mail provider accepted the
 request, not confirmed inbox delivery. When delivery is disabled the dialog explains
 that it is unavailable. Tests use local captured mail, never real Gmail delivery.
+
+
+## Existing email registration and recovery
+
+Registration requests use the existing normalized-email lookup. A verified email
+already attached to a user receives private sign-in/reset instructions through the
+MailSender, without creating a new registration challenge or sending a registration
+code. The same browser response is returned for new and existing addresses. Direct
+public account-existence messages are deliberately avoided because they permit
+email enumeration. Delivery timing is not guaranteed to be identical.
+
+After requesting email, the browser shows Check your email, Sign in, and Reset
+password. Only users selecting I received a registration code see the new-account
+password form. Selecting Reset password explicitly requests one reset code and
+opens the existing reset form with the email preserved; rendering the form never
+automatically sends or retries email. Ineligible reset requests retain their generic
+behavior. Registration codes cannot be used as reset codes.
+
+The database unique email constraint remains authoritative if another registration
+completes after the initial lookup. A raced or invalid completion returns the same
+REGISTRATION_REJECTED error, with instructions to request a new code or use sign-in
+or reset. Reset retains expiring browser-bound hashes, attempt limits, session
+revocation and fresh login. No account linking, migrations, deployment settings,
+Gmail scope changes, or legacy credential changes are introduced.

@@ -113,6 +113,7 @@ export function explainError(error: unknown): string {
   PASSWORD_REJECTED: 'Your current password was not accepted. Your password has not changed.',
   RESET_REJECTED: 'The reset code is invalid, expired, or no longer usable. Return to sign in to start a new reset request.',
   WEAK_PASSWORD: 'Use at least 15 characters. Avoid common passwords, repeated patterns, and obvious sequences. Try a unique passphrase of unrelated words.',
+  REGISTRATION_REJECTED: 'Registration could not be completed. The code may be incorrect, expired, or no longer usable. Request a new code, or sign in or reset your password if you already have an account.',
   INVALID_INPUT: 'Check the values you entered and try again.',
   UNSUPPORTED_MEDIA_TYPE: 'This file cannot be previewed. You can download it instead.',
  };

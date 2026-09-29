@@ -94,6 +94,7 @@ func testEmailRegistration(t *testing.T, ctx context.Context, operator *pgx.Conn
 	if !strings.Contains(response.Body.String(), "\"requestEmailRegistration\":true") || len(capture.messages) != 1 {
 		t.Fatalf("registration request: %s", response.Body)
 	}
+	newAccountResponse := response.Body.String()
 	code := capture.messages[0].Code
 	if len(code) != 7 || strings.Trim(code, "0123456789") != "" {
 		t.Fatal("not seven digits")
@@ -173,9 +174,19 @@ func testEmailRegistration(t *testing.T, ctx context.Context, operator *pgx.Conn
 	if !strings.Contains(response.Body.String(), "\"requestEmailRegistration\":true") {
 		t.Fatal("duplicate disclosed")
 	}
-	duplicateCode := capture.messages[len(capture.messages)-1].Code
+	if response.Body.String() != newAccountResponse {
+		t.Fatal("registration response exposes account existence")
+	}
+	existingMail := capture.messages[len(capture.messages)-1]
+	if existingMail.Purpose != mailer.ExistingAccount || existingMail.Code != "" {
+		t.Fatal("existing account received registration code")
+	}
+	if err = operator.QueryRow(ctx, "SELECT count(*) FROM vault.email_challenges WHERE email_normalized='new.owner@example.com'").Scan(&count); err != nil || count != 0 {
+		t.Fatal("existing account has registration challenge")
+	}
+	duplicateCode := "0000000"
 	response = call(completeQuery, map[string]any{"code": duplicateCode, "password": password}, anonymous, state.CSRFToken)
-	if !strings.Contains(response.Body.String(), "INVALID_INPUT") {
+	if !strings.Contains(response.Body.String(), "REGISTRATION_REJECTED") {
 		t.Fatal("duplicate account merged")
 	}
 	if err = operator.QueryRow(ctx, "SELECT count(*) FROM vault.users WHERE email_normalized='new.owner@example.com'").Scan(&count); err != nil || count != 1 {

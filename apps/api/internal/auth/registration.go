@@ -28,8 +28,8 @@ func (s *SessionStore) checkAnonymous(ctx context.Context, token, csrf string) e
 }
 
 // RequestEmailRegistration never discloses whether an email already has an
-// account. Existing addresses receive the same message, but cannot create/link
-// another account. Shared budgets bound delivery, hashing and challenge growth.
+// account. Existing addresses receive private recovery instructions, never a
+// registration code. The public response remains the same. Shared budgets bound delivery, hashing and challenge growth.
 func (s *SessionStore) RequestEmailRegistration(ctx context.Context, token, csrf, peer, email string) error {
 	if s.mail == nil {
 		return ErrEmailDisabled
@@ -63,13 +63,25 @@ func (s *SessionStore) RequestEmailRegistration(ctx context.Context, token, csrf
 	if _, err = tx.Exec(ctx, "DELETE FROM vault.email_challenges WHERE binding_hash=$1", binding); err != nil {
 		return ErrSessionStore
 	}
-	if _, err = tx.Exec(ctx, "INSERT INTO vault.email_challenges(token_hash,email_address,email_normalized,binding_hash) VALUES($1,$2,$3,$4)", digest, strings.TrimSpace(email), normalized, binding); err != nil {
+	var existing bool
+	if err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM vault.users WHERE email_normalized=$1 AND email_verified_at IS NOT NULL)", normalized).Scan(&existing); err != nil {
 		return ErrSessionStore
+	}
+	if !existing {
+		if _, err = tx.Exec(ctx, "INSERT INTO vault.email_challenges(token_hash,email_address,email_normalized,binding_hash) VALUES($1,$2,$3,$4)", digest, strings.TrimSpace(email), normalized, binding); err != nil {
+			return ErrSessionStore
+		}
+
 	}
 	if err = tx.Commit(ctx); err != nil {
 		return ErrSessionStore
 	}
-	if err = s.mail.Send(ctx, mailer.Message{To: strings.TrimSpace(email), Purpose: mailer.VerifyEmail, Code: code}); err != nil {
+	message := mailer.Message{To: strings.TrimSpace(email), Purpose: mailer.VerifyEmail, Code: code}
+	if existing {
+		message.Purpose = mailer.ExistingAccount
+		message.Code = ""
+	}
+	if err = s.mail.Send(ctx, message); err != nil {
 		cleanup, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 		_, _ = s.pool.Exec(cleanup, "DELETE FROM vault.email_challenges WHERE token_hash=$1", digest)

@@ -12,6 +12,8 @@ export function LoginView({ onLogin, onBack, error: initialError = '' }:
  { onLogin: (user: IdentityQuery['me']) => void; onBack?: () => void; error?: string }) {
  const [helping,setHelping]=useState(false);
  const [contacting,setContacting]=useState(false);
+ const [resetEmail,setResetEmail]=useState('');
+ const [resetSent,setResetSent]=useState(false);
  const [recovering, setRecovering] = useState(false);
  const [registering, setRegistering] = useState(false);
  const [registrationEnabled, setRegistrationEnabled] = useState(false);
@@ -43,7 +45,7 @@ export function LoginView({ onLogin, onBack, error: initialError = '' }:
   <section className="login-panel">
    <div className="login-form-wrap">
     {onBack && <Button variant="ghost" onClick={onBack}><ArrowLeft size={16} />Back to shared file</Button>}
-    {helping ? <SignInHelp onBack={()=>setHelping(false)} /> : recovering ? <PasswordRecovery mode="reset" onBack={() => setRecovering(false)} /> : registering ? <Registration onLogin={onLogin} onBack={() => setRegistering(false)} /> : <>
+    {helping ? <SignInHelp onBack={()=>setHelping(false)} /> : recovering ? <PasswordRecovery mode="reset" initialEmail={resetEmail} initialCodeSent={resetSent} onBack={() => setRecovering(false)} /> : registering ? <Registration onLogin={onLogin} onBack={() => setRegistering(false)} onReset={email=>{setResetEmail(email);setResetSent(true);setRegistering(false);setRecovering(true);}} /> : <>
     <span className="eyebrow">WELCOME BACK</span><h2>Sign in to your vault</h2><p className="muted">Use your Full Stack File Vault account to continue.</p>
     <form onSubmit={event => void submit(event)} className="form-stack">
      <label>Username or email<input autoComplete="username" required maxLength={254} value={loginName} onChange={event => setLoginName(event.target.value)} placeholder="Your username or verified email" /></label>
@@ -54,7 +56,7 @@ export function LoginView({ onLogin, onBack, error: initialError = '' }:
     <div className="form-stack">
      <Button variant="secondary" disabled={!registrationEnabled} onClick={() => { setPassword(''); setRegistering(true); }}>New user? Create account</Button>
      {!registrationEnabled && <p className="muted">Account creation and email recovery are currently unavailable.</p>}
-     {registrationEnabled && <Button variant="ghost" onClick={() => { setPassword(''); setRecovering(true); }}>Forgot password?</Button>}
+     {registrationEnabled && <Button variant="ghost" onClick={() => { setPassword(''); setResetEmail(''); setResetSent(false); setRecovering(true); }}>Forgot password?</Button>}
      <Button variant="ghost" onClick={()=>{setPassword('');setHelping(true);}}>Help signing in</Button>
      <Button variant="ghost" onClick={event=>{rememberFocus(event);setPassword('');setContacting(true);}}>Contact administrator</Button>
     </div>

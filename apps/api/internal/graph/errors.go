@@ -89,7 +89,10 @@ func domainErrorPresenter(logger *slog.Logger) graphql.ErrorPresenterFunc {
 		if errors.Is(err, auth.ErrWeakPassword) {
 			return &gqlerror.Error{Message: "choose a longer, less predictable password", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "WEAK_PASSWORD"}}
 		}
-		if errors.Is(err, auth.ErrEmailInput) || errors.Is(err, auth.ErrEmailVerification) {
+		if errors.Is(err, auth.ErrEmailVerification) {
+			return &gqlerror.Error{Message: "registration could not be completed; request a new code or use sign in or password reset", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "REGISTRATION_REJECTED"}}
+		}
+		if errors.Is(err, auth.ErrEmailInput) {
 			return &gqlerror.Error{Message: "invalid input or expired verification code", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "INVALID_INPUT"}}
 		}
 		if errors.Is(err, auth.ErrContactInvalid) {
