@@ -65,3 +65,21 @@ and notification destination. These checks are not marked complete from local te
 The redundant completion worktree was removed after retaining useful corrections.
 A hash-verified local source snapshot remains under ignored
 tmp/worktree-archive/completion-20261001-010820; it is not a release artifact.
+
+## Agreed handoff priorities
+
+1. **Live acceptance:** verify the deployed SHA, then login, registration, reset,
+   upload and sharing using controlled accounts. Public readiness alone is not a
+   pass. Use the release checklist; record outcomes without credentials or codes.
+2. **Optional MFA:** enable enrollment only after configuring and separately
+   backing up the matching MFA_ENCRYPTION_KEY. Do not regenerate an existing key.
+   The current live MFA configuration has not been independently verified.
+3. **Setup documentation:** follow the consolidated README quick-start for both
+   development terminals, account setup and optional settings.
+4. **Later maintenance:** frontend component extraction and bundle-size optimization
+   are deferred. The bundle warning is not a failed build.
+
+Google sign-in, real-time updates, admin graphs, one-time links, Helm, external
+object storage, off-host recovery, alert delivery, sustained load and cluster
+rollout are outside the user's current handoff scope. Preserve these limitations;
+do not call them implemented or production-validated.

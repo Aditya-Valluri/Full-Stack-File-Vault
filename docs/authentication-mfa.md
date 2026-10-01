@@ -71,3 +71,23 @@ tests exercise QR setup, recovery, fresh login and disable.
 References:
 - [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238)
 - [OWASP MFA guidance](https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html)
+
+## Enabling enrollment on the existing Render service
+
+Use the existing full-stack-file-vault-web service's Environment page.
+Configure MFA_ENCRYPTION_KEY as base64 of 32 cryptographically random bytes,
+or MFA_ENCRYPTION_KEY_FILE pointing to a private server-readable secret file,
+never both. Use a cryptographic generator; an arbitrary password is not a key.
+If users were enrolled previously, restore the original key instead of creating
+a new one. Keep a private backup separate from the database.
+
+Deploy an approved revision that forwards the MFA setting to the API. Do not
+create resources or sync the Blueprint for this configuration change. After
+deployment, sign in, open Account security, enter the current password, scan
+the local QR with an authenticator app, and confirm its six-digit code.
+Save the one-use recovery codes privately; enabling MFA revokes existing sessions.
+Then verify a fresh sign-in using the password and a new authenticator code.
+
+An unavailable-enrollment message requires checking configuration and the deployed
+revision; it is not evidence that the feature is absent. Do not expose the key,
+QR seed or recovery codes in screenshots, source, logs or support messages.

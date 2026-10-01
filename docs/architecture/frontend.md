@@ -4,6 +4,8 @@ The React/TypeScript application lives in `apps/web`. Apollo Client sends all
 application operations to `/graphql`, including GraphQL multipart uploads.
 The browser retrieves authorized bytes through the short-lived content URLs.
 
+For the consolidated setup and troubleshooting path, see [README quick-start](../../README.md#run-locally-windows--powershell).
+
 ## Development
 
 Use Node 24 LTS, Go, and Docker Desktop. In a PowerShell terminal at the repository root:
@@ -35,8 +37,10 @@ delivery; there is no default password. See [email authentication](../authentica
   security boundary.
 - Requests are serialized and paced within a tab. PostgreSQL enforces the
   two-per-second limit across tabs and API replicas.
-- Uploads currently use the default ten-file, 20 MB request/file limits and
-  show the user's remaining logical quota. Server limits remain authoritative.
+- Development defaults allow ten files with a 20 MB file limit and 21 MB multipart
+  request limit. The Render build uses a 10 MB file/batch UI limit and an 11 MB
+  backend request limit for multipart overhead. Logical quota defaults to 10 MB
+  in both environments; server limits and remaining quota remain authoritative.
 - Network-ambiguous uploads offer an explicit same-key retry; see recovery.md.
 - Previews follow the [server-approved image, TXT and PDF policy](previews.md).
 - Upload progress reports transmitted request bytes; publication completion is separate.

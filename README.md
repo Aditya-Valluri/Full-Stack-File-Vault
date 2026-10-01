@@ -59,20 +59,69 @@ workflows remain unverified. Free resource plans alone do not prevent account-le
 overage charges if payment is enabled.
 Any paid resources from earlier attempts remain until explicitly removed.
 
-## Run locally
+## Run locally (Windows / PowerShell)
 
-Install Go 1.27+ and Docker Desktop with its Linux engine running. Configure the
-root `.env` with a PostgreSQL password using `.env.example` as a reference.
-From your repository directory in PowerShell:
+Prerequisites: Go 1.27+, Node.js 24, Git, and Docker Desktop with its Linux
+engine running. Open PowerShell at the repository root. Confirm `go version`,
+`node --version`, `npm.cmd --version` and `docker version` work first;
+restart the terminal after installing tools if they are not on PATH.
 
-```powershell
-./scripts/start-api.ps1
-```
+1. For a **new checkout only**, copy the configuration template:
 
-The script starts PostgreSQL, applies migrations, provisions an ignored runtime
-credential, and starts the API at `http://127.0.0.1:8080`. Development upload storage
-defaults to ignored `apps/api/data/staging` and `apps/api/data/blobs`.
-Export API settings explicitly; the Go process does not read `.env`.
+   ```powershell
+   if (-not (Test-Path -LiteralPath '.env')) {
+       Copy-Item -LiteralPath '.env.example' -Destination '.env'
+   }
+   ```
+
+   Edit the ignored .env locally and set a strong POSTGRES_PASSWORD.
+   Keep an existing installation's database credentials and Compose project name.
+   Do not commit this file. Compose reads it; the Go process does not.
+
+2. Start the API in terminal 1:
+
+   ```powershell
+   $env:APP_ENV = 'development'
+   $env:PUBLIC_ORIGIN = 'http://127.0.0.1:5173'
+   $env:HTTP_ADDR = '127.0.0.1:8080'
+   .\scripts\start-api.ps1
+   ```
+
+   This starts PostgreSQL, applies migrations, creates the ignored runtime
+   credential and runs the backend. Keep this terminal running.
+   Configure optional mail/MFA settings in this same terminal before starting
+   the API; setting them in another terminal does not update the running process.
+
+3. Start the frontend in terminal 2, from the same repository root:
+
+   ```powershell
+   Set-Location apps/web
+   npm.cmd ci
+   npm.cmd run dev
+   ```
+
+   Keep this terminal running. Open **http://127.0.0.1:5173**.
+   Port 8080 is the API, not the frontend. Localhost is separate from the hosted
+   Render app; local changes and accounts do not automatically appear there.
+
+4. Use an existing local account, or configure
+   [verified email registration](docs/authentication-email.md) before selecting
+   Create account. There is no default password. For operator-created local
+   accounts, use [credential provisioning](docs/architecture/credentials.md)
+   and scripts/provision-user.ps1, which prompts privately for the new password.
+   scripts/provision-application.ps1 targets the separate HTTPS Compose rehearsal,
+   not this Vite development database.
+
+5. Optional [MFA setup](docs/authentication-mfa.md) requires a server key.
+   An unconfigured enrollment message is expected when no key is installed.
+   Registration/reset email codes are seven digits; authenticator codes are six.
+
+If port 5173 refuses connections, check terminal 2. If the page loads but API calls
+fail, check terminal 1 and confirm PUBLIC_ORIGIN matches the browser address exactly.
+Never include passwords, tokens, verification codes or connection URLs in shared logs.
+
+Development storage defaults to ignored apps/api/data/staging and apps/api/data/blobs.
+See [frontend details](docs/architecture/frontend.md) for proxy and test configuration.
 
 Operational probes are `/healthz` and `/readyz`. Application operations use
 `POST /graphql`. See the [upload guide](docs/architecture/upload-publication.md)
