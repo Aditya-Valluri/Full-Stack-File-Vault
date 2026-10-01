@@ -303,6 +303,9 @@ func (t *MultipartTransport) uploadPaths(params *graphql.RawParams) (map[string]
 		if tags.Value.Kind != ast.Variable || tags.Value.Raw == arg.Value.Raw {
 			return nil, invalid
 		}
+		if key := field.Arguments.ForName("idempotencyKey"); key != nil && tags.Value.Raw == key.Value.Raw {
+			return nil, invalid
+		}
 		value, exists := params.Variables[tags.Value.Raw]
 		if !exists {
 			return nil, invalid

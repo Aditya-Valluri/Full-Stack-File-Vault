@@ -374,6 +374,7 @@ func TestMultipartRetryKeyPaths(t *testing.T) {
 		{"key first", "mutation($f:Upload!,$k:ID!){uploadFile(idempotencyKey:$k,file:$f){id}}", map[string]any{"f": nil, "k": "12345678-1234-4234-9234-123456789abc"}, true},
 		{"batch", "mutation($f:[Upload!]!,$k:ID!){uploadFiles(files:$f,idempotencyKey:$k){id}}", map[string]any{"f": []any{nil, nil}, "k": "12345678-1234-4234-9234-123456789abc"}, true},
 		{"bad key", "mutation($f:Upload!,$k:ID!){uploadFile(file:$f,idempotencyKey:$k){id}}", map[string]any{"f": nil, "k": "invalid"}, false},
+		{"tags reuse retry variable", "mutation($f:Upload!,$k:ID,$extra:String){uploadFile(file:$f,idempotencyKey:$k,tags:$k){id}}", map[string]any{"f": nil, "k": nil, "extra": nil}, false},
 		{"extra variable", "mutation($f:Upload!){uploadFile(file:$f){id}}", map[string]any{"f": nil, "extra": "x"}, false},
 	} {
 		t.Run(test.name, func(t *testing.T) {

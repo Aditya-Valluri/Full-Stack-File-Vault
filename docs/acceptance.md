@@ -19,19 +19,22 @@ the user's requests. PASS means tested locally, not production certification.
 | Configurable 10,000,000-byte logical quota | PASS | Atomic quota and duplicate logical charging tests |
 | Per-user unique/logical/saved storage and percentage | PASS | Browser duplicate uploads display 50% savings |
 | Admin files/uploader details, usage, quota, role protection | PASS | Admin integration and browser workflows |
-| Responsive frontend and accessibility | PASS | Four Chromium scenarios, axe checks and mobile overflow checks; not exhaustive accessibility certification |
+| Responsive frontend and accessibility | PASS | Eighteen Chromium scenarios, axe checks and mobile overflow checks; not exhaustive accessibility certification |
 | Authenticated short-lived byte transport and image preview | PASS | Owner/shared grants, browser image preview and download checks |
 | Upload response-loss retry | PASS | Explicit same-key retry returns original result with one quota charge |
 | Crash-abandoned temporary cleanup | PASS | Lease and helper-process crash tests, including Linux |
 | Docker API/web/database and HTTPS rehearsal | PASS | Production-mode cookie/CSP/upload/download/delete smoke |
-| CI configuration | PASS | Workflow lint and local checks; hosted run must be observed after push |
+| CI configuration | PASS | Hosted workflow passed for dab56bf, including race tests, browser checks, images and manifest rendering |
 | Kubernetes configuration | PARTIAL | Seven base resources render and pass strict schemas; external PostgreSQL chosen; no cluster rollout |
 | Monitoring | PARTIAL | Ten rules validate, both local targets scrape; production receiver and delivery test pending |
 | Encrypted backups and recovery | PARTIAL | Real-file paired backup, tamper rejection, isolated DB restore, quota and referenced-blob SHA-256 checks pass; off-host upload and restored-browser drill pending |
 | Full load, power-loss, volume-driver qualification | PARTIAL | Race/concurrency tests exist; sustained throughput/latency and infrastructure failure drills pending |
-| Public cloud URL | MISSING | Free Render Blueprint and demo PostgreSQL BlobStore prepared; final local rehearsal and actual public URL verification tracked below |
-| Folders, real-time updates, admin graphs, Helm | MISSING | Optional assignment features; not implied by current implementation |
-| Activity audit | PARTIAL | Administrative audit implemented; full upload/download/delete activity audit is separate |
+| Public cloud URL | PARTIAL | Earlier public page/readiness checks recorded below; latest authenticated live workflows remain unverified |
+| Private folders | PASS | Owner-scoped constraints, bounded hierarchy, integration and browser tests |
+| Real-time updates, admin graphs, Helm | MISSING | Optional features; not implemented |
+| Activity audit | PASS | Transactional administration and resource/security events; external archival and retention remain operational work |
+| Optional TOTP MFA | PASS | Enrollment, replay protection, one-use recovery, session revocation and reset preservation; deployment key required |
+| PDF/text previews and view-only shares | PASS | Bounded rendering and server-side download denial; preview bytes can still be copied |
 | Documentation and AI methodology | PASS | README, architecture/decision notes, GraphQL SDL, AI work record |
 
 ## Automated UAT already exercised

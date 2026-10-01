@@ -43,7 +43,7 @@ public demo deployment. Free Render cannot attach a persistent volume; the expli
 `BLOB_STORAGE_BACKEND=postgres-demo` adapter stores bounded file contents in
 PostgreSQL so app sleep/restarts do not break downloads. Each file is limited to
 10 MB, shared physical content to 100 MB/10,000 objects, and the free database
-expires 30 days after creation. The UI labels the environment as temporary.
+expires 30 days after creation. These hosting constraints do not provide permanent retention.
 
 The default production adapter remains the existing Linux filesystem store;
 durable external object storage is the production target. This demo adapter does
@@ -53,8 +53,10 @@ decision, size/concurrency guards, privilege boundaries and recovery protocol.
 
 Follow the [Render deployment guide](docs/render-demo.md) to deploy a fresh Blueprint,
 check billing/usage controls, retrieve private demo-account credentials and verify
-the assigned URL. No public deployment has been verified yet. Free resource plans
-alone do not prevent account-level overage charges if payment is enabled.
+the assigned URL. Earlier public-page/readiness checks are recorded in the
+[release checklist](docs/release-checklist.md); the latest authenticated deployment
+workflows remain unverified. Free resource plans alone do not prevent account-level
+overage charges if payment is enabled.
 Any paid resources from earlier attempts remain until explicitly removed.
 
 ## Run locally
@@ -82,6 +84,8 @@ Downloads, deletion, statistics, and worker setup are in the
 API and worker must share the same blob directory.
 Sharing policy and examples are in the [sharing guide](docs/architecture/sharing.md).
 Authentication setup is described in the [login guide](docs/architecture/graphql-login.md).
+Optional TOTP MFA and its encryption-key/recovery requirements are described in
+[the MFA guide](docs/authentication-mfa.md).
 
 ## Validation
 

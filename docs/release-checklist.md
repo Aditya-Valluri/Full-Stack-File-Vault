@@ -38,7 +38,8 @@ production availability or authorize creating, replacing, or deleting resources.
    rejection, successful registration, logout, and email/password login.
 8. Test signed-in password change. Confirm a new login is required and another
    active session is revoked. Avoid rapid repeated login attempts: the shared
-   identity budget is five attempts per 15 minutes.
+   fifth consecutive failure starts temporary restrictions; recovery requests
+   retain a separate five-per-15-minute identifier limit.
 9. With explicit authorization, send one reset email for a verified account.
    Complete the reset in the requesting browser and log in with the new password.
    Do not automatically retry a failed or uncertain send.

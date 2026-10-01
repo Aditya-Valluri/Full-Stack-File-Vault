@@ -27,8 +27,9 @@ Password reset retains generic responses, MailSender, seven-digit expiring
 browser-bound code hashes, single use, strong password validation, auth-version
 increment, session revocation, and fresh login. An auth-version change atomically
 clears password restrictions. Source/global abuse limits still apply to recovery.
-MFA is not implemented; any future MFA design must retain its verification
-requirements during recovery.
+Optional TOTP MFA uses one-use recovery codes. Password reset preserves enrollment
+and does not bypass factor verification. See [the MFA guide](authentication-mfa.md)
+for encryption-key and recovery requirements.
 
 Temporary lockouts can still cause targeted temporary denial of service under
 sustained attack. Expiry, a cap and recovery reduce that risk; they cannot promise
