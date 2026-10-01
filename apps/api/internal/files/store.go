@@ -108,7 +108,7 @@ func (s *Store) List(ctx context.Context, options ListOptions) (Page, error) {
 		add("f.original_name ILIKE $%d ESCAPE '!'", "%"+escapeLike(filter.name)+"%")
 	}
 	if filter.uploader != "" {
-		add("EXISTS(SELECT 1 FROM vault.credentials c WHERE c.user_id=f.owner_id AND c.login_name ILIKE $%d ESCAPE '!')", "%"+escapeLike(filter.uploader)+"%")
+		add("EXISTS(SELECT 1 FROM vault.users u LEFT JOIN vault.credentials c ON c.user_id=u.id LEFT JOIN vault.user_identities i ON i.user_id=u.id AND i.provider='password' AND i.provider_subject=u.email_normalized WHERE u.id=f.owner_id AND COALESCE(c.login_name,CASE WHEN u.email_verified_at IS NOT NULL AND i.user_id IS NOT NULL THEN u.email_address END) ILIKE $%d ESCAPE '!')", "%"+escapeLike(filter.uploader)+"%")
 	}
 	for _, tag := range filter.tags {
 		add("EXISTS(SELECT 1 FROM vault.file_tags t WHERE t.file_id=f.id AND t.tag=$%d)", tag)

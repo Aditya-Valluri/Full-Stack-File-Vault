@@ -202,6 +202,22 @@ func testAdministration(t *testing.T, ctx context.Context, db *pgx.Conn, dsn, di
 		if _, e = publisher.Publish(emailCtx, []*upload.Staged{f.staged("email identity file")}); e != nil {
 			t.Fatal(e)
 		}
+		for _, check := range []struct {
+			name   string
+			ctx    context.Context
+			filter string
+			want   int
+		}{
+			{"verified email", emailCtx, "ADMIN.IDENTITY", 1},
+			{"different identity", emailCtx, "identity.legacy", 0},
+			{"literal wildcard", emailCtx, "%", 0},
+			{"owner isolation", ordinaryCtx, "admin.identity", 0},
+		} {
+			got, err := reader.List(check.ctx, files.ListOptions{First: 50, Filter: files.Filter{UploaderNameContains: &check.filter}})
+			if err != nil || len(got.Nodes) != check.want {
+				t.Fatalf("uploader filter %s: count=%d err=%v", check.name, len(got.Nodes), err)
+			}
+		}
 		page, e := admin.Files(actorCtx, 50, nil, &emailID)
 		if e != nil || len(page.Nodes) != 1 || page.Nodes[0].LoginName == nil || *page.Nodes[0].LoginName != "Admin.Identity@example.test" {
 			t.Fatal("file uploader identity missing")
