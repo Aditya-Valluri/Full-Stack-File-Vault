@@ -30,7 +30,7 @@ try {
  const page = await context.newPage();
  const response = await page.goto('https://localhost:8443/');
  if (response.status() !== 200 || !response.headers()['content-security-policy']) throw new Error('Static security headers missing.');
- await page.getByLabel('Username', { exact: true }).fill(loginName);
+ await page.getByLabel('Username or email', { exact: true }).fill(loginName);
  await page.getByLabel('Password', { exact: true }).fill(password);
  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
  await page.getByRole('heading', { name: 'My files', exact: true }).waitFor();

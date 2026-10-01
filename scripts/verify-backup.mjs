@@ -2,11 +2,12 @@
 // Does not replace the application database or claim a full application recovery drill.
 import { spawn } from 'node:child_process';
 import { createReadStream, createWriteStream } from 'node:fs';
-import { open, readFile, writeFile, mkdir, rm, copyFile } from 'node:fs/promises';
+import { open, readFile, writeFile, mkdir, rm, copyFile, readdir } from 'node:fs/promises';
 import { createDecipheriv, createHash, randomBytes } from 'node:crypto';
 import { pipeline } from 'node:stream/promises';
 import { resolve, sep } from 'node:path';
 import { docker } from './backup-application.mjs';
+import { validateRestoredState } from './backup-schema.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const archive = resolve(process.argv[2] || '');
@@ -71,8 +72,8 @@ try {
  console.log('[restore] Restoring database archive');
  await inputCommand(['exec', '-i', name, 'pg_restore', '--exit-on-error', '-U', 'vault_operator', '-d', 'vault'], resolve(work, 'database.dump'), true);
  console.log('[restore] Checking schema and quota invariants');
- const result = JSON.parse(await sql("SELECT json_build_object('schema_version',(SELECT version FROM public.schema_migrations),'files',(SELECT count(*) FROM vault.files),'receipts',(SELECT count(*) FROM vault.upload_receipts),'quota_mismatches',(SELECT count(*) FROM vault.users u WHERE u.used_bytes <> (SELECT coalesce(sum(b.size_bytes),0) FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id WHERE f.owner_id=u.id)));"));
- if (![14, 15].includes(result.schema_version) || result.quota_mismatches !== 0) throw new Error('Restored schema or quota invariant failed.');
+ const result = JSON.parse(await sql("SELECT json_build_object('schema_version',(SELECT version FROM public.schema_migrations),'schema_dirty',(SELECT dirty FROM public.schema_migrations),'files',(SELECT count(*) FROM vault.files),'receipts',(SELECT count(*) FROM vault.upload_receipts),'quota_mismatches',(SELECT count(*) FROM vault.users u WHERE u.used_bytes <> (SELECT coalesce(sum(b.size_bytes),0) FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id WHERE f.owner_id=u.id)));"));
+ validateRestoredState(result, await readdir(resolve(root, 'db/migrations')));
  const blobs = JSON.parse(await sql("SELECT coalesce(json_agg(json_build_object('key',b.storage_key,'digest',encode(b.sha256,'hex'),'size',b.size_bytes)),'[]'::json) FROM vault.blobs b WHERE EXISTS (SELECT 1 FROM vault.files f WHERE f.blob_id=b.id);"));
  for (const blob of blobs) {
   if (!/^blob-[a-f0-9]{64}$/.test(blob.key)) throw new Error('Unsafe restored storage key.');

@@ -121,3 +121,8 @@ and the Gmail/local MailSender adapters are available in the working implementat
 Verified email registration and email/password login are available when a mail
 sender is configured. Password reset/change are implemented and validated with isolated PostgreSQL and browser tests. Real Gmail recovery delivery remains unverified. Google OIDC remains pending. See [email sender setup](docs/authentication-email.md)
 and [ADR 0007](docs/decisions/0007-account-identities-and-recovery.md).
+
+## Handoff
+
+See [release handoff](docs/handoff.md) for verified results, deployment steps and
+remaining live/operational acceptance checks.

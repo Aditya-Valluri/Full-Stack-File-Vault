@@ -62,7 +62,7 @@ failure drills require separate implementation/configuration and validation.
 The PostgreSQL content adapter remains bounded and deployment-specific; it is not
 a replacement for the documented production storage target.
 
-## Latest evidence
+## Historical evidence (2026-09-28)
 
 Hosted CI passed for 8af78c3 (run 36371269143). The updated container rehearsal
 passed at 2026-09-28T03:00:07.189Z; see acceptance.md for recorded coverage.
@@ -71,3 +71,9 @@ srv-daolnujbc2fs73fv5a20. Public page and readiness checks returned HTTP 200.
 Anonymous identity/admin requests returned UNAUTHENTICATED; a foreign-origin
 request returned HTTP 403. Registration remains disabled as of the latest check.
 Gmail configuration and authenticated public workflows remain to be validated.
+
+
+## Current handoff
+
+See [handoff](handoff.md) for the 2026-10-01 evidence and remaining operator checks.
+Historical observations above do not establish current Gmail settings or revision.

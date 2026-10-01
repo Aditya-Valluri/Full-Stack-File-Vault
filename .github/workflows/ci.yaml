@@ -41,6 +41,7 @@ jobs:
      run: |
       node --check scripts/backup-application.mjs
       node --check scripts/verify-backup.mjs
+      node --test scripts/backup-schema.test.mjs
       node --check scripts/verify-application.mjs
       node --check scripts/verify-render-demo.mjs
       node scripts/validate-free-render.mjs
