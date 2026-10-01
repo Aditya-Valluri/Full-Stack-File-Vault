@@ -54,7 +54,9 @@ Store event ID, logical file ID, share ID, access type, server timestamp,
 share expiry and the authenticated recipient ID for a recipient-restricted link.
 Public links remain anonymous to the owner, even when a visitor is signed in.
 No IP, user agent, device, geography, raw share token, or account email is stored
-in activity. The recipient ID is the same account restriction the owner selected.
+in activity. Restricted recipients have their current username or verified email
+resolved on read. Public visitors remain anonymous. The recipient ID is the same
+account restriction the owner selected.
 
 Anyone-with-link and specific-recipient modes use the existing high-entropy
 tokens. Each creation produces an independent token. A specific recipient must
@@ -66,23 +68,23 @@ anonymous person.
 
 File details expose existing owner-authorized metadata: logical file ID,
 name, logical size, detected MIME, upload timestamp, private tags, preview
-availability, active links and recent share activity. Deduplicated logical files
+availability, and folder. A separate Share dialog displays active links and recent
+share activity; Details does not render content or sharing controls. Deduplicated logical files
 retain independent tags and share history. Account-level savings remain available.
 Do not expose global deduplication hints, storage keys, credentials or raw tokens
 through metadata. Creation of a share still returns its URL once, as required.
 
-Client-declared MIME, original modification date, folders, and scan results are
+Client-declared MIME, original modification date, and scan results are
 not persisted/supported, so the UI does not fabricate them. No format-specific
 EXIF, GPS, PDF author or other embedded metadata is extracted or displayed.
 Original downloads may contain embedded metadata; the application does not claim
 to strip it or scan for malware.
 
-The current permissions are download-only and preview-and-download. There is no
-view-only permission, so no view-only watermark is claimed or added. A future
-preview watermark would be a deterrent only and would not prevent screenshots;
-it must avoid owner identity and use a non-secret share reference. Adding image
-dimensions or document parsers should be a separate bounded-parser change with
-malformed-file tests, rather than silently parsing arbitrary uploads here.
+Sharing supports download-only, preview-and-download, and view-only for supported
+formats. View-only rejects download grants server-side, but cannot prevent copying
+preview bytes or screenshots. Its optional visual watermark contains only the
+project name and local access time. See [sharing](architecture/sharing.md) and
+[authorized previews](architecture/previews.md) for the actual boundaries.
 
 ## Validation
 

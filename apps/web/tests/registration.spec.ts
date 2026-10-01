@@ -2,10 +2,12 @@ import { test, expect } from './fixtures';
 import { readFile } from 'node:fs/promises';
 
 test('verified email registration rotates the session and supports subsequent email login', async ({ page }) => {
+ await page.setViewportSize({ width: 390, height: 844 });
  const email = 'browser-owner@example.test';
  const password = 'browser verification password';
  await page.goto('/');
  await page.getByRole('button', { name: 'New user? Create account', exact: true }).click();
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
  await page.getByLabel('Email', { exact: true }).fill(email);
  await page.getByRole('button', { name: 'Send verification code', exact: true }).click();
  await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();

@@ -29,3 +29,18 @@ func TestUploadFingerprint(t *testing.T) {
 		t.Fatal("key validation")
 	}
 }
+
+func TestTaggedUploadFingerprint(t *testing.T) {
+	staged, err := Stage(context.Background(), t.TempDir(), strings.NewReader("tagged"), Metadata{Name: "note.txt"}, 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer staged.Close()
+	plain, _ := uploadFingerprint([]*Staged{staged})
+	empty, _ := uploadFingerprint([]*Staged{staged}, []string{}...)
+	tagged, _ := uploadFingerprint([]*Staged{staged}, "audit")
+	changed, _ := uploadFingerprint([]*Staged{staged}, "project")
+	if plain != empty || plain == tagged || tagged == changed {
+		t.Fatal("receipt does not bind upload tags")
+	}
+}

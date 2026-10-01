@@ -365,6 +365,12 @@ func TestMultipartRetryKeyPaths(t *testing.T) {
 		variables   map[string]any
 		valid       bool
 	}{
+		{"tagged", "mutation($f:Upload!,$k:ID!,$t:[String!]){uploadFile(file:$f,idempotencyKey:$k,tags:$t){id}}", map[string]any{"f": nil, "k": "12345678-1234-4234-9234-123456789abc", "t": []any{"Work", "audit"}}, true},
+		{"empty tags", "mutation($f:Upload!,$t:[String!]){uploadFile(file:$f,tags:$t){id}}", map[string]any{"f": nil, "t": []any{}}, true},
+		{"null tags", "mutation($f:Upload!,$t:[String!]){uploadFile(file:$f,tags:$t){id}}", map[string]any{"f": nil, "t": nil}, true},
+		{"bad tags", "mutation($f:Upload!,$t:[String!]){uploadFile(file:$f,tags:$t){id}}", map[string]any{"f": nil, "t": []any{"bad/tag"}}, false},
+		{"bad tag type", "mutation($f:Upload!,$t:[String!]){uploadFile(file:$f,tags:$t){id}}", map[string]any{"f": nil, "t": "work"}, false},
+		{"tagged batch", "mutation($f:[Upload!]!,$t:[String!]){uploadFiles(files:$f,tags:$t){id}}", map[string]any{"f": []any{nil, nil}, "t": []any{"work"}}, true},
 		{"key first", "mutation($f:Upload!,$k:ID!){uploadFile(idempotencyKey:$k,file:$f){id}}", map[string]any{"f": nil, "k": "12345678-1234-4234-9234-123456789abc"}, true},
 		{"batch", "mutation($f:[Upload!]!,$k:ID!){uploadFiles(files:$f,idempotencyKey:$k){id}}", map[string]any{"f": []any{nil, nil}, "k": "12345678-1234-4234-9234-123456789abc"}, true},
 		{"bad key", "mutation($f:Upload!,$k:ID!){uploadFile(file:$f,idempotencyKey:$k){id}}", map[string]any{"f": nil, "k": "invalid"}, false},

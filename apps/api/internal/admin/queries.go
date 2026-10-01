@@ -19,7 +19,7 @@ func (s *Store) Users(ctx context.Context, first int, after *string) (UserPage, 
 		return UserPage{}, err
 	}
 	defer rollback(tx)
-	rows, err := tx.Query(ctx, "SELECT "+userColumns+" FROM vault.users u LEFT JOIN vault.credentials c ON c.user_id=u.id WHERE ($1::uuid IS NULL OR u.id>$1) ORDER BY u.id LIMIT $2", after, first+1)
+	rows, err := tx.Query(ctx, "SELECT "+userColumns+" FROM vault.users u"+identityJoins+" WHERE ($1::uuid IS NULL OR u.id>$1) ORDER BY u.id LIMIT $2", after, first+1)
 	if err != nil {
 		return UserPage{}, files.ErrUnavailable
 	}
@@ -64,8 +64,8 @@ func (s *Store) Files(ctx context.Context, first int, after, ownerID *string) (F
 	}
 	defer rollback(tx)
 	rows, err := tx.Query(ctx, `SELECT f.id::text,f.original_name,b.size_bytes,COALESCE(b.detected_mime,'application/octet-stream'),
- f.created_at,f.owner_id::text,c.login_name,COALESCE(d.shared_downloads,0)::text
- FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id LEFT JOIN vault.credentials c ON c.user_id=f.owner_id
+ f.created_at,f.owner_id::text,`+identityName+`,COALESCE(d.shared_downloads,0)::text
+ FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id JOIN vault.users u ON u.id=f.owner_id`+identityJoins+`
  LEFT JOIN vault.file_download_counts d ON d.file_id=f.id
  WHERE ($1::uuid IS NULL OR f.id>$1) AND ($2::uuid IS NULL OR f.owner_id=$2) ORDER BY f.id LIMIT $3`, after, ownerID, first+1)
 	if err != nil {
@@ -142,15 +142,15 @@ func (s *Store) Audit(ctx context.Context, first int, after *string) (AuditPage,
 	}
 	defer rollback(tx)
 	rows, err := tx.Query(ctx, `SELECT id::text,actor_id::text,target_user_id::text,action,occurred_at,
- previous_quota::text,new_quota::text,previous_disabled_at,new_disabled_at,revoked_sessions::text,revoked_shares::text
- FROM vault.admin_audit WHERE ($1::bigint IS NULL OR id<$1) ORDER BY id DESC LIMIT $2`, before, first+1)
+ previous_quota::text,new_quota::text,previous_disabled_at,new_disabled_at,revoked_sessions::text,revoked_shares::text,file_id::text,share_id::text
+ FROM vault.admin_audit WHERE ($1::bigint IS NULL OR id<$1) ORDER BY vault.admin_audit.id DESC LIMIT $2`, before, first+1)
 	if err != nil {
 		return AuditPage{}, files.ErrUnavailable
 	}
 	result := AuditPage{Nodes: make([]Audit, 0, first)}
 	for rows.Next() {
 		var entry Audit
-		if err = rows.Scan(&entry.ID, &entry.ActorID, &entry.TargetUserID, &entry.Action, &entry.OccurredAt, &entry.PreviousQuota, &entry.NewQuota, &entry.PreviousDisabledAt, &entry.NewDisabledAt, &entry.RevokedSessions, &entry.RevokedShares); err != nil {
+		if err = rows.Scan(&entry.ID, &entry.ActorID, &entry.TargetUserID, &entry.Action, &entry.OccurredAt, &entry.PreviousQuota, &entry.NewQuota, &entry.PreviousDisabledAt, &entry.NewDisabledAt, &entry.RevokedSessions, &entry.RevokedShares, &entry.FileID, &entry.ShareID); err != nil {
 			rows.Close()
 			return AuditPage{}, files.ErrUnavailable
 		}

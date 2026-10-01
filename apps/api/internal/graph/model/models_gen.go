@@ -17,8 +17,10 @@ type AdminAuditConnection struct {
 
 type AdminAuditEntry struct {
 	ID                 string     `json:"id"`
-	ActorID            string     `json:"actorId"`
-	TargetUserID       string     `json:"targetUserId"`
+	FileID             *string    `json:"fileId,omitempty"`
+	ShareID            *string    `json:"shareId,omitempty"`
+	ActorID            *string    `json:"actorId,omitempty"`
+	TargetUserID       *string    `json:"targetUserId,omitempty"`
 	Action             string     `json:"action"`
 	OccurredAt         time.Time  `json:"occurredAt"`
 	PreviousQuota      string     `json:"previousQuota"`
@@ -99,6 +101,9 @@ type FileConnection struct {
 }
 
 type FileFilter struct {
+	// Omit folder filters to search across all folders. Root-only and folderId are mutually exclusive.
+	FolderID *string `json:"folderId,omitempty"`
+	RootOnly bool    `json:"rootOnly"`
 	// All normalized tags must match. At most 20; private to the caller.
 	TagsAll []string `json:"tagsAll,omitempty"`
 	// Case-insensitive literal substring of uploader login; owner scope still applies.
@@ -138,14 +143,35 @@ type FileSharing struct {
 	DownloadStarts string `json:"downloadStarts"`
 }
 
+// Owned logical metadata. No blob hash, physical key or deduplication hint.
+type Folder struct {
+	ID       string  `json:"id"`
+	ParentID *string `json:"parentId,omitempty"`
+	Name     string  `json:"name"`
+}
+
 type LoginInput struct {
-	LoginName string `json:"loginName"`
-	Password  string `json:"password"`
+	SecondFactor *string `json:"secondFactor,omitempty"`
+	LoginName    string  `json:"loginName"`
+	Password     string  `json:"password"`
 }
 
 type LoginPayload struct {
 	CsrfToken string             `json:"csrfToken"`
 	User      *AuthenticatedUser `json:"user"`
+}
+
+type MFARecovery struct {
+	RecoveryCodes []string `json:"recoveryCodes"`
+}
+
+type MFASetup struct {
+	URI string `json:"uri"`
+}
+
+type MFAStatus struct {
+	Available bool `json:"available"`
+	Enabled   bool `json:"enabled"`
 }
 
 type Mutation struct {
@@ -174,20 +200,22 @@ type SessionBootstrap struct {
 
 // Owner-only bounded history. No raw tokens, IP addresses or device metadata.
 type ShareActivity struct {
-	ID          string    `json:"id"`
-	ShareID     string    `json:"shareId"`
-	RecipientID *string   `json:"recipientId,omitempty"`
-	Kind        string    `json:"kind"`
-	OccurredAt  time.Time `json:"occurredAt"`
-	Status      string    `json:"status"`
+	ID            string    `json:"id"`
+	ShareID       string    `json:"shareId"`
+	RecipientName *string   `json:"recipientName,omitempty"`
+	RecipientID   *string   `json:"recipientId,omitempty"`
+	Kind          string    `json:"kind"`
+	OccurredAt    time.Time `json:"occurredAt"`
+	Status        string    `json:"status"`
 }
 
 type SharedFile struct {
-	Name           string    `json:"name"`
-	SizeBytes      string    `json:"sizeBytes"`
-	DetectedMime   string    `json:"detectedMIME"`
-	PreviewAllowed bool      `json:"previewAllowed"`
-	ExpiresAt      time.Time `json:"expiresAt"`
+	Name            string    `json:"name"`
+	SizeBytes       string    `json:"sizeBytes"`
+	DetectedMime    string    `json:"detectedMIME"`
+	PreviewAllowed  bool      `json:"previewAllowed"`
+	DownloadAllowed bool      `json:"downloadAllowed"`
+	ExpiresAt       time.Time `json:"expiresAt"`
 }
 
 type StorageStats struct {
@@ -198,8 +226,8 @@ type StorageStats struct {
 	SavingsPercent     string `json:"savingsPercent"`
 }
 
-// Owned logical metadata. No blob hash, physical key or deduplication hint.
 type VaultFile struct {
+	FolderID *string `json:"folderId,omitempty"`
 	// Private owner tags. Administrator-wide metadata returns an empty list.
 	Tags []string `json:"tags"`
 	ID   string   `json:"id"`
@@ -268,18 +296,20 @@ func (e FileAccessMode) MarshalJSON() ([]byte, error) {
 type SharePermission string
 
 const (
+	SharePermissionPreviewOnly        SharePermission = "PREVIEW_ONLY"
 	SharePermissionDownload           SharePermission = "DOWNLOAD"
 	SharePermissionPreviewAndDownload SharePermission = "PREVIEW_AND_DOWNLOAD"
 )
 
 var AllSharePermission = []SharePermission{
+	SharePermissionPreviewOnly,
 	SharePermissionDownload,
 	SharePermissionPreviewAndDownload,
 }
 
 func (e SharePermission) IsValid() bool {
 	switch e {
-	case SharePermissionDownload, SharePermissionPreviewAndDownload:
+	case SharePermissionPreviewOnly, SharePermissionDownload, SharePermissionPreviewAndDownload:
 		return true
 	}
 	return false

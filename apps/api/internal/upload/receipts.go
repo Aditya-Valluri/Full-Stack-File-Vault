@@ -15,7 +15,7 @@ var receiptKey = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab
 
 // The versioned, ordered fingerprint includes display metadata as well as bytes.
 // A retry must submit the same files in the same order, including duplicate files.
-func uploadFingerprint(files []*Staged) ([32]byte, error) {
+func uploadFingerprint(files []*Staged, tags ...string) ([32]byte, error) {
 	infos := make([]Info, len(files))
 	for i, file := range files {
 		if file == nil {
@@ -23,10 +23,15 @@ func uploadFingerprint(files []*Staged) ([32]byte, error) {
 		}
 		infos[i] = file.Info()
 	}
+	version := 1
+	if len(tags) > 0 {
+		version = 2
+	}
 	data, err := json.Marshal(struct {
 		Version int
 		Files   []Info
-	}{1, infos})
+		Tags    []string `json:",omitempty"`
+	}{version, infos, tags})
 	if err != nil {
 		return [32]byte{}, ErrInvalidInput
 	}

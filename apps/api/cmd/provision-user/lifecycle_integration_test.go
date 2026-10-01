@@ -56,15 +56,19 @@ func testLifecycle(t *testing.T, ctx context.Context, admin *pgx.Conn, dsn, dire
 		if err := reader.Delete(otherCtx, published[0].ID); !errors.Is(err, files.ErrNotFound) {
 			t.Fatal("foreign file deleted", err)
 		}
-		if _, err := reader.CreateAccess(ownerCtx, published[0].ID, "PREVIEW"); !errors.Is(err, files.ErrPreviewUnsupported) {
-			t.Fatal("text preview accepted", err)
+		if _, err := reader.CreateAccess(ownerCtx, published[0].ID, "PREVIEW"); err != nil {
+			t.Fatal("plain text preview rejected", err)
 		}
 		grant, err := reader.CreateAccess(ownerCtx, published[0].ID, "DOWNLOAD")
 		if err != nil {
 			t.Fatal(err)
 		}
 		opaque := strings.TrimPrefix(grant.URL, "/content/")
-		if len(opaque) != 43 || !grant.ExpiresAt.After(time.Now()) || grant.ExpiresAt.After(time.Now().Add(time.Minute)) {
+		var databaseNow time.Time
+		if err = admin.QueryRow(ctx, "SELECT clock_timestamp()").Scan(&databaseNow); err != nil {
+			t.Fatal(err)
+		}
+		if len(opaque) != 43 || !grant.ExpiresAt.After(databaseNow) || grant.ExpiresAt.After(databaseNow.Add(time.Minute)) {
 			t.Fatal("grant format/expiry")
 		}
 		opened, err := reader.OpenAccess(ownerCtx, opaque, f.local)

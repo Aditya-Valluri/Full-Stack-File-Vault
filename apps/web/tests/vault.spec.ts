@@ -71,7 +71,10 @@ test('files, dedup quota, sharing, revocation, and audited administration', asyn
   await page.getByRole('button', { name: 'Refresh activity', exact:true }).click();
   await expect(page.getByText('Anonymous visitor — Opened',{exact:true}).first()).toBeVisible();
   await expect(page.getByText('Anonymous visitor — Download started',{exact:true})).toBeVisible();
+  const revoked = page.waitForResponse(response => response.url().endsWith('/graphql') && response.request().postDataJSON()?.operationName === 'RevokeShare');
   await page.getByRole('button', { name: /^Revoke link ending/ }).first().click();
+  const revokeResult = await (await revoked).json();
+  expect(revokeResult.errors?.map((error: {extensions?: {code?: string}}) => error.extensions?.code) ?? []).toEqual([]);
   await expect(page.getByText('No active sharing links.')).toBeVisible();
   await guest.goto(link);
   await expect(guest.getByRole('heading', { name: 'This link is unavailable' })).toBeVisible();
@@ -168,6 +171,7 @@ test('lost upload response can be retried without duplicate files', async ({ pag
  await page.getByLabel('Select files to upload').setInputFiles({ name: 'retry-once.txt', mimeType: 'text/plain', buffer: Buffer.from('one') });
  await page.getByRole('button', { name: 'Upload selected files' }).click();
  await expect(page.getByRole('button', { name: 'Retry upload safely', exact: true })).toBeVisible();
+ await expect(page.getByText('Request sent. Waiting for the server to save the file.', { exact: true })).toHaveCount(0);
  await page.getByRole('button', { name: 'Retry upload safely', exact: true }).click();
  await expect(page.getByText('Uploaded 1 file.', { exact: true })).toBeVisible();
  await expect(page.getByRole('button', { name: 'Download retry-once.txt', exact: true })).toHaveCount(1);

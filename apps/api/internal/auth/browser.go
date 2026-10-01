@@ -292,6 +292,13 @@ func (b *BrowserSecurity) wrap(next http.Handler, validate func(*http.Request) e
 					return nil
 				}
 			} else if state.UserID != "" {
+				requestCtx = context.WithValue(requestCtx, mfaContextKey{}, mfaCapability(func(ctx context.Context, action string, password []byte, code string) (MFAResult, error) {
+					result, err := store.MFA(ctx, peer, action, password, code)
+					if err == nil && (action == "enable" || action == "disable") {
+						b.ClearSessionCookie(w)
+					}
+					return result, err
+				}))
 				capability.change = func(ctx context.Context, current, next []byte) error {
 					if err := store.ChangePassword(ctx, token, csrf[0], peer, current, next); err != nil {
 						return err

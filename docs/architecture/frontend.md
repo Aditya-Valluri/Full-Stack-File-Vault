@@ -22,8 +22,9 @@ npm run dev
 ```
 
 Open http://127.0.0.1:5173. Vite proxies application and content requests to the
-loopback API without changing the browser Origin. Provision accounts through the
-existing operator command; there is no public registration or default password.
+loopback API without changing the browser Origin. Legacy accounts can be provisioned
+through the operator command. Verified email registration requires configured mail
+delivery; there is no default password. See [email authentication](../authentication-email.md).
 
 ## Security and behavior
 
@@ -37,7 +38,12 @@ existing operator command; there is no public registration or default password.
 - Uploads currently use the default ten-file, 20 MB request/file limits and
   show the user's remaining logical quota. Server limits remain authoritative.
 - Network-ambiguous uploads offer an explicit same-key retry; see recovery.md.
-- Previews are restricted to the server-approved raster image types.
+- Previews follow the [server-approved image, TXT and PDF policy](previews.md).
+- Upload progress reports transmitted request bytes; publication completion is separate.
+  Atomic batches remain available. Individual uploads track each result and retry only
+  unfinished files with their original idempotency keys. Tags publish transactionally.
+- [Folders](folders.md) organize logical metadata without changing deduplication.
+- [MFA](../authentication-mfa.md) requires a separately configured server encryption key.
 - GraphQL bindings are generated from the Go schema and named frontend
   operations. Do not edit generated bindings directly.
 

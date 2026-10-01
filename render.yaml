@@ -1,34 +1,42 @@
 # Preserve existing Render resource identifiers to avoid accidental recreation.
+
 services:
- - type: web
-   name: full-stack-file-vault-web
-   runtime: docker
-   plan: free
-   region: virginia
-   dockerfilePath: deploy/render/Dockerfile
-   dockerContext: .
-   dockerCommand: /app/render-demo
-   autoDeployTrigger: "off"
-   healthCheckPath: /readyz
-   envVars:
-    - key: DEMO_OPERATOR_URL
-      fromDatabase:
-       name: full-stack-file-vault-free-demo-db
-       property: connectionString
-    - key: DEMO_RUNTIME_SEED
-      generateValue: true
-    - key: DEMO_GC_SEED
-      generateValue: true
-    - key: DEMO_REVIEWER_PASSWORD
-      generateValue: true
-    - key: DEMO_ADMIN_PASSWORD
-      generateValue: true
+  - type: web
+    name: full-stack-file-vault-web
+    runtime: docker
+    plan: free
+    region: virginia
+    dockerfilePath: deploy/render/Dockerfile
+    dockerContext: .
+    dockerCommand: /app/render-demo
+    autoDeployTrigger: "off"
+    healthCheckPath: /readyz
+
+    envVars:
+      - key: DEMO_OPERATOR_URL
+        fromDatabase:
+          name: full-stack-file-vault-free-demo-db
+          property: connectionString
+
+      - key: DEMO_RUNTIME_SEED
+        generateValue: true
+
+      - key: DEMO_GC_SEED
+        generateValue: true
+
+      - key: DEMO_REVIEWER_PASSWORD
+        generateValue: true
+
+      - key: DEMO_ADMIN_PASSWORD
+        generateValue: true
+
 databases:
- # Preserve the original Blueprint name; dashboard display: full-stack-file-vault-db.
- - name: full-stack-file-vault-free-demo-db
-   plan: free
-   region: virginia
-   databaseName: vault_demo
-   user: vault_operator
-   postgresMajorVersion: "17"
-   ipAllowList: []
+  # Preserve the original Blueprint resource identity.
+  # The visible dashboard display name can differ.
+  - name: full-stack-file-vault-free-demo-db
+    plan: free
+    region: virginia
+    databaseName: vault_demo
+    user: vault_operator
+    postgresMajorVersion: "17"
+    ipAllowList: []

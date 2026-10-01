@@ -234,3 +234,19 @@ tbody tr:hover { background: #fbfdfd; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 
 textarea { resize: vertical; }
+
+.text-preview { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 60vh; overflow: auto; padding: 1rem; background: #f5f8f7; }
+.pdf-canvas { max-width: 100%; height: auto; display: block; margin: 1rem auto; }
+.pdf-canvas[hidden] { display: none; }
+
+.tag-suggestions { display: flex; flex-wrap: wrap; gap: .4rem; border: 0; padding: .5rem 0; }
+.tag-suggestions button { border: 1px solid #bdccca; border-radius: 1rem; padding: .3rem .7rem; background: white; color: #23473d; }
+.tag-suggestions button[aria-pressed=true] { background: #d1eae2; border-color: #16756b; }
+.upload-list progress { max-width: 100%; }
+
+.folder-panel { padding: 1rem; margin-bottom: 1rem; }
+.folder-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.folder-panel select { max-width: 100%; }
+
+.watermarked-preview { position: relative; }
+.preview-watermark { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; pointer-events: none; color: #334155; opacity: .45; font-size: clamp(.85rem, 2vw, 1.4rem); overflow-wrap: anywhere; }

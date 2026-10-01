@@ -86,3 +86,30 @@ func testUploadReceipts(t *testing.T, ctx context.Context, db *pgx.Conn, dsn, di
 		t.Fatal(err)
 	}
 }
+
+func testUploadTags(t *testing.T, ctx context.Context, db *pgx.Conn, dsn, directory string) {
+	f := newPublicationFixture(t, ctx, db, dsn, directory)
+	identity, user, _, _ := f.user(100)
+	publisher := f.publisher(f.pool, f.local)
+	key := "12345678-1234-4234-9234-123456789abc"
+	staged := []*upload.Staged{f.staged("tags")}
+	published, err := publisher.PublishWithTags(identity, staged, []string{" Audit ", "audit", "project"}, key)
+	if err != nil || len(published) != 1 || len(published[0].Tags) != 2 {
+		t.Fatal("tagged publication failed", err)
+	}
+	replay, err := publisher.PublishWithTags(identity, staged, []string{"project", "AUDIT"}, key)
+	if err != nil || len(replay) != 1 || replay[0].ID != published[0].ID {
+		t.Fatal("normalized retry was not idempotent", err)
+	}
+	if _, err = publisher.PublishWithTags(identity, staged, []string{"different"}, key); !errors.Is(err, upload.ErrRetryConflict) {
+		t.Fatal("tag change reused receipt", err)
+	}
+	if _, err = publisher.PublishWithTags(identity, staged, []string{"<script>"}); !errors.Is(err, upload.ErrInvalidInput) {
+		t.Fatal("unsafe tags accepted", err)
+	}
+	var filesCount, tagsCount int
+	var used int64
+	if err = db.QueryRow(ctx, "SELECT (SELECT count(*) FROM vault.files WHERE owner_id=$1),(SELECT count(*) FROM vault.file_tags WHERE file_id=$2),used_bytes FROM vault.users WHERE id=$1", user, published[0].ID).Scan(&filesCount, &tagsCount, &used); err != nil || filesCount != 1 || tagsCount != 2 || used != 4 {
+		t.Fatal("tag/upload atomicity or quota invariant", err)
+	}
+}

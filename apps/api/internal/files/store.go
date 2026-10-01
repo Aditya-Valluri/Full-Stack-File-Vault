@@ -29,6 +29,7 @@ func NewStore(pool *pgxpool.Pool) (*Store, error) {
 }
 
 type File struct {
+	FolderID               *string
 	ID, Name, DetectedMIME string
 	Tags                   []string
 	SizeBytes              int64
@@ -40,6 +41,8 @@ type Page struct {
 	HasNextPage bool
 }
 type Filter struct {
+	FolderID                   *string
+	RootOnly                   bool
 	NameContains               *string
 	UploaderNameContains       *string
 	TagsAll                    []string
@@ -59,6 +62,9 @@ func (s *Store) List(ctx context.Context, options ListOptions) (Page, error) {
 	identity, err := auth.RequireUser(ctx)
 	if err != nil {
 		return Page{}, err
+	}
+	if (options.Filter.FolderID != nil && !validID(*options.Filter.FolderID)) || (options.Filter.RootOnly && options.Filter.FolderID != nil) {
+		return Page{}, ErrInvalidInput
 	}
 	if options.First < 1 || options.First > 50 {
 		return Page{}, ErrInvalidInput
@@ -87,6 +93,12 @@ func (s *Store) List(ctx context.Context, options ListOptions) (Page, error) {
 	add := func(clause string, value any) {
 		args = append(args, value)
 		query += " AND " + fmt.Sprintf(clause, len(args))
+	}
+	if options.Filter.RootOnly {
+		query += " AND f.folder_id IS NULL"
+	}
+	if options.Filter.FolderID != nil {
+		add("f.folder_id=$%d", *options.Filter.FolderID)
 	}
 	if after != nil {
 		args = append(args, after.CreatedAt, after.ID)
@@ -125,7 +137,7 @@ func (s *Store) List(ctx context.Context, options ListOptions) (Page, error) {
 	page := Page{Nodes: make([]File, 0, options.First)}
 	for rows.Next() {
 		var file File
-		if err = rows.Scan(&file.ID, &file.Name, &file.SizeBytes, &file.DetectedMIME, &file.CreatedAt, &file.Tags); err != nil {
+		if err = rows.Scan(&file.ID, &file.Name, &file.SizeBytes, &file.DetectedMIME, &file.CreatedAt, &file.Tags, &file.FolderID); err != nil {
 			rows.Close()
 			return Page{}, ErrUnavailable
 		}
@@ -170,7 +182,7 @@ func (s *Store) Get(ctx context.Context, id string) (File, error) {
 	}
 	defer rollback(tx)
 	var file File
-	err = tx.QueryRow(ctx, selectMetadata+" WHERE f.owner_id=$1 AND f.id=$2", identity.UserID, id).Scan(&file.ID, &file.Name, &file.SizeBytes, &file.DetectedMIME, &file.CreatedAt, &file.Tags)
+	err = tx.QueryRow(ctx, selectMetadata+" WHERE f.owner_id=$1 AND f.id=$2", identity.UserID, id).Scan(&file.ID, &file.Name, &file.SizeBytes, &file.DetectedMIME, &file.CreatedAt, &file.Tags, &file.FolderID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return File{}, ErrNotFound
 	}
@@ -183,7 +195,7 @@ func (s *Store) Get(ctx context.Context, id string) (File, error) {
 	return file, nil
 }
 
-const selectMetadata = "SELECT f.id::text,f.original_name,b.size_bytes,COALESCE(b.detected_mime,'application/octet-stream'),f.created_at,ARRAY(SELECT t.tag FROM vault.file_tags t WHERE t.file_id=f.id ORDER BY t.tag) FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id"
+const selectMetadata = "SELECT f.id::text,f.original_name,b.size_bytes,COALESCE(b.detected_mime,'application/octet-stream'),f.created_at,ARRAY(SELECT t.tag FROM vault.file_tags t WHERE t.file_id=f.id ORDER BY t.tag),f.folder_id::text FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id"
 
 // Reuse the existing user/session lock protocol for fresh authorization. This
 // serializes reads with publication for one user; keep statements and pages bounded.

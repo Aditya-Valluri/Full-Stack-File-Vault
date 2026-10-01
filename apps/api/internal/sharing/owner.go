@@ -13,7 +13,7 @@ import (
 // link; an account restriction still requires possession of the unpredictable token.
 func (s *Store) Create(ctx context.Context, fileID, permission string, expiresInSeconds int, recipient *string) (Created, error) {
 	if !validID(fileID) || expiresInSeconds < 60 || expiresInSeconds > 2592000 ||
-		(permission != "DOWNLOAD" && permission != "PREVIEW_AND_DOWNLOAD") || (recipient != nil && !validID(*recipient)) {
+		(permission != "DOWNLOAD" && permission != "PREVIEW_AND_DOWNLOAD" && permission != "PREVIEW_ONLY") || (recipient != nil && !validID(*recipient)) {
 		return Created{}, files.ErrInvalidInput
 	}
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -29,6 +29,15 @@ func (s *Store) Create(ctx context.Context, fileID, permission string, expiresIn
 	}
 	if !exists {
 		return Created{}, files.ErrNotFound
+	}
+	if permission == "PREVIEW_ONLY" {
+		var name, media string
+		if err = tx.QueryRow(ctx, "SELECT f.original_name,COALESCE(b.detected_mime,'application/octet-stream') FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id WHERE f.id=$1 AND f.owner_id=$2", fileID, user.UserID).Scan(&name, &media); err != nil {
+			return Created{}, files.ErrUnavailable
+		}
+		if !files.FilePreviewAllowed(name, media) {
+			return Created{}, files.ErrPreviewUnsupported
+		}
 	}
 	if recipient != nil {
 		if *recipient == user.UserID {

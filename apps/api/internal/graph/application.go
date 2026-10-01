@@ -53,7 +53,7 @@ func NewApplicationHandler(logger *slog.Logger, browser *auth.BrowserSecurity, b
 	return browser.WrapAuthentication(limiter.Wrap(handler), validateBootstrapRequest, limitedBegin, login, logout), nil
 }
 
-func (r *Resolver) publish(ctx context.Context, inputs []*graphql.Upload, retryKey *string) ([]*model.VaultFile, error) {
+func (r *Resolver) publish(ctx context.Context, inputs []*graphql.Upload, retryKey *string, tags []string) ([]*model.VaultFile, error) {
 	if _, err := auth.RequireUser(ctx); err != nil {
 		return nil, err
 	}
@@ -75,17 +75,17 @@ func (r *Resolver) publish(ctx context.Context, inputs []*graphql.Upload, retryK
 	if retryKey != nil {
 		keys = append(keys, *retryKey)
 	}
-	files, err := r.Publisher.Publish(ctx, staged, keys...)
+	files, err := r.Publisher.PublishWithTags(ctx, staged, tags, keys...)
 	if err != nil {
 		return nil, err
 	}
 	result := make([]*model.VaultFile, 0, len(files))
 	for _, file := range files {
-		result = append(result, &model.VaultFile{ID: file.ID, Name: file.Name, SizeBytes: strconv.FormatInt(file.SizeBytes, 10), DetectedMime: file.DetectedMIME, CreatedAt: file.CreatedAt})
+		result = append(result, &model.VaultFile{ID: file.ID, Name: file.Name, SizeBytes: strconv.FormatInt(file.SizeBytes, 10), DetectedMime: file.DetectedMIME, CreatedAt: file.CreatedAt, Tags: append([]string{}, file.Tags...)})
 	}
 	return result, nil
 }
 
 func fileModel(file files.File) *model.VaultFile {
-	return &model.VaultFile{ID: file.ID, Name: file.Name, SizeBytes: strconv.FormatInt(file.SizeBytes, 10), DetectedMime: file.DetectedMIME, CreatedAt: file.CreatedAt, Tags: file.Tags}
+	return &model.VaultFile{ID: file.ID, Name: file.Name, SizeBytes: strconv.FormatInt(file.SizeBytes, 10), DetectedMime: file.DetectedMIME, CreatedAt: file.CreatedAt, Tags: file.Tags, FolderID: file.FolderID}
 }

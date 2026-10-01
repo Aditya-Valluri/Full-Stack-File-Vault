@@ -16,6 +16,78 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+// CreateFolder is the resolver for the createFolder field.
+func (r *mutationResolver) CreateFolder(ctx context.Context, name string, parentID *string) (*model.Folder, error) {
+	if r.FilesStore == nil {
+		return nil, files.ErrUnavailable
+	}
+	f, err := r.FilesStore.CreateFolder(ctx, name, parentID)
+	if err != nil {
+		return nil, err
+	}
+	return &model.Folder{ID: f.ID, ParentID: f.ParentID, Name: f.Name}, nil
+}
+
+// RenameFolder is the resolver for the renameFolder field.
+func (r *mutationResolver) RenameFolder(ctx context.Context, id string, name string) (*model.Folder, error) {
+	if r.FilesStore == nil {
+		return nil, files.ErrUnavailable
+	}
+	f, err := r.FilesStore.RenameFolder(ctx, id, name)
+	if err != nil {
+		return nil, err
+	}
+	return &model.Folder{ID: f.ID, ParentID: f.ParentID, Name: f.Name}, nil
+}
+
+// DeleteFolder is the resolver for the deleteFolder field.
+func (r *mutationResolver) DeleteFolder(ctx context.Context, id string) (bool, error) {
+	if r.FilesStore == nil {
+		return false, files.ErrUnavailable
+	}
+	err := r.FilesStore.DeleteFolder(ctx, id)
+	return err == nil, err
+}
+
+// MoveFile is the resolver for the moveFile field.
+func (r *mutationResolver) MoveFile(ctx context.Context, fileID string, folderID *string) (bool, error) {
+	if r.FilesStore == nil {
+		return false, files.ErrUnavailable
+	}
+	err := r.FilesStore.MoveFile(ctx, fileID, folderID)
+	return err == nil, err
+}
+
+// SetupMfa is the resolver for the setupMFA field.
+func (r *mutationResolver) SetupMfa(ctx context.Context, currentPassword string) (*model.MFASetup, error) {
+	password := []byte(currentPassword)
+	defer clear(password)
+	result, err := auth.MFAFromContext(ctx, "setup", password, "")
+	if err != nil {
+		return nil, err
+	}
+	return &model.MFASetup{URI: result.URI}, nil
+}
+
+// EnableMfa is the resolver for the enableMFA field.
+func (r *mutationResolver) EnableMfa(ctx context.Context, currentPassword string, code string) (*model.MFARecovery, error) {
+	password := []byte(currentPassword)
+	defer clear(password)
+	result, err := auth.MFAFromContext(ctx, "enable", password, code)
+	if err != nil {
+		return nil, err
+	}
+	return &model.MFARecovery{RecoveryCodes: result.RecoveryCodes}, nil
+}
+
+// DisableMfa is the resolver for the disableMFA field.
+func (r *mutationResolver) DisableMfa(ctx context.Context, currentPassword string, code string) (bool, error) {
+	password := []byte(currentPassword)
+	defer clear(password)
+	_, err := auth.MFAFromContext(ctx, "disable", password, code)
+	return err == nil, err
+}
+
 // ContactAdministrator is the resolver for the contactAdministrator field.
 func (r *mutationResolver) ContactAdministrator(ctx context.Context, subject string, message string) (bool, error) {
 	err := auth.ContactAdministratorFromContext(ctx, subject, message)
@@ -148,6 +220,9 @@ func (r *mutationResolver) BeginSession(ctx context.Context) (*model.SessionBoot
 func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.LoginPayload, error) {
 	password := []byte(input.Password)
 	defer clear(password)
+	if input.SecondFactor != nil {
+		ctx = auth.WithSecondFactor(ctx, *input.SecondFactor)
+	}
 	state, err := auth.LoginFromContext(ctx, input.LoginName, password)
 	if err != nil {
 		return nil, err
@@ -193,8 +268,8 @@ func (r *mutationResolver) DeleteFile(ctx context.Context, id string) (bool, err
 }
 
 // UploadFile is the resolver for the uploadFile field.
-func (r *mutationResolver) UploadFile(ctx context.Context, file graphql.Upload, idempotencyKey *string) (*model.VaultFile, error) {
-	files, err := r.publish(ctx, []*graphql.Upload{&file}, idempotencyKey)
+func (r *mutationResolver) UploadFile(ctx context.Context, file graphql.Upload, idempotencyKey *string, tags []string) (*model.VaultFile, error) {
+	files, err := r.publish(ctx, []*graphql.Upload{&file}, idempotencyKey, tags)
 	if err != nil {
 		return nil, err
 	}
@@ -202,8 +277,33 @@ func (r *mutationResolver) UploadFile(ctx context.Context, file graphql.Upload, 
 }
 
 // UploadFiles is the resolver for the uploadFiles field.
-func (r *mutationResolver) UploadFiles(ctx context.Context, files []*graphql.Upload, idempotencyKey *string) ([]*model.VaultFile, error) {
-	return r.publish(ctx, files, idempotencyKey)
+func (r *mutationResolver) UploadFiles(ctx context.Context, files []*graphql.Upload, idempotencyKey *string, tags []string) ([]*model.VaultFile, error) {
+	return r.publish(ctx, files, idempotencyKey, tags)
+}
+
+// Folders is the resolver for the folders field.
+func (r *queryResolver) Folders(ctx context.Context) ([]*model.Folder, error) {
+	if r.FilesStore == nil {
+		return nil, files.ErrUnavailable
+	}
+	folders, err := r.FilesStore.Folders(ctx)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]*model.Folder, 0, len(folders))
+	for _, f := range folders {
+		result = append(result, &model.Folder{ID: f.ID, ParentID: f.ParentID, Name: f.Name})
+	}
+	return result, nil
+}
+
+// MfaStatus is the resolver for the mfaStatus field.
+func (r *queryResolver) MfaStatus(ctx context.Context) (*model.MFAStatus, error) {
+	result, err := auth.MFAFromContext(ctx, "status", nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return &model.MFAStatus{Available: result.Available, Enabled: result.Enabled}, nil
 }
 
 // EmailRegistrationEnabled is the resolver for the emailRegistrationEnabled field.
@@ -270,7 +370,7 @@ func (r *queryResolver) AdminAudit(ctx context.Context, first int, after *string
 	}
 	nodes := make([]*model.AdminAuditEntry, 0, len(page.Nodes))
 	for _, entry := range page.Nodes {
-		nodes = append(nodes, &model.AdminAuditEntry{ID: entry.ID, ActorID: entry.ActorID, TargetUserID: entry.TargetUserID, Action: entry.Action, OccurredAt: entry.OccurredAt, PreviousQuota: entry.PreviousQuota, NewQuota: entry.NewQuota, PreviousDisabledAt: entry.PreviousDisabledAt, NewDisabledAt: entry.NewDisabledAt, RevokedSessions: entry.RevokedSessions, RevokedShares: entry.RevokedShares})
+		nodes = append(nodes, &model.AdminAuditEntry{ID: entry.ID, FileID: entry.FileID, ShareID: entry.ShareID, ActorID: entry.ActorID, TargetUserID: entry.TargetUserID, Action: entry.Action, OccurredAt: entry.OccurredAt, PreviousQuota: entry.PreviousQuota, NewQuota: entry.NewQuota, PreviousDisabledAt: entry.PreviousDisabledAt, NewDisabledAt: entry.NewDisabledAt, RevokedSessions: entry.RevokedSessions, RevokedShares: entry.RevokedShares})
 	}
 	return &model.AdminAuditConnection{Nodes: nodes, PageInfo: &model.FilePageInfo{EndCursor: page.EndCursor, HasNextPage: page.HasNextPage}}, nil
 }
@@ -291,7 +391,7 @@ func (r *queryResolver) FileShares(ctx context.Context, fileID string) (*model.F
 	}
 	activity := make([]*model.ShareActivity, 0, len(overview.Activity))
 	for _, event := range overview.Activity {
-		activity = append(activity, &model.ShareActivity{ID: event.ID, ShareID: event.ShareID, RecipientID: event.RecipientID, Kind: event.Kind, OccurredAt: event.OccurredAt, Status: event.Status})
+		activity = append(activity, &model.ShareActivity{ID: event.ID, ShareID: event.ShareID, RecipientID: event.RecipientID, RecipientName: event.RecipientName, Kind: event.Kind, OccurredAt: event.OccurredAt, Status: event.Status})
 	}
 	return &model.FileSharing{Shares: shares, Activity: activity, DownloadStarts: strconv.FormatInt(overview.DownloadStarts, 10)}, nil
 }
@@ -306,7 +406,7 @@ func (r *queryResolver) SharedFile(ctx context.Context, token string) (*model.Sh
 	if err != nil {
 		return nil, err
 	}
-	return &model.SharedFile{Name: file.Name, SizeBytes: strconv.FormatInt(file.SizeBytes, 10), DetectedMime: file.DetectedMIME, PreviewAllowed: file.PreviewAllowed, ExpiresAt: file.ExpiresAt}, nil
+	return &model.SharedFile{Name: file.Name, SizeBytes: strconv.FormatInt(file.SizeBytes, 10), DetectedMime: file.DetectedMIME, PreviewAllowed: file.PreviewAllowed, DownloadAllowed: file.DownloadAllowed, ExpiresAt: file.ExpiresAt}, nil
 }
 
 // ServiceInfo is the resolver for the serviceInfo field.
@@ -363,7 +463,7 @@ func (r *queryResolver) Files(ctx context.Context, first int, after *string, fil
 	}
 	options := files.ListOptions{First: first, After: after}
 	if filter != nil {
-		options.Filter = files.Filter{TagsAll: filter.TagsAll, UploaderNameContains: filter.UploaderNameContains, NameContains: filter.NameContains, MIMEType: filter.MimeType, MinSizeBytes: filter.MinSizeBytes, MaxSizeBytes: filter.MaxSizeBytes, CreatedFrom: filter.CreatedFrom, CreatedBefore: filter.CreatedBefore}
+		options.Filter = files.Filter{FolderID: filter.FolderID, RootOnly: filter.RootOnly, TagsAll: filter.TagsAll, UploaderNameContains: filter.UploaderNameContains, NameContains: filter.NameContains, MIMEType: filter.MimeType, MinSizeBytes: filter.MinSizeBytes, MaxSizeBytes: filter.MaxSizeBytes, CreatedFrom: filter.CreatedFrom, CreatedBefore: filter.CreatedBefore}
 	}
 	page, err := r.FilesStore.List(ctx, options)
 	if err != nil {

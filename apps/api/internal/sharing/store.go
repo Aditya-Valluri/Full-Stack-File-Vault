@@ -46,6 +46,7 @@ type SharedFile struct {
 	Name, DetectedMIME string
 	SizeBytes          int64
 	PreviewAllowed     bool
+	DownloadAllowed    bool
 	ExpiresAt          time.Time
 }
 type capability struct {

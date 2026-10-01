@@ -24,6 +24,12 @@ type failingResolver struct {
 func (r *failingResolver) EmailRegistrationEnabled(ctx context.Context) (bool, error) {
 	return false, nil
 }
+func (r *failingResolver) MfaStatus(ctx context.Context) (*model.MFAStatus, error) {
+	return (&Resolver{}).Query().MfaStatus(ctx)
+}
+func (r *failingResolver) Folders(ctx context.Context) ([]*model.Folder, error) {
+	return (&Resolver{}).Query().Folders(ctx)
+}
 func (r *failingResolver) Query() QueryResolver { return r }
 func (r *failingResolver) AdminUsers(ctx context.Context, first int, after *string) (*model.AdminUserConnection, error) {
 	return (&Resolver{}).Query().AdminUsers(ctx, first, after)

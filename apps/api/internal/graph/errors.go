@@ -87,6 +87,18 @@ func domainErrorPresenter(logger *slog.Logger) graphql.ErrorPresenterFunc {
 		if errors.Is(err, auth.ErrResetRejected) {
 			return &gqlerror.Error{Message: "reset code invalid or expired", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "RESET_REJECTED"}}
 		}
+		for _, mfa := range []struct {
+			err           error
+			code, message string
+		}{
+			{auth.ErrMFARequired, "MFA_REQUIRED", "authenticator or recovery code required"},
+			{auth.ErrMFARejected, "MFA_REJECTED", "MFA code or setup not accepted"},
+			{auth.ErrMFAUnavailable, "MFA_UNAVAILABLE", "MFA service unavailable"},
+		} {
+			if errors.Is(err, mfa.err) {
+				return &gqlerror.Error{Message: mfa.message, Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": mfa.code}}
+			}
+		}
 		if errors.Is(err, auth.ErrPasswordRejected) {
 			return &gqlerror.Error{Message: "current password not accepted", Path: graphql.GetPath(ctx), Extensions: map[string]any{"code": "PASSWORD_REJECTED"}}
 		}

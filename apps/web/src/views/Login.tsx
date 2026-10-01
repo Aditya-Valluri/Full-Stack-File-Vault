@@ -24,6 +24,8 @@ export function LoginView({ onLogin, onBack, error: initialError = '' }:
  }, []);
  const [loginName, setLoginName] = useState('');
  const [password, setPassword] = useState('');
+ const [secondFactor, setSecondFactor] = useState('');
+ const [mfaRequired, setMFARequired] = useState(false);
  const [visible, setVisible] = useState(false);
  const [busy, setBusy] = useState(false);
  const [blocked, setBlocked] = useState(false);
@@ -31,9 +33,10 @@ export function LoginView({ onLogin, onBack, error: initialError = '' }:
  async function submit(event: FormEvent) {
   event.preventDefault(); setBusy(true); setError(''); setBlocked(false);
   try {
-   const result = await mutate(LoginDocument, { input: { loginName, password } });
+   const result = await mutate(LoginDocument, { input: { loginName, password, secondFactor: secondFactor || null } });
    setCSRF(result.login.csrfToken); setPassword(''); onLogin(result.login.user);
   } catch (failure) {
+   if (errorCode(failure) === 'MFA_REQUIRED') setMFARequired(true);
    setBlocked(errorCode(failure) === 'LOGIN_TEMPORARILY_BLOCKED');
    setError(errorCode(failure) === 'UNAUTHENTICATED' ? 'The username, email or password was not accepted.' : explainError(failure));
   } finally { setBusy(false); }
@@ -52,6 +55,7 @@ export function LoginView({ onLogin, onBack, error: initialError = '' }:
     <form onSubmit={event => void submit(event)} className="form-stack">
      <label>Username or email<input autoComplete="username" required maxLength={254} value={loginName} onChange={event => setLoginName(event.target.value)} placeholder="Your username or verified email" /></label>
      <label>Password<div className="password-field"><input type={visible ? 'text' : 'password'} autoComplete="current-password" required maxLength={1024} value={password} onChange={event => setPassword(event.target.value)} placeholder="Your password" /><button type="button" aria-label={visible ? 'Hide password' : 'Show password'} onClick={() => setVisible(!visible)}>{visible ? <EyeOff size={18} /> : <Eye size={18} />}</button></div></label>
+     {mfaRequired && <label>Authenticator or recovery code<input autoComplete="one-time-code" required maxLength={40} value={secondFactor} onChange={event => setSecondFactor(event.target.value)} /></label>}
      {error && <Notice error>{error}</Notice>}
      <Button type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}<ArrowRight size={17} /></Button>
     </form>

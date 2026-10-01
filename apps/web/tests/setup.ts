@@ -86,13 +86,13 @@ export default async function setup() {
   console.log('[e2e] Building API and provisioning test accounts');
   await run('go', ['build', '-o', server, './cmd/server'], { cwd: api });
   await run('go', ['build', '-o', provision, './cmd/provision-user'], { cwd: api });
-  for (const [name, role] of [['e2e.owner', 'USER'], ['e2e.admin', 'ADMIN'], ['e2e.recipient', 'USER'], ['e2e.retry', 'USER']]) {
+  for (const [name, role] of [['e2e.owner', 'USER'], ['e2e.admin', 'ADMIN'], ['e2e.recipient', 'USER'], ['e2e.retry', 'USER'], ['e2e.mfa', 'USER'], ['e2e.progress', 'USER'], ['e2e.folders', 'USER']]) {
    await run(provision, ['-login', name, '-role', role], { env: { PROVISION_DATABASE_URL: operatorURL }, input: accountPassword });
   }
   process.env.E2E_PASSWORD = accountPassword;
   const backend = spawn(server, [], {
    cwd: workspace, windowsHide: true, stdio: 'ignore',
-   env: { ...process.env, AUTH_MAIL_MODE: 'development', AUTH_DEV_SMTP_ADDR: mail.address, DATABASE_URL: runtimeURL, APP_ENV: 'development', HTTP_ADDR: '127.0.0.1:18881', PUBLIC_ORIGIN: 'http://127.0.0.1:4173', BLOB_STORAGE_DIR: resolve(workspace, 'blobs'), UPLOAD_STAGING_DIR: resolve(workspace, 'staging') },
+   env: { ...process.env, MFA_ENCRYPTION_KEY: randomBytes(32).toString('base64'), MFA_ENCRYPTION_KEY_FILE: '', AUTH_MAIL_MODE: 'development', AUTH_DEV_SMTP_ADDR: mail.address, DATABASE_URL: runtimeURL, APP_ENV: 'development', HTTP_ADDR: '127.0.0.1:18881', PUBLIC_ORIGIN: 'http://127.0.0.1:4173', BLOB_STORAGE_DIR: resolve(workspace, 'blobs'), UPLOAD_STAGING_DIR: resolve(workspace, 'staging') },
   });
   children.push(backend);
   await ready('http://127.0.0.1:18881/readyz', backend);

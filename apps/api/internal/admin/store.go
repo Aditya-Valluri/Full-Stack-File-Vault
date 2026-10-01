@@ -113,9 +113,10 @@ type FilePage struct {
 }
 type Statistics struct{ UserCount, FileCount, LogicalBytes, ReferencedBytes, PendingDeletionBytes, SavedBytes, SavingsPercent, DownloadStarts string }
 type Audit struct {
-	ID, ActorID, TargetUserID, Action, PreviousQuota, NewQuota, RevokedSessions, RevokedShares string
-	OccurredAt                                                                                 time.Time
-	PreviousDisabledAt, NewDisabledAt                                                          *time.Time
+	ID, Action, PreviousQuota, NewQuota, RevokedSessions, RevokedShares string
+	ActorID, TargetUserID, FileID, ShareID                              *string
+	OccurredAt                                                          time.Time
+	PreviousDisabledAt, NewDisabledAt                                   *time.Time
 }
 type AuditPage struct {
 	Nodes       []Audit
@@ -137,7 +138,12 @@ func quotaInput(value string) (int64, error) {
 	return parsed, nil
 }
 
-const userColumns = "u.id::text,c.login_name,u.role,u.used_bytes::text,u.quota_bytes::text,u.disabled_at,u.created_at"
+// Both joins are at most one row per user (credential user PK and unique
+// identity user/provider). Resolve names in the page query, never per-user calls.
+// Keep legacy-name precedence consistent with the existing session display.
+const identityJoins = " LEFT JOIN vault.credentials c ON c.user_id=u.id LEFT JOIN vault.user_identities i ON i.user_id=u.id AND i.provider='password' AND i.provider_subject=u.email_normalized"
+const identityName = "COALESCE(c.login_name,CASE WHEN u.email_verified_at IS NOT NULL AND i.user_id IS NOT NULL THEN u.email_address END)"
+const userColumns = "u.id::text," + identityName + ",u.role,u.used_bytes::text,u.quota_bytes::text,u.disabled_at,u.created_at"
 
 func scanUser(row pgx.Row) (User, error) {
 	var user User
@@ -145,7 +151,7 @@ func scanUser(row pgx.Row) (User, error) {
 	return user, err
 }
 func readUser(ctx context.Context, tx pgx.Tx, id string) (User, error) {
-	user, err := scanUser(tx.QueryRow(ctx, "SELECT "+userColumns+" FROM vault.users u LEFT JOIN vault.credentials c ON c.user_id=u.id WHERE u.id=$1", id))
+	user, err := scanUser(tx.QueryRow(ctx, "SELECT "+userColumns+" FROM vault.users u"+identityJoins+" WHERE u.id=$1", id))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return User{}, files.ErrNotFound
 	}

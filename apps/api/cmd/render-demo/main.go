@@ -121,12 +121,7 @@ func serve() error {
 	}
 	// Do not inherit operator, demo-account or the other worker's credentials.
 	children[0].Env = append(append([]string{}, common...), "DATABASE_URL="+c.runtime, "PUBLIC_ORIGIN="+origin, "HTTP_ADDR=127.0.0.1:8080", "USER_CALLS_PER_SECOND=2", "UPLOAD_MAX_FILE_BYTES=10000000", "UPLOAD_MAX_REQUEST_BYTES=11000000", "UPLOAD_MAX_CONCURRENT=2")
-	// Only the API receives the operator's send-only Gmail credentials.
-	for _, key := range []string{"AUTH_MAIL_MODE", "AUTH_MAIL_FROM", "GMAIL_SENDER_CLIENT_ID", "GMAIL_SENDER_CLIENT_SECRET", "GMAIL_SENDER_REFRESH_TOKEN", "GMAIL_SENDER_CLIENT_ID_FILE", "GMAIL_SENDER_CLIENT_SECRET_FILE", "GMAIL_SENDER_REFRESH_TOKEN_FILE"} {
-		if value, ok := os.LookupEnv(key); ok {
-			children[0].Env = append(children[0].Env, key+"="+value)
-		}
-	}
+	children[0].Env = appendAPIAuthEnvironment(children[0].Env, os.LookupEnv)
 	children[1].Env = append(append([]string{}, common...), "GC_DATABASE_URL="+c.gc, "GC_METRICS_ADDR=127.0.0.1:8082")
 	exited := make(chan error, 2)
 	started := 0
@@ -178,4 +173,20 @@ func serve() error {
 	defer cancel()
 	_ = srv.Shutdown(shutdown)
 	return result
+}
+
+// appendAPIAuthEnvironment forwards only API authentication settings.
+// The collector never receives mail credentials or the MFA encryption key.
+func appendAPIAuthEnvironment(env []string, lookup func(string) (string, bool)) []string {
+	for _, key := range []string{
+		"AUTH_MAIL_MODE", "AUTH_MAIL_FROM",
+		"GMAIL_SENDER_CLIENT_ID", "GMAIL_SENDER_CLIENT_SECRET", "GMAIL_SENDER_REFRESH_TOKEN",
+		"GMAIL_SENDER_CLIENT_ID_FILE", "GMAIL_SENDER_CLIENT_SECRET_FILE", "GMAIL_SENDER_REFRESH_TOKEN_FILE",
+		"MFA_ENCRYPTION_KEY", "MFA_ENCRYPTION_KEY_FILE",
+	} {
+		if value, ok := lookup(key); ok {
+			env = append(env, key+"="+value)
+		}
+	}
+	return env
 }

@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"full-stack-file-vault.local/api/internal/auth"
+	"full-stack-file-vault.local/api/internal/files"
 	"full-stack-file-vault.local/api/internal/upload"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -293,6 +294,33 @@ func (t *MultipartTransport) uploadPaths(params *graphql.RawParams) (map[string]
 		if value != nil {
 			text, ok := value.(string)
 			if !ok || !upload.ValidRetryKey(text) {
+				return nil, invalid
+			}
+		}
+	}
+	if tags := field.Arguments.ForName("tags"); tags != nil {
+		expectedVariables++
+		if tags.Value.Kind != ast.Variable || tags.Value.Raw == arg.Value.Raw {
+			return nil, invalid
+		}
+		value, exists := params.Variables[tags.Value.Raw]
+		if !exists {
+			return nil, invalid
+		}
+		if value != nil {
+			values, ok := value.([]any)
+			if !ok || len(values) > 20 {
+				return nil, invalid
+			}
+			input := make([]string, len(values))
+			for i, v := range values {
+				text, ok := v.(string)
+				if !ok {
+					return nil, invalid
+				}
+				input[i] = text
+			}
+			if _, err := files.NormalizeTags(input); err != nil {
 				return nil, invalid
 			}
 		}

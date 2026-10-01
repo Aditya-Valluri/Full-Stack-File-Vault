@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -31,6 +32,7 @@ type Session struct {
 // SessionStore manages anonymous and authenticated sessions. Create's caller must verify
 // credentials before creation. It does not authorize browser requests by itself.
 type SessionStore struct {
+	mfaCipher      cipher.AEAD
 	pool           *pgxpool.Pool
 	mail           mailer.MailSender
 	absolute, idle time.Duration

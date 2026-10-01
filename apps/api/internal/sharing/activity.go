@@ -10,6 +10,7 @@ import (
 type Activity struct {
 	ID, ShareID, Kind, Status string
 	RecipientID               *string
+	RecipientName             *string
 	OccurredAt                time.Time
 }
 
@@ -29,9 +30,12 @@ func recordActivity(ctx context.Context, tx pgx.Tx, c capability, kind string) e
 }
 
 func readActivity(ctx context.Context, tx pgx.Tx, fileID string) ([]Activity, error) {
-	rows, err := tx.Query(ctx, `SELECT a.id::text,a.share_id::text,a.recipient_id::text,a.kind,a.occurred_at,
+	rows, err := tx.Query(ctx, `SELECT a.id::text,a.share_id::text,a.recipient_id::text,COALESCE(c.login_name, CASE WHEN u.email_verified_at IS NOT NULL AND i.user_id IS NOT NULL THEN u.email_address END),a.kind,a.occurred_at,
  CASE WHEN a.expires_at<=clock_timestamp() THEN 'EXPIRED' WHEN s.id IS NULL THEN 'REVOKED' ELSE 'ACTIVE' END
  FROM vault.share_activity a LEFT JOIN vault.file_shares s ON s.id=a.share_id
+ LEFT JOIN vault.users u ON u.id=a.recipient_id
+ LEFT JOIN vault.credentials c ON c.user_id=u.id
+ LEFT JOIN vault.user_identities i ON i.user_id=u.id AND i.provider='password' AND i.provider_subject=u.email_normalized
  WHERE a.file_id=$1 ORDER BY a.id DESC LIMIT 100`, fileID)
 	if err != nil {
 		return nil, err
@@ -40,7 +44,7 @@ func readActivity(ctx context.Context, tx pgx.Tx, fileID string) ([]Activity, er
 	result := make([]Activity, 0)
 	for rows.Next() {
 		var a Activity
-		if err = rows.Scan(&a.ID, &a.ShareID, &a.RecipientID, &a.Kind, &a.OccurredAt, &a.Status); err != nil {
+		if err = rows.Scan(&a.ID, &a.ShareID, &a.RecipientID, &a.RecipientName, &a.Kind, &a.OccurredAt, &a.Status); err != nil {
 			return nil, err
 		}
 		result = append(result, a)

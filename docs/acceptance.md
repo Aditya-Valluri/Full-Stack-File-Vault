@@ -93,3 +93,32 @@ billing settings remain unverified; no new cloud resources were created here.
 ## Repository audit (2026-09-21)
 
 See [the audit report](audit-2026-09-21.md) for reproduced inconsistencies, fixes, test results, hosted CI status, and the remaining deployment/recovery gaps. Earlier PASS entries describe their recorded local checks; they are not a claim that the current pushed revision passed hosted CI.
+
+## Release validation update (2026-09-28)
+
+- Hosted GitHub Actions passed for authentication commit 7c745e8 and latest
+  pushed commit 8af78c3. Latest run:
+  https://github.com/Aditya-Valluri/Full-Stack-File-Vault/actions/runs/36371269143
+- The updated Render container built successfully. The isolated rehearsal result
+  recorded at 2026-09-28T03:00:07.189Z confirms non-superuser migrations, repeat
+  setup, Secure/HttpOnly cookies, content persistence after container replacement,
+  shared downloads, administration, upload limits, duplicate deletion, and physical
+  capacity release. No live Render resources were changed.
+- One read-only check of the existing public readiness endpoint returned HTTP 200.
+  This does not establish its deployed commit or validate the public user flows.
+- Remaining public-release gates: confirm live revision and Gmail configuration,
+  approve any manual deployment, and complete controlled live account/mail/file
+  checks. Blueprint resource association remains unresolved; do not approve
+  replacement resource creation. See release-checklist.md.
+- Production off-host recovery, alert delivery, sustained load, and cluster rollout
+  remain unverified. Google sign-in remains deferred.
+
+## Public release smoke checks (2026-09-28)
+
+The supplied Render dashboard identifies 8af78c3 as Live on existing service
+srv-daolnujbc2fs73fv5a20. Read-only checks returned HTTP 200 for the public
+page and readiness endpoint, UNAUTHENTICATED for anonymous identity/admin
+queries, and HTTP 403 for a foreign-origin request. Registration is still
+disabled. These checks do not establish Gmail delivery, authenticated file
+workflows, database migration state, or production recovery. No live mutations
+or emails were submitted. See [release checklist](release-checklist.md).

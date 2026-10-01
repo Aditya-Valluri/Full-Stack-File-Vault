@@ -134,7 +134,12 @@ func testUploadAPI(t *testing.T, ctx context.Context, admin *pgx.Conn, dsn, stor
 	if status != 200 || !strings.Contains(output, "\"usedBytes\":\"8\"") || !strings.Contains(output, "\"remainingBytes\":\"0\"") {
 		t.Fatal("quota response incorrect", output)
 	}
-	// Two admissions already used: rejection must occur before reading any file body.
+	// Establish a full window explicitly: slow CI must not let earlier HTTP calls
+	// age out before checking the pre-body admission boundary.
+	if _, err := admin.Exec(ctx, "UPDATE vault.user_request_windows SET accepted_at=ARRAY[clock_timestamp()+interval '30 seconds',clock_timestamp()+interval '30 seconds'] WHERE user_id=$1", user); err != nil {
+		t.Fatal(err)
+	}
+	// Rejection must occur before reading any file body.
 	unread := &countBody{}
 	req := httptest.NewRequest("POST", "https://vault.example.com/graphql", unread).WithContext(ctx)
 	req.Header.Set("Origin", "https://vault.example.com")

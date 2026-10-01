@@ -26,7 +26,8 @@ func (s *Store) Inspect(ctx context.Context, token string) (SharedFile, error) {
 	}
 	defer rollback(tx)
 	result := SharedFile{Name: c.file.Name, DetectedMIME: c.file.DetectedMIME, SizeBytes: c.file.SizeBytes, ExpiresAt: c.share.ExpiresAt,
-		PreviewAllowed: c.share.Permission == "PREVIEW_AND_DOWNLOAD" && files.PreviewAllowed(c.file.DetectedMIME)}
+		PreviewAllowed:  c.share.Permission != "DOWNLOAD" && files.FilePreviewAllowed(c.file.Name, c.file.DetectedMIME),
+		DownloadAllowed: c.share.Permission != "PREVIEW_ONLY"}
 	if err = recordActivity(ctx, tx, c, "OPENED"); err != nil {
 		return SharedFile{}, files.ErrUnavailable
 	}
@@ -54,7 +55,10 @@ func (s *Store) CreateAccess(ctx context.Context, token, mode string) (files.Acc
 		return files.AccessGrant{}, err
 	}
 	defer rollback(tx)
-	if mode == "PREVIEW" && (c.share.Permission != "PREVIEW_AND_DOWNLOAD" || !files.PreviewAllowed(c.file.DetectedMIME)) {
+	if mode == "DOWNLOAD" && c.share.Permission == "PREVIEW_ONLY" {
+		return files.AccessGrant{}, files.ErrNotFound
+	}
+	if mode == "PREVIEW" && (c.share.Permission == "DOWNLOAD" || !files.FilePreviewAllowed(c.file.Name, c.file.DetectedMIME)) {
 		return files.AccessGrant{}, files.ErrPreviewUnsupported
 	}
 	if _, err = tx.Exec(ctx, "DELETE FROM vault.shared_access WHERE session_hash=$1 AND expires_at<=clock_timestamp()", binding); err != nil {
@@ -111,7 +115,10 @@ func (s *Store) OpenAccess(ctx context.Context, token string, storage files.Cont
 	if err != nil {
 		return files.OpenContent{}, files.ErrUnavailable
 	}
-	if mode == "PREVIEW" && (c.share.Permission != "PREVIEW_AND_DOWNLOAD" || !files.PreviewAllowed(c.file.DetectedMIME)) {
+	if mode == "DOWNLOAD" && c.share.Permission == "PREVIEW_ONLY" {
+		return files.OpenContent{}, files.ErrNotFound
+	}
+	if mode == "PREVIEW" && (c.share.Permission == "DOWNLOAD" || !files.FilePreviewAllowed(c.file.Name, c.file.DetectedMIME)) {
 		return files.OpenContent{}, files.ErrPreviewUnsupported
 	}
 	handle, err := storage.Open(ctx, c.key, c.file.SizeBytes)

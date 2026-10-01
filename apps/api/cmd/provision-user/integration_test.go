@@ -185,6 +185,31 @@ func TestProvisionCommandIntegration(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	for _, suffix := range []string{"up", "down", "up"} {
+		if _, err := conn.Exec(ctx, migrationSQL(t, "000021_share_activity."+suffix+".sql")); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, suffix := range []string{"up", "down", "up"} {
+		if _, err := conn.Exec(ctx, migrationSQL(t, "000022_resource_audit."+suffix+".sql")); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, suffix := range []string{"up", "down", "up"} {
+		if _, err := conn.Exec(ctx, migrationSQL(t, "000023_totp_mfa."+suffix+".sql")); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, suffix := range []string{"up", "down", "up"} {
+		if _, err := conn.Exec(ctx, migrationSQL(t, "000024_view_only_shares."+suffix+".sql")); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, suffix := range []string{"up", "down", "up"} {
+		if _, err := conn.Exec(ctx, migrationSQL(t, "000025_folders."+suffix+".sql")); err != nil {
+			t.Fatal(err)
+		}
+	}
 	t.Run("session lifecycle", func(t *testing.T) { testSessionLifecycle(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
 	t.Run("pre-login rotation", func(t *testing.T) {
 		testLoginRotation(t, ctx, conn, dsn("vault_runtime", runtimePassword), accountPassword)
@@ -213,14 +238,13 @@ func TestProvisionCommandIntegration(t *testing.T) {
 	t.Run("file lifecycle", func(t *testing.T) {
 		testLifecycle(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory)
 	})
-	for _, suffix := range []string{"up", "down", "up"} {
-		if _, err := conn.Exec(ctx, migrationSQL(t, "000021_share_activity."+suffix+".sql")); err != nil {
-			t.Fatal(err)
-		}
-	}
+	t.Run("folders", func(t *testing.T) { testFolders(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory) })
 	t.Run("sharing", func(t *testing.T) { testSharing(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory) })
 	t.Run("administration", func(t *testing.T) {
 		testAdministration(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory)
+	})
+	t.Run("upload tags", func(t *testing.T) {
+		testUploadTags(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory)
 	})
 	t.Run("upload receipts", func(t *testing.T) {
 		testUploadReceipts(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory)
@@ -233,6 +257,7 @@ func TestProvisionCommandIntegration(t *testing.T) {
 	})
 	t.Run("email registration", func(t *testing.T) { testEmailRegistration(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
 	t.Run("password recovery", func(t *testing.T) { testPasswordRecovery(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
+	t.Run("MFA", func(t *testing.T) { testMFA(t, ctx, conn, dsn("vault_runtime", runtimePassword), storageDirectory) })
 	t.Run("administrator contact", func(t *testing.T) { testContact(t, ctx, conn, dsn("vault_runtime", runtimePassword)) })
 	t.Log(fmt.Sprintf("Verified accounts and sessions; test container %s will be removed", name))
 }

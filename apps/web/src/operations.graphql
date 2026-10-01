@@ -6,19 +6,19 @@ query Vault($first: Int!, $after: String, $filter: FileFilter) {
  quota { usedBytes quotaBytes remainingBytes }
  storageStats { fileCount logicalBytes uniqueContentBytes savedBytes savingsPercent }
  files(first: $first, after: $after, filter: $filter) {
-  nodes { id name sizeBytes detectedMIME createdAt tags }
+  nodes { id name sizeBytes detectedMIME createdAt tags folderId }
   pageInfo { endCursor hasNextPage }
  }
 }
-mutation UploadOne($file: Upload!, $idempotencyKey: ID!) { uploadFile(file: $file, idempotencyKey: $idempotencyKey) { id name sizeBytes detectedMIME createdAt } }
-mutation UploadMany($files: [Upload!]!, $idempotencyKey: ID!) { uploadFiles(files: $files, idempotencyKey: $idempotencyKey) { id name sizeBytes detectedMIME createdAt } }
+mutation UploadOne($file: Upload!, $idempotencyKey: ID!, $tags: [String!]) { uploadFile(file: $file, idempotencyKey: $idempotencyKey, tags: $tags) { id name sizeBytes detectedMIME createdAt } }
+mutation UploadMany($files: [Upload!]!, $idempotencyKey: ID!, $tags: [String!]) { uploadFiles(files: $files, idempotencyKey: $idempotencyKey, tags: $tags) { id name sizeBytes detectedMIME createdAt } }
 mutation SetFileTags($id: ID!, $tags: [String!]!) { setFileTags(fileId: $id, tags: $tags) }
 mutation DeleteFile($id: ID!) { deleteFile(id: $id) }
 mutation FileAccess($id: ID!, $mode: FileAccessMode!) { createFileAccess(fileId: $id, mode: $mode) { url expiresAt } }
-query FileShares($id: ID!) { fileShares(fileId: $id) { activity { id shareId recipientId kind occurredAt status } downloadStarts shares { id recipientId permission createdAt expiresAt } } }
+query FileShares($id: ID!) { fileShares(fileId: $id) { activity { id shareId recipientId recipientName kind occurredAt status } downloadStarts shares { id recipientId permission createdAt expiresAt } } }
 mutation CreateShare($input: CreateShareInput!) { createShare(input: $input) { url share { id permission recipientId expiresAt } } }
 mutation RevokeShare($id: ID!) { revokeShare(id: $id) }
-query SharedFile($token: String!) { sharedFile(token: $token) { name sizeBytes detectedMIME previewAllowed expiresAt } }
+query SharedFile($token: String!) { sharedFile(token: $token) { name sizeBytes detectedMIME previewAllowed downloadAllowed expiresAt } }
 mutation SharedAccess($token: String!, $mode: FileAccessMode!) { createSharedAccess(token: $token, mode: $mode) { url expiresAt } }
 query AdminOverview {
  adminStorageStats { userCount fileCount logicalBytes referencedBytes pendingDeletionBytes savedBytes savingsPercent downloadStarts }
@@ -37,7 +37,7 @@ query AdminFiles($first: Int!, $after: String, $owner: ID) {
 }
 query AdminAudit($first: Int!, $after: String) {
  adminAudit(first: $first, after: $after) {
-  nodes { id actorId targetUserId action occurredAt previousQuota newQuota previousDisabledAt newDisabledAt revokedSessions revokedShares }
+  nodes { id fileId shareId actorId targetUserId action occurredAt previousQuota newQuota previousDisabledAt newDisabledAt revokedSessions revokedShares }
   pageInfo { endCursor hasNextPage }
  }
 }
@@ -55,3 +55,18 @@ mutation ContactAdministrator($subject: String!, $message: String!) { contactAdm
 mutation RequestPasswordReset($email: String!) { requestPasswordReset(email: $email) }
 mutation CompletePasswordReset($code: String!, $password: String!) { completePasswordReset(code: $code, password: $password) }
 mutation ChangePassword($currentPassword: String!, $newPassword: String!) { changePassword(currentPassword: $currentPassword, newPassword: $newPassword) }
+
+query AdminUploaders($first: Int!, $after: String) {
+ adminUsers(first: $first, after: $after) { nodes { id loginName } pageInfo { endCursor hasNextPage } }
+}
+
+query MFAStatus { mfaStatus { available enabled } }
+mutation SetupMFA($password: String!) { setupMFA(currentPassword: $password) { uri } }
+mutation EnableMFA($password: String!, $code: String!) { enableMFA(currentPassword: $password, code: $code) { recoveryCodes } }
+mutation DisableMFA($password: String!, $code: String!) { disableMFA(currentPassword: $password, code: $code) }
+
+query Folders { folders { id parentId name } }
+mutation CreateFolder($name: String!, $parentId: ID) { createFolder(name: $name, parentId: $parentId) { id parentId name } }
+mutation RenameFolder($id: ID!, $name: String!) { renameFolder(id: $id, name: $name) { id parentId name } }
+mutation DeleteFolder($id: ID!) { deleteFolder(id: $id) }
+mutation MoveFile($fileId: ID!, $folderId: ID) { moveFile(fileId: $fileId, folderId: $folderId) }

@@ -5,6 +5,7 @@ import { print } from 'graphql';
 import { Observable } from 'rxjs';
 import { BootstrapDocument, IdentityDocument, type IdentityQuery } from '../generated/graphql';
 import { requests } from './scheduler';
+import { uploadRequest, type UploadProgress } from './upload-transport';
 
 let csrfToken = '';
 let authenticated = false;
@@ -37,7 +38,8 @@ const link = new ApolloLink(operation => new Observable(observer => {
    headers.set('Content-Type', 'application/json');
    body = JSON.stringify(envelope);
   }
-  const response = await fetch('/graphql', {
+  const response = uploads ? await uploadRequest(body as FormData, headers, controller.signal,
+   context.onUploadProgress as ((progress: UploadProgress) => void) | undefined) : await fetch('/graphql', {
    method: 'POST', credentials: 'same-origin', cache: 'no-store',
    headers, body, signal: controller.signal,
   });
@@ -60,9 +62,18 @@ export const client = new ApolloClient({
  defaultOptions: { query: { fetchPolicy: 'no-cache' }, mutate: { fetchPolicy: 'no-cache' } },
 });
 export async function query<D, V extends OperationVariables>(document: TypedDocumentNode<D, V>, variables: V): Promise<D> {
- const result = await client.query({ query: document, variables, fetchPolicy: 'no-cache' });
- if (!result.data) throw new Error('No response received.');
- return result.data as D;
+ for (let attempt = 0; ; attempt++) {
+  try {
+   const result = await client.query({ query: document, variables, fetchPolicy: 'no-cache' });
+   if (!result.data) throw new Error('No response received.');
+   return result.data as D;
+  } catch (error) {
+   // Admission rejection means the query was not executed. Only queries retry;
+   // mutations keep explicit idempotency/retry semantics.
+   if (errorCode(error) !== 'RATE_LIMITED' || attempt >= 2) throw error;
+   await new Promise(resolve => setTimeout(resolve, 1100));
+  }
+ }
 }
 export async function mutate<D, V extends OperationVariables>(document: TypedDocumentNode<D, V>, variables: V, context?: Record<string, unknown>): Promise<D> {
  const result = await client.mutate({ mutation: document, variables, context, fetchPolicy: 'no-cache' });
@@ -107,6 +118,9 @@ export function explainError(error: unknown): string {
  }
  const messages: Record<string, string> = {
   UNAUTHENTICATED: 'Please sign in again to continue.',
+  MFA_REQUIRED: 'Enter a fresh 6-digit authenticator code or an unused recovery code.',
+  MFA_REJECTED: 'The code or setup was not accepted. Use a fresh authenticator code or an unused recovery code.',
+  MFA_UNAVAILABLE: 'Authenticator setup is unavailable. Contact your administrator.',
   FORBIDDEN: 'You do not have permission to do that.',
   NOT_FOUND: 'This file or link is no longer available to this account.',
   CONTACT_INVALID: 'Enter a subject up to 120 UTF-8 bytes and a message up to 4000 UTF-8 bytes, without control characters.',
@@ -134,6 +148,12 @@ export function startDownload(url: string, name: string): Promise<void> {
   anchor.href = safeContentURL(url); anchor.download = name; anchor.rel = 'noreferrer';
   document.body.append(anchor); anchor.click(); anchor.remove();
  });
+}
+// Schedule the actual fetch, including effect cancellation, so StrictMode and
+// rapid preview navigation cannot bypass pacing with duplicate byte requests.
+export function fetchPreview(url: string, signal: AbortSignal): Promise<Response> {
+ const path = safeContentURL(url);
+ return requests.run(() => fetch(path, { credentials: 'same-origin', cache: 'no-store', signal }), signal);
 }
 export function preparePreview(url: string): Promise<string> {
  return requests.run(async () => safeContentURL(url));

@@ -122,6 +122,9 @@ func (s *SessionStore) Login(ctx context.Context, anonymous, csrf, login string,
 	if currentHash != hash {
 		return "", Session{}, ErrLoginRejected
 	}
+	if err = s.checkMFALogin(ctx, tx, user); err != nil {
+		return "", Session{}, err
+	}
 	digest, _ := sessionDigest(anonymous)
 	var locked []byte
 	if err = tx.QueryRow(ctx, "SELECT token_hash FROM vault.sessions WHERE token_hash=$1 FOR UPDATE", digest).Scan(&locked); errors.Is(err, pgx.ErrNoRows) {

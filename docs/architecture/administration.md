@@ -100,3 +100,54 @@ session/share revocation, and preservation of logical files.
 ## ACTIONABLE MOMENTUM
 
 Next in the authorized sequence: React/TypeScript frontend.
+
+## Identity display and uploader selection
+
+Admin user pages, file metadata, and quota/status mutation responses resolve
+legacy usernames first. If no legacy credential exists, a matching password
+identity and verified account email supply the display name. These lookups use
+unique-key joins in the existing page query; no per-user query or password-hash
+selection is needed. An account with neither supported identity is labeled
+"Account without a login identity" rather than implying that verified email
+accounts were never provisioned.
+
+The uploader selector reuses the adminUsers field through a minimal
+AdminUploaders operation (id, loginName, cursor metadata). It requests 50 accounts
+at a time, below the existing GraphQL complexity limit, with explicit Load more
+and Retry actions. Display labels are human-readable; filter values remain UUIDs.
+A selection opened from a user row retains its label even before that user's
+selector page loads. Account identities remain admin-only; private tags and
+file-content authorization are unchanged.
+
+## Resource and security audit
+
+Migration 000022 extends the existing admin audit table, API, and role-protected
+feed. Transactional triggers record authenticated-session creation, uploads,
+file deletion, share creation/removal/opening, shared download starts, rejected
+password attempts, and account security-version changes. Owner downloads are
+counted once per short-lived grant after a GET opens the content successfully.
+HEAD requests and preview requests do not count as downloads. A download start
+does not prove the entire transfer completed.
+
+Authenticated-session creation covers login and registration; it is labelled as
+such rather than claiming every new session came from a password login. A share
+removal can result from explicit revocation, expiry cleanup, account disabling,
+or file deletion. Unknown/system actors are null rather than incorrectly
+attributed to the file owner. Anonymous public-share visitors remain anonymous.
+Rejected logins contain no submitted identifier, IP address, credential, or hash.
+Existing admission budgets bound rejected-login event creation.
+
+File/share UUIDs are snapshots, not live foreign keys, so removing a file does
+not remove its audit history. The runtime role still cannot update or delete
+audit records. Existing quota fields are meaningful only for administrative
+events; resource events use zero placeholders and the UI displays resource IDs
+instead. All event writes roll back with failed mutations. The feed sorts the
+numeric database ID, not its GraphQL string representation.
+
+Audit history is metadata and needs an operator retention policy. A suggested
+starting point is 90 days, adjusted to operational requirements. No automatic
+deletion job is introduced here. An authorized database operator can remove
+expired records in bounded batches during maintenance; the web runtime must
+not receive DELETE privileges. Monitor table size before enabling a sustained
+high-volume public deployment. Migration rollback removes only the additional
+event kinds to restore the prior schema, so export required audit history first.

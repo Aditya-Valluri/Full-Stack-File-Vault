@@ -14,9 +14,14 @@ links require both possession and the specified account. Both use random 256-bit
 whose SHA-256 digests alone are stored. A stateless signed URL would avoid a DB lookup
 but complicate immediate revocation, owner disablement, and file deletion checks.
 
-DOWNLOAD permits attachment transport only. PREVIEW_AND_DOWNLOAD also permits the
-existing PNG/JPEG/WebP inline policy. A preview-only permission would falsely imply
-that a browser receiving bytes cannot save them, so it is deliberately absent.
+DOWNLOAD permits attachment transport only. PREVIEW_AND_DOWNLOAD also permits
+authorized previews. Migration 000024 adds PREVIEW_ONLY for supported preview
+formats; both grant creation and byte redemption reject DOWNLOAD for these links.
+PNG/JPEG/WebP, TXT and PDF follow the shared [preview policy](previews.md).
+View-only is a permission on application operations, not DRM: the browser receives
+preview bytes and can copy them or capture screenshots. Unsupported preview types
+cannot receive a view-only link. A rollback refuses while view-only links exist
+instead of silently broadening their permissions.
 
 ## THE HOW
 
@@ -32,7 +37,7 @@ query Manage($id: ID!) {
  fileShares(fileId: $id) { downloadStarts shares { id permission recipientId expiresAt } }
 }
 query Inspect($token: String!) {
- sharedFile(token: $token) { name sizeBytes detectedMIME previewAllowed expiresAt }
+ sharedFile(token: $token) { name sizeBytes detectedMIME previewAllowed downloadAllowed expiresAt }
 }
 mutation Access($token: String!) {
  createSharedAccess(token: $token, mode: DOWNLOAD) { url expiresAt }
@@ -42,8 +47,11 @@ mutation Revoke($id: ID!) { revokeShare(id: $id) }
 
 CreateShareInput requires fileId and expiresInSeconds (60..2592000); permission defaults
 to DOWNLOAD. Omit recipientId for a public bearer link. The URL is returned once as
-/share#<token>; the frontend will consume the fragment and remove it from history.
-The sharing page itself belongs to the frontend increment and is not implemented here.
+/share#<token>; the frontend consumes the fragment and removes it from history.
+The sharing page shows only permitted actions. View-only previews include an
+optional removable watermark with the project name and local access time; it
+contains no owner identity, token or private metadata and is not an enforcement
+mechanism.
 Do not put the token in a query string, telemetry, or logs. A lost creation response
 requires owner inspection/revocation and a new link; raw tokens cannot be recovered.
 
@@ -88,4 +96,9 @@ A gated storage open verifies deletion waits for admission and blocks future ope
 
 ## ACTIONABLE MOMENTUM
 
-Next in the authorized sequence: role-protected administration and audit records.
+Administration and audit records are described in [administration.md](administration.md).
+Recipient-restricted activity resolves the current verified account display name
+for the owner. Public visitors remain anonymous even if signed in. Names are
+resolved on read, not preserved as identity snapshots. No forwarding attribution
+is inferred from a reused link. One-time links are not implemented: their exact
+consumption semantics across preview ranges and retries require a separate design.

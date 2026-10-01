@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
+	"path"
 	"strings"
 	"time"
 
@@ -34,11 +35,17 @@ type OpenContent struct {
 
 func PreviewAllowed(media string) bool {
 	switch strings.SplitN(media, ";", 2)[0] {
-	case "image/png", "image/jpeg", "image/webp":
+	case "image/png", "image/jpeg", "image/webp", "text/plain", "application/pdf":
 		return true
 	default:
 		return false
 	}
+}
+
+// Text preview is limited to TXT names in addition to detected plain-text MIME.
+// Extensions never enable a MIME type; script/HTML names cannot opt into preview.
+func FilePreviewAllowed(name, media string) bool {
+	return PreviewAllowed(media) && (strings.SplitN(media, ";", 2)[0] != "text/plain" || strings.EqualFold(path.Ext(name), ".txt"))
 }
 
 func (s *Store) CreateAccess(ctx context.Context, id, mode string) (AccessGrant, error) {
@@ -62,15 +69,15 @@ func (s *Store) CreateAccess(ctx context.Context, id, mode string) (AccessGrant,
 		return AccessGrant{}, err
 	}
 	defer rollback(tx)
-	var detected string
-	err = tx.QueryRow(ctx, "SELECT COALESCE(b.detected_mime,'application/octet-stream') FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id WHERE f.id=$1 AND f.owner_id=$2 AND b.state='ACTIVE'", id, identity.UserID).Scan(&detected)
+	var detected, name string
+	err = tx.QueryRow(ctx, "SELECT COALESCE(b.detected_mime,'application/octet-stream'),f.original_name FROM vault.files f JOIN vault.blobs b ON b.id=f.blob_id WHERE f.id=$1 AND f.owner_id=$2 AND b.state='ACTIVE'", id, identity.UserID).Scan(&detected, &name)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return AccessGrant{}, ErrNotFound
 	}
 	if err != nil {
 		return AccessGrant{}, ErrUnavailable
 	}
-	if mode == "PREVIEW" && !PreviewAllowed(detected) {
+	if mode == "PREVIEW" && !FilePreviewAllowed(name, detected) {
 		return AccessGrant{}, ErrPreviewUnsupported
 	}
 	if _, err = tx.Exec(ctx, "DELETE FROM vault.file_access WHERE owner_id=$1 AND expires_at<=clock_timestamp()", identity.UserID); err != nil {
@@ -143,12 +150,18 @@ func (s *Store) OpenAccess(ctx context.Context, token string, storage ContentSto
 	if err != nil {
 		return OpenContent{}, ErrUnavailable
 	}
-	if result.Mode == "PREVIEW" && !PreviewAllowed(result.File.DetectedMIME) {
+	if result.Mode == "PREVIEW" && !FilePreviewAllowed(result.File.Name, result.File.DetectedMIME) {
 		return OpenContent{}, ErrPreviewUnsupported
 	}
 	result.Body, err = storage.Open(ctx, key, result.File.SizeBytes)
 	if err != nil {
 		return OpenContent{}, ErrUnavailable
+	}
+	if result.Mode == "DOWNLOAD" && IsDownloadGET(ctx) {
+		if _, err = tx.Exec(ctx, "UPDATE vault.file_access SET download_counted=true WHERE token_hash=$1 AND NOT download_counted", digest[:]); err != nil {
+			_ = result.Body.Close()
+			return OpenContent{}, ErrUnavailable
+		}
 	}
 	if err = tx.Commit(ctx); err != nil {
 		_ = result.Body.Close()

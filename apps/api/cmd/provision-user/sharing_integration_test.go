@@ -108,6 +108,7 @@ func testSharing(t *testing.T, ctx context.Context, admin *pgx.Conn, dsn, direct
 		exec("UPDATE vault.shared_request_windows SET accepted_at='{}' WHERE session_hash=$1", binding)
 	}
 
+	exec("INSERT INTO vault.credentials(user_id,login_name,password_hash) SELECT $1,'share-recipient',password_hash FROM vault.credentials LIMIT 1", recipientID)
 	t.Run("bounded private activity", func(t *testing.T) {
 		ownCtx, _, _, _ := f.user(1000)
 		items, e := publisher.Publish(ownCtx, []*upload.Staged{f.staged("activity-data")})
@@ -139,6 +140,9 @@ func testSharing(t *testing.T, ctx context.Context, admin *pgx.Conn, dsn, direct
 		}
 		if overview.Activity[0].RecipientID == nil || *overview.Activity[0].RecipientID != recipientID || overview.Activity[1].RecipientID != nil {
 			t.Fatal("incorrect attribution")
+		}
+		if overview.Activity[0].RecipientName == nil || *overview.Activity[0].RecipientName != "share-recipient" || overview.Activity[1].RecipientName != nil {
+			t.Fatal("incorrect recipient display or public identity leak")
 		}
 		if _, e = service.List(strangerCtx, id); !errors.Is(e, files.ErrNotFound) {
 			t.Fatal("private activity leaked")
@@ -188,6 +192,46 @@ func testSharing(t *testing.T, ctx context.Context, admin *pgx.Conn, dsn, direct
 		exec("UPDATE vault.file_shares SET created_at=clock_timestamp()-interval '2 hours',expires_at=clock_timestamp()-interval '1 second' WHERE id=$1", public.Share.ID)
 		if _, e = service.Inspect(recipientCtx, tokenOf(public)); !errors.Is(e, files.ErrNotFound) {
 			t.Fatal("expired share admitted")
+		}
+	})
+	t.Run("view-only permission enforced at both boundaries", func(t *testing.T) {
+		sh := create(&recipientID, "PREVIEW_ONLY")
+		info, err := service.Inspect(recipientCtx, tokenOf(sh))
+		if err != nil || !info.PreviewAllowed || info.DownloadAllowed {
+			t.Fatal("incorrect view-only capabilities", err)
+		}
+		if _, err = service.CreateAccess(recipientCtx, tokenOf(sh), "DOWNLOAD"); !errors.Is(err, files.ErrNotFound) {
+			t.Fatal("view-only download grant issued", err)
+		}
+		grant, err := service.CreateAccess(recipientCtx, tokenOf(sh), "PREVIEW")
+		if err != nil {
+			t.Fatal(err)
+		}
+		opened, err := service.OpenAccess(recipientCtx, grantToken(grant), f.local)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = opened.Body.Close()
+		// Simulate a previously issued download grant: byte redemption must recheck permission.
+		exec("UPDATE vault.shared_access SET mode='DOWNLOAD' WHERE share_id=$1", sh.Share.ID)
+		if _, err = service.OpenAccess(recipientCtx, grantToken(grant), f.local); !errors.Is(err, files.ErrNotFound) {
+			t.Fatal("view-only transport bypass", err)
+		}
+		unsupported, err := publisher.Publish(ownerCtx, []*upload.Staged{f.staged("<html><body>active</body></html>")})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err = service.Create(ownerCtx, unsupported[0].ID, "PREVIEW_ONLY", 3600, nil); !errors.Is(err, files.ErrPreviewUnsupported) {
+			t.Fatal("unpreviewable view-only link", err)
+		}
+		if err = reader.Delete(ownerCtx, unsupported[0].ID); err != nil {
+			t.Fatal(err)
+		}
+		if err = service.Revoke(ownerCtx, sh.Share.ID); err != nil {
+			t.Fatal(err)
+		}
+		if _, err = service.OpenAccess(recipientCtx, grantToken(grant), f.local); !errors.Is(err, files.ErrNotFound) {
+			t.Fatal("revoked preview grant survived", err)
 		}
 	})
 	t.Run("owner control and recipient permissions", func(t *testing.T) {

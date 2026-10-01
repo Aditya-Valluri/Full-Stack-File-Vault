@@ -58,6 +58,9 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 	sessions.ConfigureMail(sender)
+	if err = sessions.ConfigureMFAFromEnvironment(); err != nil {
+		return err
+	}
 	browser, err := auth.NewBrowserSecurity(cfg.Browser, sessions)
 	if err != nil {
 		return err

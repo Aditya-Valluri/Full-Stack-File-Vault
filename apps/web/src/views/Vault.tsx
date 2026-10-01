@@ -1,10 +1,15 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Download, Eye, FileText, FolderOpen, HardDrive, Link2, Plus, RefreshCw, Search, SlidersHorizontal, Trash2, UploadCloud, X } from 'lucide-react';
-import { SetFileTagsDocument, DeleteFileDocument, FileAccessDocument, FileAccessMode, UploadManyDocument, UploadOneDocument, VaultDocument, type FileFilter, type VaultQuery } from '../generated/graphql';
+import { MoveFileDocument, SetFileTagsDocument, DeleteFileDocument, FileAccessDocument, FileAccessMode, UploadManyDocument, UploadOneDocument, VaultDocument, type FileFilter, type VaultQuery } from '../generated/graphql';
 import { errorCode, explainError, mutate, preparePreview, query, startDownload } from '../lib/api';
 import { formatBytes, formatDate, quotaPercent } from '../lib/format';
 import { Button, Dialog, EmptyState, Notice, rememberFocus } from '../components/ui';
+import { FilePreview, previewSupported } from '../components/FilePreview';
+import type { UploadProgress } from '../lib/upload-transport';
+import { TagSuggestions } from '../components/TagSuggestions';
+import { FolderOrganizer, folderPaths, type Folder } from '../components/FolderOrganizer';
+import { FileSharingSummary } from '../components/FileSharingSummary';
 import { ShareManager } from '../components/ShareManager';
 
 // Match the temporary demo's 10 MB transport budget; normal deployments retain 20 MB.
@@ -15,6 +20,20 @@ type VaultFile = VaultQuery['files']['nodes'][number];
 export function VaultView() {
  const [data, setData] = useState<VaultQuery>();
  const [filter, setFilter] = useState<FileFilter>({});
+ const [folderScope, setFolderScope] = useState('all');
+ const [folders, setFolders] = useState<Folder[]>([]);
+ const paths = useMemo(() => folderPaths(folders), [folders]);
+ const effectiveFilter = useMemo(() => ({ ...filter, folderId: folderScope === 'all' || folderScope === 'root' ? null : folderScope, rootOnly: folderScope === 'root' }), [filter, folderScope]);
+ const [moveTarget, setMoveTarget] = useState<VaultFile>();
+ const [destination, setDestination] = useState('');
+ const [moveBusy, setMoveBusy] = useState(false);
+ const [moveError, setMoveError] = useState('');
+ async function moveFile() {
+  if (!moveTarget || moveBusy) return;
+  setMoveBusy(true); setMoveError('');
+  try { await mutate(MoveFileDocument, { fileId: moveTarget.id, folderId: destination || null }); setMoveTarget(undefined); setRefresh(value => value + 1); }
+  catch (failure) { setMoveError(explainError(failure)); } finally { setMoveBusy(false); }
+ }
  const [name, setName] = useState('');
  const [tagFilter, setTagFilter] = useState('');
  const [uploader, setUploader] = useState('');
@@ -35,11 +54,22 @@ export function VaultView() {
  const [notice, setNotice] = useState('');
  const [uploadOpen, setUploadOpen] = useState(false);
  const [selected, setSelected] = useState<File[]>([]);
+ const [uploadTags, setUploadTags] = useState('');
  const [uploading, setUploading] = useState(false);
  const [retryPending, setRetryPending] = useState(false);
+ const [individualUploads, setIndividualUploads] = useState(false);
+ type UploadItem = { key: string; status: 'queued' | 'uploading' | 'processing' | 'complete' | 'failed'; loaded: number; total?: number; error?: string };
+ const uploadItems = useRef<UploadItem[]>([]);
+ const [fileProgress, setFileProgress] = useState<UploadItem[]>([]);
+ const [batchProgress, setBatchProgress] = useState<UploadProgress>();
+ function updateUpload(index: number, update: Partial<UploadItem>) {
+  uploadItems.current[index] = { ...uploadItems.current[index], ...update };
+  setFileProgress([...uploadItems.current]);
+ }
  const uploadKey = useRef('');
  function chooseFiles(files: File[]) {
-  setSelected(files); uploadKey.current = crypto.randomUUID(); setRetryPending(false);
+  setSelected(files); uploadKey.current = crypto.randomUUID(); setRetryPending(false); setBatchProgress(undefined);
+  uploadItems.current = files.map(() => ({ key: crypto.randomUUID(), status: 'queued', loaded: 0 })); setFileProgress([...uploadItems.current]);
  }
  const [deleting, setDeleting] = useState(false);
  const [deleteTarget, setDeleteTarget] = useState<VaultFile>();
@@ -53,11 +83,11 @@ export function VaultView() {
  useEffect(() => {
   const version = ++generation.current;
   let active = true; setLoading(true); setError('');
-  void query(VaultDocument, { first: 20, filter }).then(result => {
+  void query(VaultDocument, { first: 20, filter: effectiveFilter }).then(result => {
    if (active && version === generation.current) setData(result);
   }, failure => { if (active) setError(explainError(failure)); }).finally(() => { if (active) setLoading(false); });
   return () => { active = false; };
- }, [filter, refresh]);
+ }, [effectiveFilter, refresh]);
 
  function applyFilters(event: FormEvent) {
   event.preventDefault();
@@ -74,7 +104,7 @@ export function VaultView() {
   if (!data?.files.pageInfo.endCursor) return;
   const version = generation.current; setMoreBusy(true);
   try {
-   const result = await query(VaultDocument, { first: 20, filter, after: data.files.pageInfo.endCursor });
+   const result = await query(VaultDocument, { first: 20, filter: effectiveFilter, after: data.files.pageInfo.endCursor });
    if (version === generation.current) setData(previous => ({ ...result, files: { ...result.files, nodes: [...(previous?.files.nodes ?? []), ...result.files.nodes] } }));
   } catch (failure) { setError(explainError(failure)); } finally { setMoreBusy(false); }
  }
@@ -90,11 +120,30 @@ export function VaultView() {
   },
  });
  async function upload() {
-  if (!selected.length) return;
+  if (!selected.length || uploading) return;
   setUploading(true); setError(''); setNotice('');
+  const tags = uploadTags.trim() ? uploadTags.split(',').map(tag => tag.trim()) : [];
+  if (individualUploads) {
+   for (const [index, file] of selected.entries()) {
+    if (uploadItems.current[index].status === 'complete') continue;
+    updateUpload(index, { status: 'uploading', loaded: 0, total: undefined, error: undefined });
+    try {
+     await mutate(UploadOneDocument, { file, idempotencyKey: uploadItems.current[index].key, tags }, {
+      uploads: [file], onUploadProgress: (progress: UploadProgress) => updateUpload(index, { ...progress, status: progress.total && progress.loaded >= progress.total ? 'processing' : 'uploading' }),
+     });
+     updateUpload(index, { status: 'complete' });
+    } catch (failure) { updateUpload(index, { status: 'failed', error: explainError(failure) }); }
+   }
+   const saved = uploadItems.current.filter(item => item.status === 'complete').length;
+   setRetryPending(saved !== selected.length);
+   setNotice(saved === selected.length ? `Uploaded ${saved} ${saved === 1 ? 'file' : 'files'}.` : `${saved} of ${selected.length} files saved. Retry retries only unfinished files with their original keys.`);
+   setRefresh(value => value + 1); setUploading(false);
+   return;
+  }
+  setBatchProgress(undefined);
   try {
-   if (selected.length === 1) await mutate(UploadOneDocument, { file: selected[0], idempotencyKey: uploadKey.current }, { uploads: selected });
-   else await mutate(UploadManyDocument, { files: selected, idempotencyKey: uploadKey.current }, { uploads: selected, uploadMany: true });
+   if (selected.length === 1) await mutate(UploadOneDocument, { file: selected[0], idempotencyKey: uploadKey.current, tags }, { uploads: selected, onUploadProgress: setBatchProgress });
+   else await mutate(UploadManyDocument, { files: selected, idempotencyKey: uploadKey.current, tags }, { uploads: selected, uploadMany: true, onUploadProgress: setBatchProgress });
    setNotice(`Uploaded ${selected.length} ${selected.length === 1 ? 'file' : 'files'}.`);
    chooseFiles([]); setUploadOpen(false); setRefresh(value => value + 1);
   } catch (failure) {
@@ -144,6 +193,7 @@ export function VaultView() {
   {error && <Notice error>{error}</Notice>}
   {notice && <Notice>{notice}</Notice>}
   {uploading && <Notice>Uploading your files. You can keep this window open while they finish.</Notice>}
+  <FolderOrganizer scope={folderScope} onSelect={setFolderScope} onLoaded={setFolders} />
   <section className="panel files-panel" aria-label="Your files">
    <form className="file-toolbar" onSubmit={applyFilters}>
     <label className="search-box"><Search size={17} /><span className="sr-only">Search filenames</span><input value={name} onChange={event => setName(event.target.value)} placeholder="Search your files…" /><button type="submit" aria-label="Search"><Search size={16} /></button></label>
@@ -161,20 +211,28 @@ export function VaultView() {
     <div className="table-scroll"><table><thead><tr><th scope="col">Name</th><th scope="col">Size</th><th scope="col">Added</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead><tbody>{data.files.nodes.map(file => <tr key={file.id}>
      <td><div className="file-name"><span className="file-icon"><FileText size={20} /></span><div><strong>{file.name}</strong><small>{file.detectedMIME.split(';')[0]}</small>{file.tags.length > 0 && <small aria-label={`Private tags for ${file.name}`}>{file.tags.join(', ')}</small>}</div></div></td><td className="nowrap">{formatBytes(file.sizeBytes)}</td><td className="muted nowrap">{formatDate(file.createdAt)}</td>
      <td><div className="row-actions"><Button variant="ghost" disabled={Boolean(actionID)} aria-label={`Download ${file.name}`} onClick={() => void access(file, FileAccessMode.Download)}><Download size={17} /></Button>
-      {['image/png', 'image/jpeg', 'image/webp'].includes(file.detectedMIME.split(';')[0]) && <Button variant="ghost" disabled={Boolean(actionID)} aria-label={`Preview ${file.name}`} onClick={event => { rememberFocus(event); void access(file, FileAccessMode.Preview); }}><Eye size={17} /></Button>}
+      {previewSupported(file.detectedMIME, file.name) && <Button variant="ghost" disabled={Boolean(actionID)} aria-label={`Preview ${file.name}`} onClick={event => { rememberFocus(event); void access(file, FileAccessMode.Preview); }}><Eye size={17} /></Button>}
       <Button variant="ghost" aria-label={`Details for ${file.name}`} onClick={event=>{rememberFocus(event);setDetails(file);}}>Details</Button>
+      <Button variant="ghost" aria-label={`Move ${file.name}`} onClick={event => { rememberFocus(event); setMoveTarget(file); setDestination(file.folderId ?? ''); setMoveError(''); }}>Move</Button>
       <Button variant="ghost" aria-label={`Edit tags for ${file.name}`} onClick={event => { rememberFocus(event); setTagTarget(file); setTagText(file.tags.join(', ')); setTagError(''); }}>Tags</Button>
       <Button variant="ghost" aria-label={`Share ${file.name}`} onClick={event => { rememberFocus(event); setSharing(file); }}><Link2 size={17} /></Button><Button variant="ghost" aria-label={`Delete ${file.name}`} disabled={deleting} onClick={event => { rememberFocus(event); setDeleteTarget(file); }}><Trash2 size={17} /></Button></div></td>
     </tr>)}</tbody></table></div>}
    <div className="table-footer"><span>{data?.files.nodes.length ?? 0} {filtered ? 'matching files shown' : 'files shown'}</span>{data?.files.pageInfo.hasNextPage && <Button variant="secondary" disabled={moreBusy || loading} onClick={() => void loadMore()}>{moreBusy ? 'Loading…' : 'Load more'}</Button>}</div>
   </section>
-  <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} title="Upload files" description={`Choose up to 10 files. Each batch can contain up to ${uploadLimitMB} MB, within your remaining quota.`}>
+  <Dialog open={uploadOpen} onClose={() => { if (!uploading) setUploadOpen(false); }} title="Upload files" description={`Choose up to 10 files. Each batch can contain up to ${uploadLimitMB} MB, within your remaining quota.`}>
+   <label>Upload mode<select value={individualUploads ? 'individual' : 'atomic'} disabled={uploading || retryPending || fileProgress.some(item => item.status !== 'queued')} onChange={event => setIndividualUploads(event.target.value === 'individual')}><option value="atomic">All-or-nothing batch</option><option value="individual">Individual files with separate progress</option></select></label>
+   <p className="help-text">{individualUploads ? 'Each file saves independently. Other files may succeed if one fails.' : 'All files publish together. Progress describes the entire request.'}</p>
+   <label>Upload tags separated by commas<input value={uploadTags} onChange={event => setUploadTags(event.target.value)} maxLength={700} disabled={uploading || retryPending || fileProgress.some(item => item.status !== 'queued')} /></label>
+   <TagSuggestions value={uploadTags} onChange={setUploadTags} disabled={uploading || retryPending || fileProgress.some(item => item.status !== 'queued')} />
+   <p className="help-text">These owner-private tags apply to each selected logical file. You can also type custom tags.</p>
    <div {...dropzone.getRootProps({ className: `dropzone ${dropzone.isDragActive ? 'drag-active' : ''}` })}>
     <input {...dropzone.getInputProps({ 'aria-label': 'Select files to upload' })} /><UploadCloud size={36} /><h3>Drop your files here</h3><p className="muted">or choose them from your device</p><Button variant="secondary" onClick={dropzone.open} disabled={uploading || retryPending}>Choose files</Button>
    </div>
-   {selected.length > 0 && <ul className="upload-list">{selected.map((file, index) => <li key={`${file.name}-${index}`}><FileText size={17} /><span>{file.name}<small>{formatBytes(file.size)}</small></span><Button variant="ghost" aria-label={`Remove ${file.name} from selection`} disabled={uploading || retryPending} onClick={() => chooseFiles(selected.filter((_, i) => i !== index))}><X size={15} /></Button></li>)}</ul>}
+   {selected.length > 0 && <ul className="upload-list">{selected.map((file, index) => <li key={`${file.name}-${index}`}><FileText size={17} /><span>{file.name}<small>{formatBytes(file.size)}</small>{individualUploads && fileProgress[index] && <UploadStatus item={fileProgress[index]} name={file.name} />}</span><Button variant="ghost" aria-label={`Remove ${file.name} from selection`} disabled={uploading || retryPending} onClick={() => chooseFiles(selected.filter((_, i) => i !== index))}><X size={15} /></Button></li>)}</ul>}
+   {!individualUploads && uploading && batchProgress && <UploadStatus item={{ ...batchProgress, status: batchProgress.total && batchProgress.loaded >= batchProgress.total ? 'processing' : 'uploading' }} name="Batch" />}
+   {notice && individualUploads && <Notice>{notice}</Notice>}
    {error && <Notice error>{error}</Notice>}
-   <div className="dialog-actions"><span className="muted">{selected.length} selected · {formatBytes(selected.reduce((sum, file) => sum + file.size, 0))}</span><Button disabled={!selected.length || uploading} onClick={() => void upload()}>{uploading ? 'Uploading…' : retryPending ? 'Retry upload safely' : 'Upload selected files'}</Button></div>
+   <div className="dialog-actions"><Button variant="secondary" disabled={uploading || !selected.length} onClick={() => chooseFiles([])}>Clear selection (keeps saved files)</Button><span className="muted">{selected.length} selected · {formatBytes(selected.reduce((sum, file) => sum + file.size, 0))}</span><Button disabled={!selected.length || uploading} onClick={() => void upload()}>{uploading ? 'Uploading…' : retryPending ? 'Retry upload safely' : 'Upload selected files'}</Button></div>
   </Dialog>
   <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(undefined)} title="Delete this file?" description="This removes your file and revokes its sharing links. Other users' independently owned copies are unaffected.">
    <p className="delete-filename">{deleteTarget?.name}</p><div className="dialog-actions"><Button variant="secondary" onClick={() => setDeleteTarget(undefined)}>Keep file</Button><Button variant="danger" disabled={deleting} onClick={() => void remove()}>{deleting ? 'Deleting…' : 'Delete file'}</Button></div>
@@ -182,24 +240,42 @@ export function VaultView() {
   <Dialog open={Boolean(tagTarget)} onClose={() => { if (!tagBusy) setTagTarget(undefined); }} title="Private file tags" description="Visible only to you, including when this file is shared. Up to 20 tags, each 1–32 characters: letters, numbers, spaces, hyphens or underscores.">
    <form onSubmit={event => { event.preventDefault(); void saveTags(); }}>
     <label>Tags separated by commas<input value={tagText} onChange={event => setTagText(event.target.value)} maxLength={700} disabled={tagBusy} /></label>
+    <TagSuggestions value={tagText} onChange={setTagText} disabled={tagBusy} />
     <p className="muted">Tags are saved in lowercase. Leave blank to remove all tags.</p>
     {tagError && <Notice error>{tagError}</Notice>}
     <div className="dialog-actions"><Button type="submit" disabled={tagBusy}>{tagBusy ? 'Saving…' : 'Save tags'}</Button></div>
    </form>
   </Dialog>
+  <Dialog open={Boolean(moveTarget)} onClose={() => { if (!moveBusy) setMoveTarget(undefined); }} title="Move file" description={moveTarget?.name}>
+   <form className="form-stack" onSubmit={event => { event.preventDefault(); void moveFile(); }}>
+    <label>Destination folder<select aria-label="Destination folder" value={destination} disabled={moveBusy} onChange={event => setDestination(event.target.value)}><option value="">Root</option>{folders.map(folder => <option key={folder.id} value={folder.id}>{paths.get(folder.id)}</option>)}</select></label>
+    {moveError && <Notice error>{moveError}</Notice>}
+    <Button type="submit" disabled={moveBusy}>{moveBusy ? 'Moving…' : 'Move file'}</Button>
+   </form>
+  </Dialog>
   <Dialog open={Boolean(details)} onClose={()=>setDetails(undefined)} title="File details" description={details?.name}>
    {details && <div className="form-stack"><dl>
+    <dt>Owner</dt><dd>You</dd>
+    <dt>Folder</dt><dd>{details.folderId ? paths.get(details.folderId) ?? 'Folder unavailable' : 'Root'}</dd>
     <dt>Logical file ID</dt><dd>{details.id}</dd>
     <dt>Logical size</dt><dd>{formatBytes(details.sizeBytes)} ({details.sizeBytes} bytes)</dd>
     <dt>Detected MIME type</dt><dd>{details.detectedMIME}</dd>
     <dt>Uploaded</dt><dd>{formatDate(details.createdAt)}</dd>
     <dt>Private tags</dt><dd>{details.tags.join(', ') || 'None'}</dd>
-    <dt>Preview</dt><dd>{['image/png','image/jpeg','image/webp'].includes(details.detectedMIME.split(';')[0]) ? 'Image preview available' : 'Download only'}</dd>
-   </dl><p className="help-text">Private to your account unless explicitly shared. Duplicate contents still use this file's full logical quota. Storage savings are shown for your account, not inferred from other users' files. Embedded metadata is not extracted or displayed; original downloads may retain it. No malware scan is claimed.</p><ShareManager key={details.id} fileID={details.id} /></div>}
+    <dt>Preview</dt><dd>{previewSupported(details.detectedMIME, details.name) ? 'Preview available' : 'Download only'}</dd>
+   </dl><FileSharingSummary key={details.id} fileID={details.id} /><p className="help-text">Private to your account unless explicitly shared. Duplicate contents still use this file's full logical quota. Storage savings are shown for your account, not inferred from other users' files. Embedded metadata is not extracted or displayed; original downloads may retain it. No malware scan is claimed.</p></div>}
   </Dialog>
-  <Dialog open={Boolean(sharing)} onClose={() => setSharing(undefined)} title="Share file" description={sharing?.name}>{sharing && <ShareManager key={sharing.id} fileID={sharing.id} />}</Dialog>
+  <Dialog open={Boolean(sharing)} onClose={() => setSharing(undefined)} title="Share file" description={sharing?.name}>{sharing && <ShareManager key={sharing.id} fileID={sharing.id} canPreview={previewSupported(sharing.detectedMIME, sharing.name)} />}</Dialog>
   <Dialog open={Boolean(preview)} onClose={() => { previewGeneration.current++; setPreview(undefined); }} title="File preview" description={preview?.file.name} wide>
-   {preview?.url ? <img className="preview-image" src={preview.url} alt={preview.file.name} onError={() => { setError('The preview expired or could not load. Open it again to retry.'); setPreview(undefined); }} /> : <p role="status">Preparing a secure preview…</p>}
+   {preview?.url ? <FilePreview url={preview.url} media={preview.file.detectedMIME} name={preview.file.name} /> : <p role="status">Preparing a secure preview…</p>}
   </Dialog>
  </>;
+}
+
+function UploadStatus({ item, name }: { item: { status: string; loaded: number; total?: number; error?: string }; name: string }) {
+ const percent = item.total ? Math.min(100, Math.floor(item.loaded * 100 / item.total)) : undefined;
+ if (item.status === 'queued') return <small>Queued</small>;
+ if (item.status === 'complete') return <small role="status">Saved</small>;
+ if (item.status === 'failed') return <small role="alert">{item.error ?? 'Upload failed. Retry is available.'}</small>;
+ return <div><progress aria-label={name + ' upload progress'} max={100} value={percent} /><small>{percent === undefined ? '' : percent + '% · '}{formatBytes(item.loaded)} request bytes transferred{item.total ? ' of ' + formatBytes(item.total) : ''}</small><small role="status">{item.status === 'processing' ? 'Request sent. Waiting for the server to save the file.' : 'Sending request…'}</small></div>;
 }

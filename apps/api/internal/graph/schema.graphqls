@@ -1,5 +1,8 @@
 """Application queries. Operational readiness is exposed separately at /readyz."""
 type Query {
+  """Owner-private organization tree, at most 1000 folders."""
+  folders: [Folder!]!
+  mfaStatus: MFAStatus!
   emailRegistrationEnabled: Boolean!
   adminUsers(first: Int! = 20, after: String): AdminUserConnection!
   adminFiles(first: Int! = 20, after: String, ownerId: ID): AdminFileConnection!
@@ -30,6 +33,13 @@ type ServiceInfo {
 }
 
 type Mutation {
+ createFolder(name: String!, parentId: ID): Folder!
+ renameFolder(id: ID!, name: String!): Folder!
+ deleteFolder(id: ID!): Boolean!
+ moveFile(fileId: ID!, folderId: ID): Boolean!
+ setupMFA(currentPassword: String!): MFASetup!
+ enableMFA(currentPassword: String!, code: String!): MFARecovery!
+ disableMFA(currentPassword: String!, code: String!): Boolean!
  """Send a bounded plain-text support request to the fixed administrator inbox."""
  contactAdministrator(subject: String!, message: String!): Boolean!
  """Send a reset code without disclosing account existence. Anonymous session required."""
@@ -65,12 +75,17 @@ type Mutation {
   """Delete an owned logical file and release its full quota charge."""
   deleteFile(id: ID!): Boolean!
   """Publish one bounded multipart upload. Duplicate content still charges logical quota."""
-  uploadFile(file: Upload!, idempotencyKey: ID): VaultFile!
+  uploadFile(file: Upload!, idempotencyKey: ID, tags: [String!]): VaultFile!
   """All-or-nothing batch. A lost response is not safe to retry automatically."""
-  uploadFiles(files: [Upload!]!, idempotencyKey: ID): [VaultFile!]!
+  uploadFiles(files: [Upload!]!, idempotencyKey: ID, tags: [String!]): [VaultFile!]!
 }
 
+type MFAStatus { available: Boolean! enabled: Boolean! }
+type MFASetup { uri: String! }
+type MFARecovery { recoveryCodes: [String!]! }
+
 input LoginInput {
+  secondFactor: String
   loginName: String!
   password: String!
 }
@@ -101,7 +116,9 @@ scalar Upload
 scalar Time
 
 """Owned logical metadata. No blob hash, physical key or deduplication hint."""
+type Folder { id: ID! parentId: ID name: String! }
 type VaultFile {
+ folderId: ID
  """Private owner tags. Administrator-wide metadata returns an empty list."""
  tags: [String!]!
  id: ID!
@@ -118,6 +135,9 @@ type Quota {
  remainingBytes: String!
 }
 input FileFilter {
+ """Omit folder filters to search across all folders. Root-only and folderId are mutually exclusive."""
+ folderId: ID
+ rootOnly: Boolean! = false
  """All normalized tags must match. At most 20; private to the caller."""
  tagsAll: [String!]
  """Case-insensitive literal substring of uploader login; owner scope still applies."""
@@ -159,6 +179,7 @@ type StorageStats {
  savingsPercent: String!
 }
 enum SharePermission {
+ PREVIEW_ONLY
  DOWNLOAD
  PREVIEW_AND_DOWNLOAD
 }
@@ -185,6 +206,7 @@ type CreatedShare {
 type ShareActivity {
  id: ID!
  shareId: ID!
+ recipientName: String
  recipientId: ID
  kind: String!
  occurredAt: Time!
@@ -202,6 +224,7 @@ type SharedFile {
  sizeBytes: String!
  detectedMIME: String!
  previewAllowed: Boolean!
+ downloadAllowed: Boolean!
  expiresAt: Time!
 }
 
@@ -240,8 +263,10 @@ type AdminStorageStats {
 }
 type AdminAuditEntry {
  id: ID!
- actorId: ID!
- targetUserId: ID!
+ fileId: ID
+ shareId: ID
+ actorId: ID
+ targetUserId: ID
  action: String!
  occurredAt: Time!
  previousQuota: String!

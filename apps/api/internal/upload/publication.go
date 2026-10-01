@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"full-stack-file-vault.local/api/internal/auth"
+	filemeta "full-stack-file-vault.local/api/internal/files"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -23,6 +24,7 @@ var (
 
 // PublishedFile contains logical metadata only; no content hash or reuse signal.
 type PublishedFile struct {
+	Tags         []string `json:",omitempty"`
 	ID           string
 	Name         string
 	SizeBytes    int64
@@ -55,6 +57,16 @@ type candidate struct {
 // Caller retains ownership of Staged handles. Prepared copies are always cleaned.
 // Durable candidate records survive failed/ambiguous commits for later recovery.
 func (p *Publisher) Publish(ctx context.Context, files []*Staged, retryKeys ...string) ([]PublishedFile, error) {
+	return p.PublishWithTags(ctx, files, nil, retryKeys...)
+}
+
+// PublishWithTags attaches normalized tags to each logical file in the same
+// publication transaction. Empty tags retain the original receipt fingerprint.
+func (p *Publisher) PublishWithTags(ctx context.Context, files []*Staged, inputTags []string, retryKeys ...string) ([]PublishedFile, error) {
+	tags, tagErr := filemeta.NormalizeTags(inputTags)
+	if tagErr != nil {
+		return nil, ErrInvalidInput
+	}
 	var retryKey string
 	if len(retryKeys) > 1 {
 		return nil, ErrInvalidInput
@@ -65,7 +77,7 @@ func (p *Publisher) Publish(ctx context.Context, files []*Staged, retryKeys ...s
 			return nil, ErrInvalidInput
 		}
 	}
-	fingerprint, fingerprintErr := uploadFingerprint(files)
+	fingerprint, fingerprintErr := uploadFingerprint(files, tags...)
 	if fingerprintErr != nil {
 		return nil, fingerprintErr
 	}
@@ -177,11 +189,16 @@ func (p *Publisher) Publish(ctx context.Context, files []*Staged, retryKeys ...s
 	for _, file := range files {
 		info := file.Info()
 		c := candidates[info.SHA256]
-		item := PublishedFile{Name: info.Name, SizeBytes: info.SizeBytes, DetectedMIME: info.DetectedMIME}
+		item := PublishedFile{Tags: tags, Name: info.Name, SizeBytes: info.SizeBytes, DetectedMIME: info.DetectedMIME}
 		err = tx.QueryRow(transactionCtx, `INSERT INTO vault.files(owner_id,blob_id,original_name,declared_mime)
  VALUES($1,$2,$3,NULLIF($4,'')) RETURNING id::text,created_at`, identity.UserID, c.blobID, info.Name, info.DeclaredMIME).Scan(&item.ID, &item.CreatedAt)
 		if err != nil {
 			return nil, ErrPublication
+		}
+		if len(tags) > 0 {
+			if _, err = tx.Exec(transactionCtx, "INSERT INTO vault.file_tags(file_id,tag) SELECT $1::uuid,unnest($2::text[])", item.ID, tags); err != nil {
+				return nil, ErrPublication
+			}
 		}
 		output = append(output, item)
 	}

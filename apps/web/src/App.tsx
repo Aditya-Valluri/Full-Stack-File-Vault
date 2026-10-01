@@ -4,6 +4,7 @@ import { bootstrap, client, errorCode, explainError, mutate, restoreIdentity, se
 import { LogoutDocument, UserRole, type IdentityQuery } from './generated/graphql';
 import { Button, Notice } from './components/ui';
 import { LoginView } from './views/Login';
+import { MFASettings } from './components/MFASettings';
 import { PasswordRecovery } from './views/PasswordRecovery';
 import { VaultView } from './views/Vault';
 const SharedView = lazy(() => import('./views/Shared').then(module => ({ default: module.SharedView })));
@@ -96,7 +97,7 @@ export function App() {
    <main id="main-content" className="main-content">
     {error && <Notice error>{error}</Notice>}
     <Suspense fallback={<p role="status">Loading workspace...</p>}>{isSharedRoute ? <SharedView key={`${identity?.id ?? 'anonymous'}:${sharedLink.revision}`} initialToken={sharedLink.token} signedIn={Boolean(identity)} onSignIn={() => setShowLogin(true)} />
-     : tab === 'password' ? <PasswordRecovery mode="change" onBack={() => setTab('vault')} /> : tab === 'admin' && identity?.role === UserRole.Admin ? <AdminView key={identity.id} /> : <VaultView key={identity?.id} />}</Suspense>
+     : tab === 'password' ? <div className="form-stack"><MFASettings /><PasswordRecovery mode="change" onBack={() => setTab('vault')} /></div> : tab === 'admin' && identity?.role === UserRole.Admin ? <AdminView key={identity.id} /> : <VaultView key={identity?.id} />}</Suspense>
    </main>
    <footer className="workspace-footer">Full Stack File Vault<span>Private files. Deliberate sharing.</span></footer>
   </div>

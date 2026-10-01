@@ -65,6 +65,33 @@ func testAdministration(t *testing.T, ctx context.Context, db *pgx.Conn, dsn, di
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Run("resource audit commits and rolls back with its mutation", func(t *testing.T) {
+		var uploads, sessions int
+		if err := db.QueryRow(ctx, "SELECT count(*) FROM vault.admin_audit WHERE target_user_id=$1 AND action='FILE_UPLOADED'", targetID).Scan(&uploads); err != nil || uploads != 2 {
+			t.Fatal("upload audit missing", uploads, err)
+		}
+		if err := db.QueryRow(ctx, "SELECT count(*) FROM vault.admin_audit WHERE target_user_id=$1 AND action='AUTHENTICATED_SESSION_CREATED'", targetID).Scan(&sessions); err != nil || sessions != 1 {
+			t.Fatal("session audit missing", sessions, err)
+		}
+		tx, err := db.Begin(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer tx.Rollback(ctx)
+		if _, err = tx.Exec(ctx, "DELETE FROM vault.files WHERE id=$1", input[0].ID); err != nil {
+			t.Fatal(err)
+		}
+		var count int
+		if err = tx.QueryRow(ctx, "SELECT count(*) FROM vault.admin_audit WHERE file_id=$1 AND action='FILE_DELETED' AND actor_id IS NULL", input[0].ID).Scan(&count); err != nil || count != 1 {
+			t.Fatal("deletion audit missing or incorrectly attributed", count, err)
+		}
+		if err = tx.Rollback(ctx); err != nil {
+			t.Fatal(err)
+		}
+		if err = db.QueryRow(ctx, "SELECT count(*) FROM vault.admin_audit WHERE file_id=$1 AND action='FILE_DELETED'", input[0].ID).Scan(&count); err != nil || count != 0 {
+			t.Fatal("rolled-back deletion left an audit event", count, err)
+		}
+	})
 	t.Run("user and stale admin denied", func(t *testing.T) {
 		if _, err := admin.Users(ordinaryCtx, 20, nil); !errors.Is(err, administration.ErrForbidden) {
 			t.Fatal("user list allowed", err)
@@ -130,6 +157,67 @@ func testAdministration(t *testing.T, ctx context.Context, db *pgx.Conn, dsn, di
 			t.Fatal("admin private deletion bypass", err)
 		}
 	})
+
+	t.Run("legacy and verified email display", func(t *testing.T) {
+		emailCtx, emailID, _, _ := f.user(1000)
+		_, legacyID, _, _ := f.user(1000)
+		_, emptyID, _, _ := f.user(1000)
+		hash, e := auth.HashPassword([]byte("synthetic identity regression password"))
+		if e != nil {
+			t.Fatal(e)
+		}
+		exec("UPDATE vault.users SET email_address='Admin.Identity@example.test',email_normalized='admin.identity@example.test',email_verified_at=clock_timestamp() WHERE id=$1", emailID)
+		exec("INSERT INTO vault.user_identities(user_id,provider,provider_subject,password_hash) VALUES($1,'password','admin.identity@example.test',$2)", emailID, hash)
+		exec("INSERT INTO vault.credentials(user_id,login_name,password_hash) VALUES($1,'identity.legacy',$2)", legacyID, hash)
+		// Multiple identity methods must not duplicate rows, and legacy display wins.
+		exec("UPDATE vault.users SET email_address='legacy.identity@example.test',email_normalized='legacy.identity@example.test',email_verified_at=clock_timestamp() WHERE id=$1", legacyID)
+		exec("INSERT INTO vault.user_identities(user_id,provider,provider_subject,password_hash) VALUES($1,'password','legacy.identity@example.test',$2)", legacyID, hash)
+		found := map[string]*string{}
+		var cursor *string
+		for {
+			page, e := admin.Users(actorCtx, 1, cursor)
+			if e != nil {
+				t.Fatal(e)
+			}
+			for _, user := range page.Nodes {
+				if _, ok := found[user.ID]; ok {
+					t.Fatal("duplicate identity row")
+				}
+				found[user.ID] = user.LoginName
+			}
+			if !page.HasNextPage {
+				break
+			}
+			cursor = page.EndCursor
+		}
+		if found[emailID] == nil || *found[emailID] != "Admin.Identity@example.test" {
+			t.Fatal("email identity missing")
+		}
+		if found[legacyID] == nil || *found[legacyID] != "identity.legacy" {
+			t.Fatal("legacy display changed")
+		}
+		if _, ok := found[emptyID]; !ok || found[emptyID] != nil {
+			t.Fatal("identity fabricated")
+		}
+		if _, e = publisher.Publish(emailCtx, []*upload.Staged{f.staged("email identity file")}); e != nil {
+			t.Fatal(e)
+		}
+		page, e := admin.Files(actorCtx, 50, nil, &emailID)
+		if e != nil || len(page.Nodes) != 1 || page.Nodes[0].LoginName == nil || *page.Nodes[0].LoginName != "Admin.Identity@example.test" {
+			t.Fatal("file uploader identity missing")
+		}
+		if page.Nodes[0].OwnerID != emailID || len(page.Nodes[0].File.Tags) != 0 {
+			t.Fatal("owner or private tags changed")
+		}
+		changed, e := admin.SetQuota(actorCtx, emailID, "2000")
+		if e != nil || changed.LoginName == nil || *changed.LoginName != "Admin.Identity@example.test" {
+			t.Fatal("mutation identity missing")
+		}
+		disabled, e := admin.SetDisabled(actorCtx, emailID, true)
+		if e != nil || disabled.LoginName == nil || *disabled.LoginName != "Admin.Identity@example.test" {
+			t.Fatal("disabled identity missing")
+		}
+	})
 	t.Run("quota mutation and append-only audit are atomic", func(t *testing.T) {
 		if _, err := admin.SetQuota(actorCtx, targetID, strconv.Itoa(2*len(data)-1)); !errors.Is(err, administration.ErrConflict) {
 			t.Fatal("quota below usage accepted", err)
@@ -143,7 +231,7 @@ func testAdministration(t *testing.T, ctx context.Context, db *pgx.Conn, dsn, di
 			t.Fatal("audit missing", err)
 		}
 		event := events.Nodes[0]
-		if event.ActorID != actorID || event.TargetUserID != targetID || event.Action != "USER_QUOTA_CHANGED" || event.PreviousQuota != "100" || event.NewQuota != "10000001" {
+		if (event.ActorID == nil || *event.ActorID != actorID) || (event.TargetUserID == nil || *event.TargetUserID != targetID) || event.Action != "USER_QUOTA_CHANGED" || event.PreviousQuota != "100" || event.NewQuota != "10000001" {
 			t.Fatal("audit mismatch", event)
 		}
 		for _, sql := range []string{"UPDATE vault.admin_audit SET action='USER_ENABLED' WHERE false", "DELETE FROM vault.admin_audit WHERE false", "UPDATE vault.users SET role='ADMIN' WHERE false"} {

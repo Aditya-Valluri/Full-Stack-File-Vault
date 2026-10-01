@@ -89,7 +89,7 @@ func singleAuthRoot(doc *ast.QueryDocument, selected *ast.OperationDefinition, e
 			switch node := selection.(type) {
 			case *ast.Field:
 				roots++
-				if roots > 1 || (expected != "" && node.Name != expected) || (node.Name != "beginSession" && node.Name != "login" && node.Name != "logout" && node.Name != "requestEmailRegistration" && node.Name != "completeEmailRegistration" && node.Name != "requestPasswordReset" && node.Name != "completePasswordReset" && node.Name != "changePassword" && node.Name != "contactAdministrator") || len(node.Directives) > 0 {
+				if roots > 1 || (expected != "" && node.Name != expected) || (node.Name != "beginSession" && node.Name != "login" && node.Name != "logout" && node.Name != "requestEmailRegistration" && node.Name != "completeEmailRegistration" && node.Name != "requestPasswordReset" && node.Name != "completePasswordReset" && node.Name != "changePassword" && node.Name != "contactAdministrator" && node.Name != "setupMFA" && node.Name != "enableMFA" && node.Name != "disableMFA") || len(node.Directives) > 0 {
 					return false
 				}
 			case *ast.InlineFragment:
@@ -124,5 +124,5 @@ func singleMutationRoot(doc *ast.QueryDocument, op *ast.OperationDefinition) boo
 		return false
 	}
 	field := singleUploadRoot(doc, op.SelectionSet)
-	return field != nil && (field.Name == "uploadFile" || field.Name == "uploadFiles" || field.Name == "createFileAccess" || field.Name == "deleteFile" || field.Name == "setFileTags" || field.Name == "createShare" || field.Name == "revokeShare" || field.Name == "createSharedAccess" || field.Name == "adminSetQuota" || field.Name == "adminSetUserDisabled")
+	return field != nil && (field.Name == "uploadFile" || field.Name == "uploadFiles" || field.Name == "createFileAccess" || field.Name == "deleteFile" || field.Name == "setFileTags" || field.Name == "createFolder" || field.Name == "renameFolder" || field.Name == "deleteFolder" || field.Name == "moveFile" || field.Name == "createShare" || field.Name == "revokeShare" || field.Name == "createSharedAccess" || field.Name == "adminSetQuota" || field.Name == "adminSetUserDisabled")
 }
